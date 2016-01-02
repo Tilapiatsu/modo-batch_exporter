@@ -1,10 +1,11 @@
 # modo-batch_exporter
 Simple python script to batch export mesh items out of modo
 Tested in Modo 902. It's not fully functionnal and there is still some work to do to make it easy to integrate into Modo's pipeline.
+Only FBX export supported.
 
 Launch the script by running the command in Modo :
 
-@<path_to_python_script> triple 0 resetPos 0 rotAngle 0 scaleAmount 1 exportEach 1 exportHierarchy 0 scanFiles 0 upAxis Y
+@<path_to_python_script> triple 0 resetPos 0 rotAngle 0 scaleAmount 1 smoothAngle 1 exportEach 1 exportHierarchy 0 scanFiles 0 upAxis Y
 
 (no matter the order of these parameters, if you put no parameter, the default one will be picked)
 

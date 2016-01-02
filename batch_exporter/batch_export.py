@@ -5,16 +5,19 @@ import os
 import sys
 
 # Arguments
-triple = '0'
-resetPos = '0'
+triple_sw = '0'
+resetPos_sw = '0'
 rotAngle = '0'
 scaleAmount = '1'
+smoothAngle_sw = '0'
 smoothAngle = '1'
+exportFile = '1'
 exportEach = '1'
 exportHierarchy = '0'
 scanFiles = '0'
 upAxis = lx.eval('pref.value units.upAxis ?')
 iUpAxis = upAxis
+
 
 # Get the current FBX Export setting.
 fbx_export_setting = lx.eval1('user.value sceneio.fbx.save.exportType ?')
@@ -25,7 +28,7 @@ userSelectionCount = len(userSelection)
 currentPath = lx.eval("query sceneservice scene.file ? current")
 
 
-def init_dialog(dialog_type, text):
+def init_dialog(dialog_type):
     if dialog_type == "input":
         # Get the directory to export to.
         lx.eval('dialog.setup fileOpenMulti')
@@ -34,23 +37,48 @@ def init_dialog(dialog_type, text):
         lx.eval('dialog.msg "Select the meshes you want to process."')
         lx.eval('dialog.result "%s"' % currentPath)
 
-    elif dialog_type == "output":
+    if dialog_type == "output":
         # Get the directory to export to.
         lx.eval('dialog.setup dir')
         lx.eval('dialog.title "Export Path"')
         lx.eval('dialog.msg "Select path to export to."')
         lx.eval('dialog.result "%s"' % currentPath)
 
-    elif dialog_type == "file_save":
-        lx.eval('dialog.setup fileSave')
-        lx.eval('dialog.title "Save File"')
-        lx.eval('dialog.msg "Select path to save teh file."')
-        lx.eval('dialog.result "%s"' % currentPath)
+    if dialog_type == 'file_save':
+        init_custom_dialog('fileSave', 'SaveFile', ('FBX',), 'FBX file', ('*.FBX',), 'fbx', currentPath[:-4])
 
-    elif dialog_type == "bad_formatting":
-        lx.eval('dialog.setup error')
-        lx.eval('dialog.title "Bad Formatting."')
-        lx.eval('dialog.msg " Please check the synthax of the command : %s"' % text)
+    if dialog_type == "cancel":
+        init_message('error', 'Canceled', 'Operation aborded')
+        sys.exit()
+
+
+# http://modo.sdk.thefoundry.co.uk/wiki/Dialog_Commands
+def init_custom_dialog(type, title, format, uname, ext, save_ext=None, path=None, init_dialog = False):
+    ''' Custom file dialog wrapper function
+
+        type  :   Type of dialog, string value, options are 'fileOpen' or 'fileSave'
+        title :   Dialog title, string value.
+        format:   file format, tuple of string values
+        uname :   internal name
+        ext   :   tuple of file extension filter strings
+        save_ext: output file extension for fileSave dialog
+        path  :   optional default loacation to open dialog
+
+    '''
+    lx.eval("dialog.setup %s" % type)
+    lx.eval("dialog.title {%s}" % (title))
+    lx.eval("dialog.fileTypeCustom {%s} {%s} {%s} {%s}" % (format, uname, ext, save_ext))
+    if type == 'fileSave' and save_ext != None:
+        lx.eval("dialog.fileSaveFormat %s extension" % save_ext)
+    if path is not None:
+        lx.eval('dialog.result {%s}' % path)
+
+    if init_dialog:
+        try:
+            lx.eval("dialog.open")
+            return lx.eval("dialog.result ?")
+        except:
+            return None
 
 
 def init_message(type, title, message):
@@ -60,9 +88,38 @@ def init_message(type, title, message):
     lx.eval('dialog.open')
 
 
+def set_bool_arg(arg_arr, index, arg_name, init_value):
+    if arg_arr[index] == arg_name:
+        if arg_arr[index + 1] != '0' and arg_arr[index + 1] != '1':
+            init_message('error', arg_name, 'Illegal ' + arg_name + ' = ' + arg_arr[index + 1] + ' argument value')
+            sys.exit()
+        else:
+            return arg_arr[index + 1]
+    else:
+        return init_value
+
+
+def set_float_arg(arg_arr, index, arg_name, init_value):
+    if arg_arr[index] == arg_name:
+        return arg_arr[index + 1]
+    else:
+        return init_value
+
+
+def set_axis_arg(arg_arr, index, arg_name, init_value):
+    if arg_arr[index] == arg_name:
+        if arg_arr[index + 1] != 'X' and arg_arr[index + 1] != 'Y' and arg_arr[index + 1] != 'Z':
+            init_message('error', arg_name, 'Illegal ' + arg_name + ' = ' + arg_arr[index + 1] + ' argument value')
+            sys.exit()
+        else:
+            return arg_arr[index + 1]
+    else:
+        return init_value
+
+
 def init_arg():
-    global triple
-    global resetPos
+    global triple_sw
+    global resetPos_sw
     global rotAngle
     global scaleAmount
     global smoothAngle
@@ -74,78 +131,20 @@ def init_arg():
     args = lx.args()
     argCount = len(args)
 
-    error_message = "Bad Formatting !"
-
     for a in xrange(0, argCount - 1):
         if a % 2 == 0:
-            if args[a] == 'triple':
-                if args[a + 1] != '0' and args[a + 1] != '1':
-                    init_dialog(error_message, "triple")
-                    try:
-                        lx.eval('dialog.open')
-                    except:
-                        pass
-                else:
-                    triple = args[a + 1]
 
-            if args[a] == 'resetPos':
-                if args[a + 1] != '0' and args[a + 1] != '1':
-                    init_dialog(error_message, "resetPos")
-                    try:
-                        lx.eval('dialog.open')
-                    except:
-                        pass
-                else:
-                    resetPos = args[a + 1]
+            triple_sw = set_bool_arg(args, a, 'triple', triple_sw)
+            resetPos_sw = set_bool_arg(args, a, 'resetPos', resetPos_sw)
+            exportEach = set_bool_arg(args, a, 'exportEach', exportEach)
+            exportHierarchy = set_bool_arg(args, a, 'exportHierarchy', exportHierarchy)
+            scanFiles = set_bool_arg(args, a, 'scanFiles', scanFiles)
 
-            if args[a] == 'rotAngle':
-                rotAngle = args[a + 1]
+            rotAngle = set_float_arg(args, a, 'rotAngle', rotAngle)
+            scaleAmount = set_float_arg(args, a, 'scaleAmount', scaleAmount)
+            smoothAngle = set_float_arg(args, a, 'smoothAngle', smoothAngle)
 
-            if args[a] == 'scaleAmount':
-                scaleAmount = args[a + 1]
-
-            if args[a] == 'smoothAngle':
-                smoothAngle = args[a + 1]
-
-            if args[a] == 'exportEach':
-                if args[a + 1] != '0' and args[a + 1] != '1':
-                    init_dialog(error_message, "exportEach")
-                    try:
-                        lx.eval('dialog.open')
-                    except:
-                        pass
-                else:
-                    exportEach = args[a + 1]
-
-            if args[a] == 'exportHierarchy':
-                if args[a + 1] != '0' and args[a + 1] != '1':
-                    init_dialog(error_message, "exportHierarchy")
-                    try:
-                        lx.eval('dialog.open')
-                    except:
-                        pass
-                else:
-                    exportHierarchy = args[a + 1]
-
-            if args[a] == 'scanFiles':
-                if args[a + 1] != '0' and args[a + 1] != '1':
-                    init_dialog(error_message, "scanFiles")
-                    try:
-                        lx.eval('dialog.open')
-                    except:
-                        pass
-                else:
-                    scanFiles = args[a + 1]
-
-            if args[a] == 'upAxis':
-                if args[a + 1] != 'X' and args[a + 1] != 'Y' and args[a + 1] != 'Z':
-                    init_dialog(error_message, "upAxis")
-                    try:
-                        lx.eval('dialog.open')
-                    except:
-                        pass
-                else:
-                    upAxis = args[a + 1]
+            upAxis = set_axis_arg(args, a, 'smoothAngle', upAxis)
 
 
 def flow():
@@ -153,32 +152,35 @@ def flow():
 
     if scanFiles == '0':  # export selected mesh in the scene
         if userSelectionCount == 0:
-            init_message('error','No item selected', 'Select at least one item')
+            init_message('error', 'No item selected', 'Select at least one item')
             sys.exit()
 
-        init_dialog("output", "")
+        if exportEach == '1':
+            init_dialog("output")
+        else:
+            init_dialog("file_save")
 
         try:  # output folder dialog
             lx.eval('dialog.open')
         except:
-            pass
+            init_dialog('cancel')
         else:
             output_dir = lx.eval1('dialog.result ?')
             batch_export(output_dir)
     else:  # browse file to process
 
-        init_dialog("input", "")
+        init_dialog("input")
         try:  # mesh to process dialog
             lx.eval('dialog.open')
         except:
-            pass
+            init_dialog('cancel')
         else:
             files = lx.evalN('dialog.result ?')
-            init_dialog("output", "")
+            init_dialog("output")
             try:  # output folder dialog
                 lx.eval('dialog.open')
             except:
-                pass
+                init_dialog('cancel')
             else:
                 output_dir = lx.eval1('dialog.result ?')
 
@@ -312,13 +314,14 @@ def export_selection(output_path, layer_name):
 def export_loop(output_dir, layer):
     # Get the layer name.
     layer_name = get_name(layer)
-    # Work out the export path from the name.
-    output_path = os.path.join(output_dir, layer_name + '.fbx')
 
     if exportEach == '1':
+        # write the export path from the name.
+        output_path = os.path.join(output_dir, layer_name + '.fbx')
         # Select only the mesh item.
         lx.eval('select.subItem %s set mesh' % layer)
     else:
+        output_path = output_dir
         get_user_selection()
 
     if exportHierarchy == '1':
@@ -327,12 +330,13 @@ def export_loop(output_dir, layer):
     duplicate_rename(layer_name)
 
     # Set Vertex normal
-    lx.eval('vertMap.normals vert_normals false {%s}' % smoothAngle)
+    if smoothAngle_sw == '1':
+        lx.eval('vertMap.normals vert_normals false {%s}' % smoothAngle)
 
-    if triple == '1':
+    if triple_sw == '1':
         lx.eval('poly.triple')
 
-    if resetPos == '1':
+    if resetPos_sw == '1':
         lx.eval('transform.reset translation')
 
     if scaleAmount != '1':

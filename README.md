@@ -8,7 +8,7 @@ Usage
 
 Launch the script by running the command in Modo :
 
-@<path_to_python_script> triple 0 resetPos 0 rotAngle 0 scaleAmount 1 smoothAngle 1 exportEach 1 exportHierarchy 0 scanFiles 0 upAxis Y
+@%PATH_TO_PYTHON_SCRIPT% triple 0 resetPos 0 rotAngle 0 scaleAmount 1 smoothAngle 1 exportEach 1 exportHierarchy 0 scanFiles 0 upAxis Y
 
 (no matter the order of these parameters, if you put no parameter, the default one will be picked)
 

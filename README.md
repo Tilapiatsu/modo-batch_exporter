@@ -8,7 +8,7 @@ Usage
 
 Launch the script by running the command in Modo :
 
-@%PATH_TO_PYTHON_SCRIPT% triple 0 resetPos 0 rotAngle 0 scaleAmount 1 smoothAngle 1 exportEach 1 exportHierarchy 0 scanFiles 0 upAxis Y
+@%PATH_TO_PYTHON_SCRIPT% triple 0 resetPos 0 rotAngle 0 scaleAmount 1 smoothAngle 1 hardenUvBorder 0 exportEach 1 exportHierarchy 0 scanFiles 0 upAxis Y
 
 (no matter the order of these parameters, if you put no parameter, the default one will be picked)
 
@@ -17,6 +17,7 @@ resetPos (0/1) : reset position of the mesh
 rotAngle (float) : rotate the mesh on the x axis (other axis comming soon)
 scaleAmount (float) : scale the mesh uniformly
 smoothAngle (0 -> 1 float) : set the global smoothing angle of the mesh
+hardenUvBorder(0/1) : set an hard edge on each uv border of the mesh
 exportEach (0/1) : when 1 -> export each selected mesh on a separate file. otherwise, export all the selected mesh in the same file
 exportHierarchy (0/1) : when 1 -> export all children of the selected mesh
 scanFiles (0/1) : when 1 -> open file dialog pops, the selected files is exported instead of the selected mesh on the current scene (NOT WORKING)

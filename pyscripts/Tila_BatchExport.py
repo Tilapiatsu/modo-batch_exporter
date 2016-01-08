@@ -10,13 +10,13 @@ resetPos_sw = '0'
 resetRot_sw = '0'
 resetSca_sw = '0'
 
-rotAngle = '0'
-scaleAmount = '1'
+rot = '0'
+sca = '1'
 smoothAngle_sw = '0'
 smoothAngle = '1'
 
 hardenUvBorder_sw = '0'
-uvMap = 'Texture'
+uvMapName = 'Texture'
 
 exportFile_sw = '1'
 exportEach_sw = '1'
@@ -128,8 +128,8 @@ def set_axis_arg(arg_arr, index, arg_name, init_value):
 def init_arg():
     global triple_sw
     global resetPos_sw
-    global rotAngle
-    global scaleAmount
+    global rot
+    global sca
     global smoothAngle
     global hardenUvBorder_sw
     global exportEach_sw
@@ -143,15 +143,15 @@ def init_arg():
     for a in xrange(0, argCount - 1):
         if a % 2 == 0:
 
-            triple_sw = set_bool_arg(args, a, 'triple', triple_sw)
-            resetPos_sw = set_bool_arg(args, a, 'resetPos', resetPos_sw)
-            hardenUvBorder_sw = set_bool_arg(args, a, 'hardenUvBorder', hardenUvBorder_sw)
-            exportEach_sw = set_bool_arg(args, a, 'exportEach', exportEach_sw)
-            exportHierarchy_sw = set_bool_arg(args, a, 'exportHierarchy', exportHierarchy_sw)
-            scanFiles_sw = set_bool_arg(args, a, 'scanFiles', scanFiles_sw)
+            triple_sw = set_bool_arg(args, a, 'triple_sw', triple_sw)
+            resetPos_sw = set_bool_arg(args, a, 'resetPos_sw', resetPos_sw)
+            hardenUvBorder_sw = set_bool_arg(args, a, 'hardenUvBorder_sw', hardenUvBorder_sw)
+            exportEach_sw = set_bool_arg(args, a, 'exportEach_sw', exportEach_sw)
+            exportHierarchy_sw = set_bool_arg(args, a, 'exportHierarchy_sw', exportHierarchy_sw)
+            scanFiles_sw = set_bool_arg(args, a, 'scanFiles_sw', scanFiles_sw)
 
-            rotAngle = set_float_arg(args, a, 'rotAngle', rotAngle)
-            scaleAmount = set_float_arg(args, a, 'scaleAmount', scaleAmount)
+            rot = set_float_arg(args, a, 'rot', rot)
+            sca = set_float_arg(args, a, 'sca', sca)
             smoothAngle = set_float_arg(args, a, 'smoothAngle', smoothAngle)
 
             upAxis = set_axis_arg(args, a, 'smoothAngle', upAxis)
@@ -365,7 +365,7 @@ def smooth_angle():
 
 def harden_uv_border():
     if hardenUvBorder_sw == '1':
-        lx.eval('select.vertexMap {%s} txuv replace' % uvMap)
+        lx.eval('select.vertexMap {%s} txuv replace' % uvMapName)
         lx.eval('uv.selectBorder')
         lx.eval('edgesmooth.harden connected:true')
         lx.eval('edgesmooth.update')
@@ -383,17 +383,17 @@ def reset_pos():
 
 
 def scale_amount():
-    if scaleAmount != '1':
+    if sca != '1':
         lx.eval('transform.freeze scale')
-        lx.eval('transform.channel scl.X %s' % scaleAmount)
-        lx.eval('transform.channel scl.Y %s' % scaleAmount)
-        lx.eval('transform.channel scl.Z %s' % scaleAmount)
+        lx.eval('transform.channel scl.X %s' % sca)
+        lx.eval('transform.channel scl.Y %s' % sca)
+        lx.eval('transform.channel scl.Z %s' % sca)
         lx.eval('transform.freeze scale')
 
 
 def rot_angle():
-    if rotAngle != '0':
-        lx.eval('transform.channel rot.X "%s"' % rotAngle)
+    if rot != '0':
+        lx.eval('transform.channel rot.X "%s"' % rot)
         lx.eval('transform.freeze rotation')
         lx.eval('edgesmooth.update')
 

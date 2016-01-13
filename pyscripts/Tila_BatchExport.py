@@ -5,23 +5,29 @@ import os
 import sys
 
 ############## Arguments ##############
-triple_sw = '0'
-resetPos_sw = '0'
-resetRot_sw = '0'
-resetSca_sw = '0'
+triple_sw = False
+resetPos_sw = False
+resetRot_sw = False
+resetSca_sw = False
 
-rot = '0'
-sca = '1'
-smoothAngle_sw = '0'
-smoothAngle = '1'
+rotX = 0
+rotY = 0
+rotZ = 0
 
-hardenUvBorder_sw = '0'
+scaX = 1
+scaY = 1
+scaZ = 1
+
+smoothAngle_sw = False
+smoothAngle = 180
+
+hardenUvBorder_sw = False
 uvMapName = 'Texture'
 
-exportFile_sw = '1'
-exportEach_sw = '1'
-exportHierarchy_sw = '0'
-scanFiles_sw = '0'
+exportFile_sw = True
+exportEach_sw = True
+exportHierarchy_sw = False
+scanFiles_sw = False
 
 upAxis = lx.eval('pref.value units.upAxis ?')
 iUpAxis = upAxis
@@ -125,36 +131,81 @@ def set_axis_arg(arg_arr, index, arg_name, init_value):
         return init_value
 
 
+def get_user_value(value_name, default_value):
+    if not lx.eval("query scriptsysservice userValue.isDefined ? {%s}" % ('tilaBExp.' + value_name)):
+        print_log("default " + value_name + "  = " + default_value)
+        return default_value
+    else:
+        print_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
+        return lx.eval("user.value {%s} ?" % ('tilaBExp.' + str(value_name)))
+
+
 def init_arg():
     global triple_sw
     global resetPos_sw
-    global rot
-    global sca
+    global resetRot_sw
+    global resetSca_sw
+
+    global posX
+    global posY
+    global posZ
+
+    global rotX
+    global rotY
+    global rotZ
+
+    global scaX
+    global scaY
+    global scaZ
+
+    global smoothAngle_sw
     global smoothAngle
+
     global hardenUvBorder_sw
+    global uvMapName
+
+    global exportFile_sw
     global exportEach_sw
     global exportHierarchy_sw
     global scanFiles_sw
+
     global upAxis
+
+    triple_sw = get_user_value('triple_sw', False)
+    resetPos_sw = get_user_value('resetPos_sw', False)
+    resetRot_sw = get_user_value('resetRot_sw', False)
+    resetSca_sw = get_user_value('resetSca_sw', False)
+
+    posX = get_user_value('posX', 0)
+    posY = get_user_value('posY', 0)
+    posZ = get_user_value('posZ', 0)
+
+    rotX = get_user_value('rotX', 0)
+    rotY = get_user_value('rotY', 0)
+    rotZ = get_user_value('rotZ', 0)
+
+    scaX = get_user_value('scaX', 1)
+    scaY = get_user_value('scaY', 1)
+    scaZ = get_user_value('scaZ', 1)
+
+    smoothAngle_sw = get_user_value('smoothAngle_sw', False)
+    smoothAngle = get_user_value('smoothAngle', 180)
+
+    hardenUvBorder_sw = get_user_value('hardenUvBorder_sw', False)
+    uvMapName = get_user_value('uvMapName', 'Texture')
+
+    exportEach_sw = get_user_value('exportEach_sw', True)
 
     args = lx.args()
     argCount = len(args)
 
     for a in xrange(0, argCount - 1):
         if a % 2 == 0:
-
-            triple_sw = set_bool_arg(args, a, 'triple_sw', triple_sw)
-            resetPos_sw = set_bool_arg(args, a, 'resetPos_sw', resetPos_sw)
-            hardenUvBorder_sw = set_bool_arg(args, a, 'hardenUvBorder_sw', hardenUvBorder_sw)
-            exportEach_sw = set_bool_arg(args, a, 'exportEach_sw', exportEach_sw)
+            exportFile_sw = set_bool_arg(args, a, 'exportFile_sw', exportFile_sw)
             exportHierarchy_sw = set_bool_arg(args, a, 'exportHierarchy_sw', exportHierarchy_sw)
             scanFiles_sw = set_bool_arg(args, a, 'scanFiles_sw', scanFiles_sw)
 
-            rot = set_float_arg(args, a, 'rot', rot)
-            sca = set_float_arg(args, a, 'sca', sca)
-            smoothAngle = set_float_arg(args, a, 'smoothAngle', smoothAngle)
 
-            upAxis = set_axis_arg(args, a, 'smoothAngle', upAxis)
 
 
 def flow():
@@ -163,12 +214,12 @@ def flow():
 
     lx.eval('user.value sceneio.fbx.save.materials true')
 
-    if scanFiles_sw == '0':  # export selected mesh in the scene
+    if scanFiles_sw:  # export selected mesh in the scene
         if userSelectionCount == 0:
             init_message('error', 'No item selected', 'Select at least one item')
             sys.exit()
 
-        if exportEach_sw == '1':
+        if exportEach_sw:
             init_dialog("output")
         else:
             init_dialog("file_save")
@@ -223,7 +274,7 @@ def batch_export(output_dir):
     if upAxis != lx.eval('pref.value units.upAxis ?'):
         lx.eval('pref.value units.upAxis %s' % upAxis)
 
-    if exportHierarchy_sw == '1':
+    if exportHierarchy_sw:
         lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelectionWithHierarchy')
     else:
         lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelection')
@@ -231,7 +282,7 @@ def batch_export(output_dir):
     # Grab the IDs of each foreground layer.
     layers = userSelection
 
-    if exportEach_sw == '1':  # Export each layer separately.
+    if exportEach_sw:  # Export each layer separately.
 
         for layer in layers:
             export_loop(output_dir, layer)
@@ -243,7 +294,7 @@ def batch_export(output_dir):
 
 
 def duplicate_rename(layer_name):
-    if exportEach_sw == '1':
+    if exportEach_sw:
         lx.eval('item.duplicate false all:true')
         lx.eval('item.name %s mesh' % (layer_name + '_1'))
     else:
@@ -256,14 +307,14 @@ def duplicate_rename(layer_name):
 
 
 def get_name(layer):
-    if exportEach_sw == '1':
+    if exportEach_sw:
         return lx.eval1('query layerservice layer.name ? %s' % layer)
     else:
         return os.path.splitext(lx.eval1('query sceneservice scene.name ? current'))[0]
 
 
 def set_name(layer_name):
-    if exportEach_sw == '1':
+    if exportEach_sw:
         lx.eval('item.name %s mesh' % layer_name)
     else:
 
@@ -278,7 +329,7 @@ def set_name(layer_name):
 
 
 def select_duplicate(layer_name):
-    if exportEach_sw == '1':
+    if exportEach_sw:
         lx.eval('select.item {%s} set' % (layer_name + '_1'))
     else:
         get_user_selection()
@@ -328,7 +379,7 @@ def export_loop(output_dir, layer):
     # Get the layer name.
     layer_name = get_name(layer)
 
-    if exportEach_sw == '1':
+    if exportEach_sw:
         # write the export path from the name.
         output_path = os.path.join(output_dir, layer_name + '.fbx')
         # Select only the mesh item.
@@ -345,6 +396,7 @@ def export_loop(output_dir, layer):
     harden_uv_border()
     triple()
     reset_pos()
+    position_offset()
     scale_amount()
     rot_angle()
 
@@ -353,18 +405,18 @@ def export_loop(output_dir, layer):
 
 
 def export_hierarchy():
-    if exportHierarchy_sw == '1':
+    if exportHierarchy_sw:
         lx.eval('select.itemHierarchy')
 
 
 def smooth_angle():
-    if smoothAngle_sw == '1':
+    if smoothAngle_sw:
         lx.eval('vertMap.normals vert_normals false {%s}' % smoothAngle)
         lx.eval('edgesmooth.update')
 
 
 def harden_uv_border():
-    if hardenUvBorder_sw == '1':
+    if hardenUvBorder_sw:
         lx.eval('select.vertexMap {%s} txuv replace' % uvMapName)
         lx.eval('uv.selectBorder')
         lx.eval('edgesmooth.harden connected:true')
@@ -373,27 +425,36 @@ def harden_uv_border():
 
 
 def triple():
-    if triple_sw == '1':
+    if triple_sw:
         lx.eval('poly.triple')
 
 
 def reset_pos():
-    if resetPos_sw == '1':
+    if resetPos_sw:
         lx.eval('transform.reset translation')
 
 
+def position_offset():
+    if posX != 1 or posY != 1 or posZ != 1:
+        lx.eval('transform.channel pos.X %s' % posX)
+        lx.eval('transform.channel pos.Y %s' % posY)
+        lx.eval('transform.channel pos.Z %s' % posZ)
+
+
 def scale_amount():
-    if sca != '1':
+    if scaX != 1 or scaY != 1 or scaZ != 1:
         lx.eval('transform.freeze scale')
-        lx.eval('transform.channel scl.X %s' % sca)
-        lx.eval('transform.channel scl.Y %s' % sca)
-        lx.eval('transform.channel scl.Z %s' % sca)
+        lx.eval('transform.channel scl.X %s' % scaX)
+        lx.eval('transform.channel scl.Y %s' % scaY)
+        lx.eval('transform.channel scl.Z %s' % scaZ)
         lx.eval('transform.freeze scale')
 
 
 def rot_angle():
-    if rot != '0':
-        lx.eval('transform.channel rot.X "%s"' % rot)
+    if rotX != 0 or rotY != 0 or rotZ != 0:
+        lx.eval('transform.channel rot.X "%s"' % rotX)
+        lx.eval('transform.channel rot.Y "%s"' % rotY)
+        lx.eval('transform.channel rot.Z "%s"' % rotZ)
         lx.eval('transform.freeze rotation')
         lx.eval('edgesmooth.update')
 
@@ -409,7 +470,7 @@ def clean_scene():
 
 
 def print_log(message):
-    lx.out("BATCH_EXPORT : " + message)
+    lx.out("TILA_BATCH_EXPORT : " + message)
 
 
 def processing_log(message):

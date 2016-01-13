@@ -3,6 +3,7 @@
 import lx
 import os
 import sys
+import subprocess
 
 ############## Arguments ##############
 triple_sw = False
@@ -29,8 +30,12 @@ exportEach_sw = True
 exportHierarchy_sw = False
 scanFiles_sw = False
 
+openDestFolder_sw = True
+
 upAxis = lx.eval('pref.value units.upAxis ?')
 iUpAxis = upAxis
+
+debug_log = False
 
 
 # Get the current FBX Export setting.
@@ -39,7 +44,22 @@ fbx_export_setting = lx.eval1('user.value sceneio.fbx.save.exportType ?')
 sceneIndex = lx.eval('query sceneservice scene.index ? current')
 userSelection = lx.evalN('query layerservice layer.id ? fg')
 userSelectionCount = len(userSelection)
+
 currentPath = lx.eval("query sceneservice scene.file ? current")
+
+if currentPath is None:
+    currentPath = ""
+
+
+if sys.platform == 'darwin':
+    def open_folder(path):
+        subprocess.check_call(['open', '--', path])
+elif sys.platform == 'linux2':
+    def open_folder(path):
+        subprocess.check_call(['xdg-open', '--', path])
+elif sys.platform == 'win32':
+    def open_folder(path):
+        os.startfile(path)
 
 
 def init_dialog(dialog_type):
@@ -133,10 +153,12 @@ def set_axis_arg(arg_arr, index, arg_name, init_value):
 
 def get_user_value(value_name, default_value):
     if not lx.eval("query scriptsysservice userValue.isDefined ? {%s}" % ('tilaBExp.' + value_name)):
-        print_log("default " + value_name + "  = " + default_value)
+        if debug_log:
+            print_log("default " + value_name + "  = " + default_value)
         return default_value
     else:
-        print_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
+        if debug_log:
+            print_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
         return lx.eval("user.value {%s} ?" % ('tilaBExp.' + str(value_name)))
 
 
@@ -169,6 +191,8 @@ def init_arg():
     global exportHierarchy_sw
     global scanFiles_sw
 
+    global openDestFolder_sw
+
     global upAxis
 
     triple_sw = get_user_value('triple_sw', False)
@@ -196,6 +220,8 @@ def init_arg():
 
     exportEach_sw = get_user_value('exportEach_sw', True)
 
+    openDestFolder_sw = get_user_value('openDestFolder_sw', True)
+
     args = lx.args()
     argCount = len(args)
 
@@ -204,8 +230,6 @@ def init_arg():
             exportFile_sw = set_bool_arg(args, a, 'exportFile_sw', exportFile_sw)
             exportHierarchy_sw = set_bool_arg(args, a, 'exportHierarchy_sw', exportHierarchy_sw)
             scanFiles_sw = set_bool_arg(args, a, 'scanFiles_sw', scanFiles_sw)
-
-
 
 
 def flow():
@@ -255,7 +279,6 @@ def flow():
                     name = os.path.splitext(name)[0]
 
                     lx.eval('loaderOptions.wf_OBJ false false Meters')
-                    # lx.eval('loaderOptions.fbx false true true true true true true true false false true true true true 0')
                     lx.eval('!scene.open "%s" normal' % f)
 
                     # if ext == 'fbx'
@@ -266,6 +289,11 @@ def flow():
                     lx.eval('!scene.close')
 
     init_message('info','Done', 'Operation completed !')
+    if openDestFolder_sw:
+        if exportEach_sw:
+            open_folder(output_dir)
+        else:
+            open_folder(os.path.split(output_dir)[0])
 
 
 def batch_export(output_dir):
@@ -411,7 +439,7 @@ def export_hierarchy():
 
 def smooth_angle():
     if smoothAngle_sw:
-        lx.eval('vertMap.normals vert_normals false {%s}' % smoothAngle)
+        lx.eval('edgesmooth.harden {%s}' % smoothAngle)
         lx.eval('edgesmooth.update')
 
 
@@ -460,7 +488,7 @@ def rot_angle():
 
 
 def clean_scene():
-    # get_user_selection()
+    get_user_selection()
 
     # Put the user's original FBX Export setting back.
     lx.eval('user.value sceneio.fbx.save.exportType %s' % fbx_export_setting)

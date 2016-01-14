@@ -35,7 +35,7 @@ openDestFolder_sw = True
 upAxis = lx.eval('pref.value units.upAxis ?')
 iUpAxis = upAxis
 
-debug_log = False
+debug_log = True
 
 
 # Get the current FBX Export setting.
@@ -153,12 +153,10 @@ def set_axis_arg(arg_arr, index, arg_name, init_value):
 
 def get_user_value(value_name, default_value):
     if not lx.eval("query scriptsysservice userValue.isDefined ? {%s}" % ('tilaBExp.' + value_name)):
-        if debug_log:
-            print_log("default " + value_name + "  = " + default_value)
+        print_debug_log("default " + value_name + "  = " + default_value)
         return default_value
     else:
-        if debug_log:
-            print_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
+        print_debug_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
         return lx.eval("user.value {%s} ?" % ('tilaBExp.' + str(value_name)))
 
 
@@ -445,6 +443,7 @@ def smooth_angle():
 
 def harden_uv_border():
     if hardenUvBorder_sw:
+        print_debug_log("Processing : HardenUvBorder = " + uvMapName)
         lx.eval('select.vertexMap {%s} txuv replace' % uvMapName)
         lx.eval('uv.selectBorder')
         lx.eval('edgesmooth.harden connected:true')
@@ -500,6 +499,9 @@ def clean_scene():
 def print_log(message):
     lx.out("TILA_BATCH_EXPORT : " + message)
 
+def print_debug_log(message):
+    if debug_log:
+        print_log('Debug : ' + message)
 
 def processing_log(message):
     print_log("Processing_File : " + message)

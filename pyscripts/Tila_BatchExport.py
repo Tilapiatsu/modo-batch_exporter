@@ -25,6 +25,9 @@ smoothAngle = 180
 hardenUvBorder_sw = False
 uvMapName = 'Texture'
 
+exportCageMorph_sw = False
+cageMorphMapName = 'cage'
+
 exportFile_sw = True
 exportEach_sw = True
 exportHierarchy_sw = False
@@ -128,7 +131,10 @@ def set_bool_arg(arg_arr, index, arg_name, init_value):
             init_message('error', arg_name, 'Illegal ' + arg_name + ' = ' + arg_arr[index + 1] + ' argument value')
             sys.exit()
         else:
-            return arg_arr[index + 1]
+            if arg_arr[index + 1] == '0':
+                return False
+            if arg_arr[index + 1] == '1':
+                return True
     else:
         return init_value
 
@@ -153,10 +159,10 @@ def set_axis_arg(arg_arr, index, arg_name, init_value):
 
 def get_user_value(value_name, default_value):
     if not lx.eval("query scriptsysservice userValue.isDefined ? {%s}" % ('tilaBExp.' + value_name)):
-        print_debug_log("default " + value_name + "  = " + default_value)
+        #print_debug_log("default " + value_name + "  = " + default_value)
         return default_value
     else:
-        print_debug_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
+        #print_debug_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
         return lx.eval("user.value {%s} ?" % ('tilaBExp.' + str(value_name)))
 
 
@@ -183,6 +189,9 @@ def init_arg():
 
     global hardenUvBorder_sw
     global uvMapName
+
+    global exportCageMorph_sw
+    global cageMorphMapName
 
     global exportFile_sw
     global exportEach_sw
@@ -216,6 +225,9 @@ def init_arg():
     hardenUvBorder_sw = get_user_value('hardenUvBorder_sw', False)
     uvMapName = get_user_value('uvMapName', 'Texture')
 
+    exportCageMorph_sw = get_user_value('exportCageMorph_sw', False)
+    cageMorphMapName = get_user_value('cageMorphMapName', 'cage')
+
     exportEach_sw = get_user_value('exportEach_sw', True)
 
     openDestFolder_sw = get_user_value('openDestFolder_sw', True)
@@ -232,11 +244,15 @@ def init_arg():
 
 def flow():
 
+    global sceneIndex
+    global userSelection
+    global userSelectionCount
+
     init_arg()
 
     lx.eval('user.value sceneio.fbx.save.materials true')
 
-    if scanFiles_sw:  # export selected mesh in the scene
+    if not scanFiles_sw:  # export selected mesh in the scene
         if userSelectionCount == 0:
             init_message('error', 'No item selected', 'Select at least one item')
             sys.exit()
@@ -271,7 +287,7 @@ def flow():
                 output_dir = lx.eval1('dialog.result ?')
 
                 for f in files:
-                    print "processing " + os.path.basename(f)
+                    processing_log(os.path.basename(f))
                     name = os.path.basename(f)
                     ext = os.path.splitext(name)[1]
                     name = os.path.splitext(name)[0]
@@ -282,8 +298,13 @@ def flow():
                     # if ext == 'fbx'
                     lx.eval('select.itemType mesh')
 
-                    lx.eval('item.name %s mesh' % name)
-                    batch_export(output_dir)
+                    sceneIndex = lx.eval('query sceneservice scene.index ? current')
+                    userSelection = lx.evalN('query layerservice layer.id ? fg')
+                    userSelectionCount = len(userSelection)
+
+                    debug_log(userSelection)
+
+                    batch_export(output_dir + os.path.split(f)[1])
                     lx.eval('!scene.close')
 
     init_message('info','Done', 'Operation completed !')
@@ -391,7 +412,12 @@ def export_selection(output_path, layer_name):
     set_name(layer_name)
 
     # Export to FBX.
-    lx.eval('!scene.saveAs "%s" fbx false' % output_path)
+    lx.eval('!scene.saveAs "%s" fbx false' % output_path[0])
+
+    Export_log(os.path.basename(output_path[0]))
+
+    if exportCageMorph_sw:
+        export_cage(output_path[1])
 
     lx.eval('scene.close')
 
@@ -401,30 +427,47 @@ def export_selection(output_path, layer_name):
     lx.eval('!!item.delete')
 
 
+def export_cage(output_path):
+    # Smooth the mesh entirely
+    lx.eval('edgesmooth.soften connected:true')
+    # Apply Cage Morph map
+    lx.eval('vertMap.applyMorph %s 1.0' % cageMorphMapName)
+    lx.eval('!scene.saveAs "%s" fbx false' % output_path)
+    Export_log(os.path.basename(output_path))
+
+
+def construct_file_path(output_dir, layer_name, ext):
+    if exportEach_sw:
+        return [os.path.join(output_dir, layer_name+ '.' + ext), os.path.join(output_dir, layer_name + '_cage.' + ext) ]
+    else:
+        splited_path = os.path.splitext(output_dir)
+        return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
+
+
 def export_loop(output_dir, layer):
     # Get the layer name.
     layer_name = get_name(layer)
 
     if exportEach_sw:
-        # write the export path from the name.
-        output_path = os.path.join(output_dir, layer_name + '.fbx')
         # Select only the mesh item.
         lx.eval('select.subItem %s set mesh' % layer)
     else:
-        output_path = output_dir
         get_user_selection()
+
+    # Path construction
+    output_path = construct_file_path(output_dir, layer_name, 'fbx')
 
     export_hierarchy()
 
     duplicate_rename(layer_name)
 
-    smooth_angle()
-    harden_uv_border()
+    smooth_angle(smoothAngle)
+    harden_uv_border(uvMapName)
     triple()
     reset_pos()
-    position_offset()
-    scale_amount()
-    rot_angle()
+    position_offset(posX, posY, posZ)
+    scale_amount(scaX, scaY, scaZ)
+    rot_angle(rotX, rotY, rotZ)
 
     # Export to FBX.
     export_selection(output_path, layer_name)
@@ -435,41 +478,46 @@ def export_hierarchy():
         lx.eval('select.itemHierarchy')
 
 
-def smooth_angle():
+def smooth_angle(smoothAngle):
     if smoothAngle_sw:
+        print_debug_log("Processing : CalculateNormal with %s degrees smoothing" % smoothAngle)
         lx.eval('edgesmooth.harden {%s}' % smoothAngle)
         lx.eval('edgesmooth.update')
 
 
-def harden_uv_border():
+def harden_uv_border(uvMapName):
     if hardenUvBorder_sw:
         print_debug_log("Processing : HardenUvBorder = " + uvMapName)
         lx.eval('select.vertexMap {%s} txuv replace' % uvMapName)
         lx.eval('uv.selectBorder')
-        lx.eval('edgesmooth.harden connected:true')
+        lx.eval('edgesmooth.harden uv')
         lx.eval('edgesmooth.update')
         lx.eval('select.type item')
 
 
 def triple():
     if triple_sw:
+        print_debug_log("Processing : Triangulate")
         lx.eval('poly.triple')
 
 
 def reset_pos():
     if resetPos_sw:
+        print_debug_log("Processing : Reset Position")
         lx.eval('transform.reset translation')
 
 
-def position_offset():
-    if posX != 1 or posY != 1 or posZ != 1:
+def position_offset(posX, posY, posZ):
+    if posX != 1.0 or posY != 1.0 or posZ != 1.0:
+        print_debug_log("Processing : Position offset = (%s, %s, %s)" % (posX, posY, posZ))
         lx.eval('transform.channel pos.X %s' % posX)
         lx.eval('transform.channel pos.Y %s' % posY)
         lx.eval('transform.channel pos.Z %s' % posZ)
 
 
-def scale_amount():
-    if scaX != 1 or scaY != 1 or scaZ != 1:
+def scale_amount(scaX, scaY, scaZ):
+    if scaX != 1.0 or scaY != 1.0 or scaZ != 1.0:
+        print_debug_log("Processing : Scale amount = (%s, %s, %s)" % (scaX, scaY, scaZ))
         lx.eval('transform.freeze scale')
         lx.eval('transform.channel scl.X %s' % scaX)
         lx.eval('transform.channel scl.Y %s' % scaY)
@@ -477,8 +525,9 @@ def scale_amount():
         lx.eval('transform.freeze scale')
 
 
-def rot_angle():
+def rot_angle(rotX, rotY, rotZ):
     if rotX != 0 or rotY != 0 or rotZ != 0:
+        print_debug_log("Processing : Rotation Angle = (%s, %s, %s)" % (rotX, rotY, rotZ))
         lx.eval('transform.channel rot.X "%s"' % rotX)
         lx.eval('transform.channel rot.Y "%s"' % rotY)
         lx.eval('transform.channel rot.Z "%s"' % rotZ)
@@ -504,7 +553,10 @@ def print_debug_log(message):
         print_log('Debug : ' + message)
 
 def processing_log(message):
-    print_log("Processing_File : " + message)
+    print_log("Processing_Item : " + message)
+
+def Export_log(message):
+    print_log("Export_File : " + message)
 
 
 flow()

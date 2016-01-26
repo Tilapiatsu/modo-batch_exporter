@@ -10,6 +10,14 @@ triple_sw = False
 resetPos_sw = False
 resetRot_sw = False
 resetSca_sw = False
+resetShe_sw = False
+
+freezePos_sw = False
+freezeRot_sw = False
+freezeSca_sw = False
+freezeShe_sw = False
+
+freezeGeo_sw = False
 
 rotX = 0
 rotY = 0
@@ -171,6 +179,14 @@ def init_arg():
     global resetPos_sw
     global resetRot_sw
     global resetSca_sw
+    global resetShe_sw
+
+    global freezePos_sw
+    global freezeRot_sw
+    global freezeSca_sw
+    global freezeShe_sw
+
+    global freezeGeo_sw
 
     global posX
     global posY
@@ -203,9 +219,18 @@ def init_arg():
     global upAxis
 
     triple_sw = get_user_value('triple_sw', False)
+
     resetPos_sw = get_user_value('resetPos_sw', False)
     resetRot_sw = get_user_value('resetRot_sw', False)
     resetSca_sw = get_user_value('resetSca_sw', False)
+    resetShe_sw = get_user_value('resetShe_sw', False)
+
+    freezePos_sw = get_user_value('freezePos_sw', False)
+    freezeRot_sw = get_user_value('freezeRot_sw', False)
+    freezeSca_sw = get_user_value('freezeSca_sw', False)
+    freezeShe_sw = get_user_value('freezeShe_sw', False)
+
+    freezeGeo_sw = get_user_value('freezeGeo_sw', False)
 
     posX = get_user_value('posX', 0)
     posY = get_user_value('posY', 0)
@@ -463,11 +488,17 @@ def export_loop(output_dir, layer):
 
     smooth_angle(smoothAngle)
     harden_uv_border(uvMapName)
+    freeze_geo()
     triple()
     reset_pos()
     position_offset(posX, posY, posZ)
     scale_amount(scaX, scaY, scaZ)
     rot_angle(rotX, rotY, rotZ)
+
+    freeze_pos()
+    freeze_rot()
+    freeze_sca()
+    freeze_she()
 
     # Export to FBX.
     export_selection(output_path, layer_name)
@@ -505,6 +536,54 @@ def reset_pos():
     if resetPos_sw:
         print_debug_log("Processing : Reset Position")
         lx.eval('transform.reset translation')
+
+
+def reset_rot():
+    if resetRot_sw:
+        print_debug_log("Processing : Reset Rotation")
+        lx.eval('transform.reset rotation')
+
+
+def reset_sca():
+    if resetSca_sw:
+        print_debug_log("Processing : Reset Scale")
+        lx.eval('transform.reset scale')
+
+
+def reset_she():
+    if resetShe_sw:
+        print_debug_log("Processing : Reset Shear")
+        lx.eval('transform.reset shear')
+
+
+def freeze_pos():
+    if freezePos_sw:
+        print_debug_log("Processing : Freeze Position")
+        lx.eval('transform.freeze translation')
+
+
+def freeze_rot():
+    if freezeRot_sw:
+        print_debug_log("Processing : Freeze Rotation")
+        lx.eval('transform.freeze rotation')
+
+
+def freeze_sca():
+    if freezeSca_sw:
+        print_debug_log("Processing : Freeze Scale")
+        lx.eval('transform.freeze scale')
+
+
+def freeze_she():
+    if freezeShe_sw:
+        print_debug_log("Processing : Freeze Shear")
+        lx.eval('transform.freeze shear')
+
+
+def freeze_geo():
+    if freezeGeo_sw:
+        print_debug_log("Processing : Freeze Geometry")
+        lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
 
 def position_offset(posX, posY, posZ):

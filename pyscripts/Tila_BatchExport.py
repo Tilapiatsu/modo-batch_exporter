@@ -492,12 +492,14 @@ def export_loop(output_dir, layer):
     triple()
     reset_pos()
     position_offset(posX, posY, posZ)
-    scale_amount(scaX, scaY, scaZ)
-    rot_angle(rotX, rotY, rotZ)
 
-    freeze_pos()
+    scale_amount(scaX, scaY, scaZ)
+
+    rot_angle(rotX, rotY, rotZ)
     freeze_rot()
     freeze_sca()
+    freeze_pos()
+
     freeze_she()
 
     # Export to FBX.
@@ -597,11 +599,10 @@ def position_offset(posX, posY, posZ):
 def scale_amount(scaX, scaY, scaZ):
     if scaX != 1.0 or scaY != 1.0 or scaZ != 1.0:
         print_debug_log("Processing : Scale amount = (%s, %s, %s)" % (scaX, scaY, scaZ))
-        lx.eval('transform.freeze scale')
+        freeze_sca()
         lx.eval('transform.channel scl.X %s' % scaX)
         lx.eval('transform.channel scl.Y %s' % scaY)
         lx.eval('transform.channel scl.Z %s' % scaZ)
-        lx.eval('transform.freeze scale')
 
 
 def rot_angle(rotX, rotY, rotZ):
@@ -610,7 +611,7 @@ def rot_angle(rotX, rotY, rotZ):
         lx.eval('transform.channel rot.X "%s"' % rotX)
         lx.eval('transform.channel rot.Y "%s"' % rotY)
         lx.eval('transform.channel rot.Z "%s"' % rotZ)
-        lx.eval('transform.freeze rotation')
+        freeze_rot()
         lx.eval('edgesmooth.update')
 
 

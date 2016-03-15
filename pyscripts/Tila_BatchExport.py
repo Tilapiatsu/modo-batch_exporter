@@ -33,6 +33,18 @@ smoothAngle = 180
 hardenUvBorder_sw = False
 uvMapName = 'Texture'
 
+exportFormatFbx_sw = True
+exportFormatObj_sw = False
+exportFormatLxo_sw = False
+exportFormatLwo_sw = False
+exportFormatAbc_sw = False
+exportFormatAbchdf_sw = False
+exportFormatDae_sw = False
+exportFormatDxf_sw = False
+exportFormat3dm_sw = False
+exportFormatGeo_sw = False
+
+
 exportCageMorph_sw = False
 cageMorphMapName = 'cage'
 
@@ -91,6 +103,7 @@ def init_dialog(dialog_type):
 
     if dialog_type == 'file_save':
         init_custom_dialog('fileSave', 'SaveFile', ('FBX',), 'FBX file', ('*.FBX',), 'fbx', currentPath[:-4])
+
 
     if dialog_type == "cancel":
         init_message('error', 'Canceled', 'Operation aborded')
@@ -209,6 +222,17 @@ def init_arg():
     global exportCageMorph_sw
     global cageMorphMapName
 
+    global exportFormatFbx_sw
+    global exportFormatObj_sw
+    global exportFormatLxo_sw
+    global exportFormatLwo_sw
+    global exportFormatAbc_sw
+    global exportFormatAbchdf_sw
+    global exportFormatDae_sw
+    global exportFormatDxf_sw
+    global exportFormat3dm_sw
+    global exportFormatGeo_sw
+
     global exportFile_sw
     global exportEach_sw
     global exportHierarchy_sw
@@ -253,6 +277,17 @@ def init_arg():
     exportCageMorph_sw = get_user_value('exportCageMorph_sw', False)
     cageMorphMapName = get_user_value('cageMorphMapName', 'cage')
 
+    exportFormat3dm_sw = get_user_value('exportFormat3dm_sw', False)
+    exportFormatGeo_sw = get_user_value('exportFormatGeo_sw', False)
+    exportFormatAbc_sw = get_user_value('exportFormatAbc_sw', False)
+    exportFormatAbchdf_sw = get_user_value('exportFormatAbchdf_sw', False)
+    exportFormatDae_sw = get_user_value('exportFormatDae_sw', False)
+    exportFormatDxf_sw = get_user_value('exportFormatDxf_sw', False)
+    exportFormatObj_sw = get_user_value('exportFormatObj_sw', False)
+    exportFormatLwo_sw = get_user_value('exportFormatLwo_sw', False)
+    exportFormatLxo_sw = get_user_value('exportFormatLxo_sw', False)
+    exportFormatFbx_sw = get_user_value('exportFormatFbx_sw', True)
+
     exportEach_sw = get_user_value('exportEach_sw', True)
 
     openDestFolder_sw = get_user_value('openDestFolder_sw', True)
@@ -274,6 +309,7 @@ def flow():
     global userSelectionCount
 
     init_arg()
+
 
     lx.eval('user.value sceneio.fbx.save.materials true')
 
@@ -423,7 +459,7 @@ def get_user_selection():
             lx.eval('select.subItem {%s} add mesh' % userSelection[l])
 
 
-def export_selection(output_path, layer_name):
+def export_selection(output_path, layer_name, export_format):
     processing_log(layer_name)
 
     lx.eval('scene.new')
@@ -436,8 +472,7 @@ def export_selection(output_path, layer_name):
     lx.eval('scene.set %s' % newScene)
     set_name(layer_name)
 
-    # Export to FBX.
-    lx.eval('!scene.saveAs "%s" fbx false' % output_path[0])
+    lx.eval('!scene.saveAs "%s" "%s" false' % (output_path[0], export_format))
 
     Export_log(os.path.basename(output_path[0]))
 
@@ -445,12 +480,6 @@ def export_selection(output_path, layer_name):
         export_cage(output_path[1])
 
     lx.eval('scene.close')
-
-    lx.eval('scene.set %s' % sceneIndex)
-    select_duplicate(layer_name)
-
-    lx.eval('!!item.delete')
-
 
 def export_cage(output_path):
     # Smooth the mesh entirely
@@ -479,9 +508,6 @@ def export_loop(output_dir, layer):
     else:
         get_user_selection()
 
-    # Path construction
-    output_path = construct_file_path(output_dir, layer_name, 'fbx')
-
     export_hierarchy()
 
     duplicate_rename(layer_name)
@@ -502,8 +528,54 @@ def export_loop(output_dir, layer):
 
     freeze_she()
 
-    # Export to FBX.
-    export_selection(output_path, layer_name)
+    export_all_format(output_dir, layer_name)
+
+
+def export_all_format(output_dir, layer_name):
+    if exportFormatFbx_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'fbx')
+        export_selection(output_path, layer_name, 'fbx')
+
+    if exportFormatLxo_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'lxo')
+        export_selection(output_path, layer_name, '$LXOB')
+
+    if exportFormatLwo_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'lwo')
+        export_selection(output_path, layer_name, '$NLWO2')
+
+    if exportFormatObj_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'obj')
+        export_selection(output_path, layer_name, 'wf_OBJ')
+
+    if exportFormatDxf_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'dxf')
+        export_selection(output_path, layer_name, 'DXF')
+
+    if exportFormatDae_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'dae')
+        export_selection(output_path, layer_name, 'COLLADA_141')
+
+    if exportFormat3dm_sw:
+        output_path = construct_file_path(output_dir, layer_name, '3dm')
+        export_selection(output_path, layer_name, 'THREEDM')
+
+    if exportFormatAbc_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'abc')
+        export_selection(output_path, layer_name, 'Alembic')
+
+    if exportFormatAbchdf_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'abc')
+        export_selection(output_path, layer_name, 'AlembicHDF')
+
+    if exportFormatGeo_sw:
+        output_path = construct_file_path(output_dir, layer_name, 'geo')
+        export_selection(output_path, layer_name, 'vs_GEO')
+
+    lx.eval('scene.set %s' % sceneIndex)
+    select_duplicate(layer_name)
+
+    lx.eval('!!item.delete')
 
 
 def export_hierarchy():

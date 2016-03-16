@@ -477,16 +477,16 @@ def export_selection(output_path, layer_name, export_format):
     Export_log(os.path.basename(output_path[0]))
 
     if exportCageMorph_sw:
-        export_cage(output_path[1])
+        export_cage(output_path[1], export_format)
 
     lx.eval('scene.close')
 
-def export_cage(output_path):
+def export_cage(output_path, export_format):
     # Smooth the mesh entirely
     lx.eval('edgesmooth.soften connected:true')
     # Apply Cage Morph map
     lx.eval('vertMap.applyMorph %s 1.0' % cageMorphMapName)
-    lx.eval('!scene.saveAs "%s" fbx false' % output_path)
+    lx.eval('!scene.saveAs "%s" "%s" false' % (output_path, export_format))
     Export_log(os.path.basename(output_path))
 
 

@@ -661,7 +661,7 @@ def freeze_geo():
 
 
 def position_offset(posX, posY, posZ):
-    if posX != 1.0 or posY != 1.0 or posZ != 1.0:
+    if posX != 0.0 or posY != 0.0 or posZ != 0.0:
         print_debug_log("Processing : Position offset = (%s, %s, %s)" % (posX, posY, posZ))
         lx.eval('transform.channel pos.X %s' % posX)
         lx.eval('transform.channel pos.Y %s' % posY)

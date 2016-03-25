@@ -64,6 +64,8 @@ iUpAxis = upAxis
 
 debug_log = True
 
+debug_mode = False
+
 
 # Get the current FBX Export setting.
 fbx_export_setting = lx.eval1('user.value sceneio.fbx.save.exportType ?')
@@ -357,10 +359,10 @@ def flow():
                 output_dir = lx.eval1('dialog.result ?')
 
                 for f in files:
-                    processing_log(os.path.basename(f))
+                    processing_log(os.path.basename(f) + '   .....................................')
                     name = os.path.basename(f)
-                    ext = os.path.splitext(name)[1]
-                    name = os.path.splitext(name)[0]
+                    #ext = os.path.splitext(name)[1]
+                    #name = os.path.splitext(name)[0]
 
                     lx.eval('loaderOptions.wf_OBJ false false Meters')
                     lx.eval('!scene.open "%s" normal' % f)
@@ -372,9 +374,13 @@ def flow():
                     userSelection = lx.evalN('query layerservice layer.id ? fg')
                     userSelectionCount = len(userSelection)
 
-                    debug_log(userSelection)
+                    #print_log(userSelection)
 
-                    batch_export(output_dir + os.path.split(f)[1])
+                    output_dir = os.path.join(output_dir, '')
+
+                    print_debug_log(output_dir)
+
+                    batch_export(output_dir)
                     lx.eval('!scene.close')
 
     init_message('info','Done', 'Operation completed successfully !')
@@ -471,7 +477,7 @@ def get_user_selection():
 
 
 def export_selection(output_path, layer_name, export_format):
-    processing_log(layer_name)
+    processing_log(layer_name + '   .....................................')
 
     lx.eval('scene.new')
     newScene = lx.eval('query sceneservice scene.index ? current')
@@ -740,8 +746,13 @@ def processing_log(message):
     print_log("Processing_Item : " + message)
 
 
+def debug(message):
+    if debug_mode:
+        print_debug_log(message)
+
+
 def Export_log(message):
-    print_log("Export_File : " + message)
+    print_log("Exporting_File : " + message)
 
 
 flow()

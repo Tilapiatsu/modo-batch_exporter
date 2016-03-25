@@ -4,6 +4,10 @@ import lx
 import os
 import sys
 import subprocess
+import modo
+
+scn = modo.Scene()
+currScn = modo.scene.current()
 
 ############## Arguments ##############
 triple_sw = False
@@ -310,10 +314,15 @@ def flow():
 
     init_arg()
 
+    if not exportFile_sw:
+        if userSelectionCount == 0:
+            init_message('error', 'No item selected', 'Select at least one item')
+            sys.exit()
 
-    lx.eval('user.value sceneio.fbx.save.materials true')
+        for item in userSelection:
+            transform_selected(item)
 
-    if not scanFiles_sw:  # export selected mesh in the scene
+    elif not scanFiles_sw:  # export selected mesh in the scene
         if userSelectionCount == 0:
             init_message('error', 'No item selected', 'Select at least one item')
             sys.exit()
@@ -368,12 +377,14 @@ def flow():
                     batch_export(output_dir + os.path.split(f)[1])
                     lx.eval('!scene.close')
 
-    init_message('info','Done', 'Operation completed !')
-    if openDestFolder_sw:
-        if exportEach_sw:
-            open_folder(output_dir)
-        else:
-            open_folder(os.path.split(output_dir)[0])
+    init_message('info','Done', 'Operation completed successfully !')
+
+    if exportFile_sw :
+        if openDestFolder_sw:
+            if exportEach_sw:
+                open_folder(output_dir)
+            else:
+                open_folder(os.path.split(output_dir)[0])
 
 
 def batch_export(output_dir):
@@ -481,6 +492,7 @@ def export_selection(output_path, layer_name, export_format):
 
     lx.eval('scene.close')
 
+
 def export_cage(output_path, export_format):
     # Smooth the mesh entirely
     lx.eval('edgesmooth.soften connected:true')
@@ -508,25 +520,7 @@ def export_loop(output_dir, layer):
     else:
         get_user_selection()
 
-    export_hierarchy()
-
-    duplicate_rename(layer_name)
-
-    smooth_angle(smoothAngle)
-    harden_uv_border(uvMapName)
-    freeze_geo()
-    triple()
-    reset_pos()
-    position_offset(posX, posY, posZ)
-
-    scale_amount(scaX, scaY, scaZ)
-
-    rot_angle(rotX, rotY, rotZ)
-    freeze_rot()
-    freeze_sca()
-    freeze_pos()
-
-    freeze_she()
+    transform_selected(layer_name)
 
     export_all_format(output_dir, layer_name)
 
@@ -583,16 +577,39 @@ def export_hierarchy():
         lx.eval('select.itemHierarchy')
 
 
+def transform_selected(layer_name):
+    export_hierarchy()
+
+    if exportFile_sw:
+        duplicate_rename(layer_name)
+
+    smooth_angle(smoothAngle)
+    harden_uv_border(uvMapName)
+    freeze_geo()
+    triple()
+    reset_pos()
+    position_offset(posX, posY, posZ)
+
+    scale_amount(scaX, scaY, scaZ)
+
+    rot_angle(rotX, rotY, rotZ)
+    freeze_rot()
+    freeze_sca()
+    freeze_pos()
+
+    freeze_she()
+
+
 def smooth_angle(smoothAngle):
     if smoothAngle_sw:
-        print_debug_log("Processing : CalculateNormal with %s degrees smoothing" % smoothAngle)
+        processing_log("CalculateNormal with %s degrees smoothing" % smoothAngle)
         lx.eval('edgesmooth.harden {%s}' % smoothAngle)
         lx.eval('edgesmooth.update')
 
 
 def harden_uv_border(uvMapName):
     if hardenUvBorder_sw:
-        print_debug_log("Processing : HardenUvBorder = " + uvMapName)
+        processing_log("HardenUvBorder = " + uvMapName)
         lx.eval('select.vertexMap {%s} txuv replace' % uvMapName)
         lx.eval('uv.selectBorder')
         lx.eval('edgesmooth.harden uv')
@@ -602,87 +619,96 @@ def harden_uv_border(uvMapName):
 
 def triple():
     if triple_sw:
-        print_debug_log("Processing : Triangulate")
+        processing_log("Triangulate")
         lx.eval('poly.triple')
 
 
 def reset_pos():
     if resetPos_sw:
-        print_debug_log("Processing : Reset Position")
+        transform_log("Reset Position")
         lx.eval('transform.reset translation')
 
 
 def reset_rot():
     if resetRot_sw:
-        print_debug_log("Processing : Reset Rotation")
+        transform_log("Reset Rotation")
         lx.eval('transform.reset rotation')
 
 
 def reset_sca():
     if resetSca_sw:
-        print_debug_log("Processing : Reset Scale")
+        transform_log("Reset Scale")
         lx.eval('transform.reset scale')
 
 
 def reset_she():
     if resetShe_sw:
-        print_debug_log("Processing : Reset Shear")
+        transform_log("Reset Shear")
         lx.eval('transform.reset shear')
 
 
 def freeze_pos():
     if freezePos_sw:
-        print_debug_log("Processing : Freeze Position")
+        transform_log("Freeze Position")
         lx.eval('transform.freeze translation')
 
 
 def freeze_rot():
     if freezeRot_sw:
-        print_debug_log("Processing : Freeze Rotation")
+        transform_log("Freeze Rotation")
         lx.eval('transform.freeze rotation')
 
 
 def freeze_sca():
     if freezeSca_sw:
-        print_debug_log("Processing : Freeze Scale")
+        transform_log("Freeze Scale")
         lx.eval('transform.freeze scale')
 
 
 def freeze_she():
     if freezeShe_sw:
-        print_debug_log("Processing : Freeze Shear")
+        transform_log("Freeze Shear")
         lx.eval('transform.freeze shear')
 
 
 def freeze_geo():
     if freezeGeo_sw:
-        print_debug_log("Processing : Freeze Geometry")
+        transform_log("Freeze Geometry")
         lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
 
 def position_offset(posX, posY, posZ):
     if posX != 0.0 or posY != 0.0 or posZ != 0.0:
-        print_debug_log("Processing : Position offset = (%s, %s, %s)" % (posX, posY, posZ))
-        lx.eval('transform.channel pos.X %s' % posX)
-        lx.eval('transform.channel pos.Y %s' % posY)
-        lx.eval('transform.channel pos.Z %s' % posZ)
+        transform_log("Position offset = (%s, %s, %s)" % (posX, posY, posZ))
+
+        currPosition = currScn.selected[0].position
+
+        lx.eval('transform.channel pos.X %s' % str(float(posX) + currPosition.x.get()))
+        lx.eval('transform.channel pos.Y %s' % str(float(posY) + currPosition.y.get()))
+        lx.eval('transform.channel pos.Z %s' % str(float(posZ) + currPosition.z.get()))
 
 
 def scale_amount(scaX, scaY, scaZ):
     if scaX != 1.0 or scaY != 1.0 or scaZ != 1.0:
-        print_debug_log("Processing : Scale amount = (%s, %s, %s)" % (scaX, scaY, scaZ))
+        transform_log("Scale amount = (%s, %s, %s)" % (scaX, scaY, scaZ))
+
+        currScale = currScn.selected[0].scale
+
         freeze_sca()
-        lx.eval('transform.channel scl.X %s' % scaX)
-        lx.eval('transform.channel scl.Y %s' % scaY)
-        lx.eval('transform.channel scl.Z %s' % scaZ)
+        lx.eval('transform.channel scl.X %s' % str(float(scaX) * currScale.x.get()))
+        lx.eval('transform.channel scl.Y %s' % str(float(scaY) * currScale.y.get()))
+        lx.eval('transform.channel scl.Z %s' % str(float(scaZ) * currScale.z.get()))
 
 
 def rot_angle(rotX, rotY, rotZ):
-    if rotX != 0 or rotY != 0 or rotZ != 0:
-        print_debug_log("Processing : Rotation Angle = (%s, %s, %s)" % (rotX, rotY, rotZ))
-        lx.eval('transform.channel rot.X "%s"' % rotX)
-        lx.eval('transform.channel rot.Y "%s"' % rotY)
-        lx.eval('transform.channel rot.Z "%s"' % rotZ)
+    if rotX != 0.0 or rotY != 0.0 or rotZ != 0.0:
+        transform_log("Rotation Angle = (%s, %s, %s)" % (rotX, rotY, rotZ))
+
+        currRotation = currScn.selected[0].rotation
+        lx.eval('transform.freeze rotation')
+        lx.eval('transform.channel rot.X "%s"' % str(float(rotX) + currRotation.x.get()))
+        lx.eval('transform.channel rot.Y "%s"' % str(float(rotY) + currRotation.y.get()))
+        lx.eval('transform.channel rot.Z "%s"' % str(float(rotZ) + currRotation.z.get()))
         freeze_rot()
         lx.eval('edgesmooth.update')
 
@@ -700,12 +726,19 @@ def clean_scene():
 def print_log(message):
     lx.out("TILA_BATCH_EXPORT : " + message)
 
+
 def print_debug_log(message):
     if debug_log:
         print_log('Debug : ' + message)
 
+
+def transform_log(message):
+    print_log("Transform_Item : " + message)
+
+
 def processing_log(message):
     print_log("Processing_Item : " + message)
+
 
 def Export_log(message):
     print_log("Export_File : " + message)

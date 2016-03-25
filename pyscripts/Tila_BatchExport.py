@@ -9,6 +9,20 @@ import modo
 scn = modo.Scene()
 currScn = modo.scene.current()
 
+
+############## TODO ###################
+'''
+ - find a way to keep last output folder in memory
+ - ReWrite with Modo TDSDK
+ - Refactoring everything ?
+ - Create a class ?
+ - extract some methods to other files ( Freeze Transform, Position Offset etc... )
+ - Find a way to avoid using Farfarer's edgesmooth methods
+ - Create a progress bar while processing
+
+'''
+
+
 ############## Arguments ##############
 triple_sw = False
 resetPos_sw = False
@@ -186,10 +200,8 @@ def set_axis_arg(arg_arr, index, arg_name, init_value):
 
 def get_user_value(value_name, default_value):
     if not lx.eval("query scriptsysservice userValue.isDefined ? {%s}" % ('tilaBExp.' + value_name)):
-        #print_debug_log("default " + value_name + "  = " + default_value)
         return default_value
     else:
-        #print_debug_log("default " + value_name + "  = " + str(lx.eval("user.value {%s} ?" % ('tilaBExp.' + value_name))))
         return lx.eval("user.value {%s} ?" % ('tilaBExp.' + str(value_name)))
 
 
@@ -341,8 +353,8 @@ def flow():
         else:
             output_dir = lx.eval1('dialog.result ?')
             batch_export(output_dir)
-    else:  # browse file to process
 
+    else:  # browse file to process
         init_dialog("input")
         try:  # mesh to process dialog
             lx.eval('dialog.open')
@@ -359,12 +371,14 @@ def flow():
                 output_dir = lx.eval1('dialog.result ?')
 
                 for f in files:
-                    processing_log(os.path.basename(f) + '   .....................................')
-                    name = os.path.basename(f)
-                    #ext = os.path.splitext(name)[1]
-                    #name = os.path.splitext(name)[0]
+                    processing_log('.....................................   '
+                     + os.path.basename(f) + '   .....................................')
 
-                    lx.eval('loaderOptions.wf_OBJ false false Meters')
+                    name = os.path.basename(f)
+                    # ext = os.path.splitext(name)[1]
+                    # name = os.path.splitext(name)[0]
+
+                    # lx.eval('loaderOptions.wf_OBJ false false Meters')
                     lx.eval('!scene.open "%s" normal' % f)
 
                     # if ext == 'fbx'
@@ -374,19 +388,18 @@ def flow():
                     userSelection = lx.evalN('query layerservice layer.id ? fg')
                     userSelectionCount = len(userSelection)
 
-                    #print_log(userSelection)
-
-                    output_dir = os.path.join(output_dir, '')
-
-                    print_debug_log(output_dir)
+                    print_log('.....................................   ' + str(userSelectionCount) + ' mesh item founded   .....................................'
+                                    )
 
                     batch_export(output_dir)
                     lx.eval('!scene.close')
 
-    init_message('info','Done', 'Operation completed successfully !')
+    init_message('info', 'Done', 'Operation completed successfully !')
 
-    if exportFile_sw :
+    if exportFile_sw:
         if openDestFolder_sw:
+            if scanFiles_sw:
+                open_folder(output_dir)
             if exportEach_sw:
                 open_folder(output_dir)
             else:
@@ -477,7 +490,9 @@ def get_user_selection():
 
 
 def export_selection(output_path, layer_name, export_format):
-    processing_log(layer_name + '   .....................................')
+    processing_log('.....................................   '
+                   +
+                   layer_name + '   .....................................')
 
     lx.eval('scene.new')
     newScene = lx.eval('query sceneservice scene.index ? current')
@@ -509,11 +524,21 @@ def export_cage(output_path, export_format):
 
 
 def construct_file_path(output_dir, layer_name, ext):
-    if exportEach_sw:
-        return [os.path.join(output_dir, layer_name+ '.' + ext), os.path.join(output_dir, layer_name + '_cage.' + ext) ]
+    if scanFiles_sw:
+        if exportEach_sw:
+            sceneName = os.path.splitext(lx.eval1('query sceneservice scene.name ? current'))[0]
+            return [os.path.join(output_dir, sceneName + '_-_' + layer_name + '.' + ext),
+                    os.path.join(output_dir, sceneName + '_-_' + layer_name
+                                 + '_cage.' + ext)]
+        else:
+            return [os.path.join(output_dir, layer_name + '.' + ext),
+                    os.path.join(output_dir, layer_name + '_cage.' + ext)]
     else:
-        splited_path = os.path.splitext(output_dir)
-        return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
+        if exportEach_sw:
+            return [os.path.join(output_dir, layer_name + '.' + ext), os.path.join(output_dir, layer_name + '_cage.' + ext)]
+        else:
+            splited_path = os.path.splitext(output_dir)
+            return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
 
 
 def export_loop(output_dir, layer):

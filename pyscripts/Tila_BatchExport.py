@@ -710,7 +710,7 @@ def rot_angle(rotX, rotY, rotZ):
         lx.eval('transform.channel rot.Y "%s"' % str(float(rotY) + currRotation.y.get()))
         lx.eval('transform.channel rot.Z "%s"' % str(float(rotZ) + currRotation.z.get()))
         freeze_rot()
-        lx.eval('edgesmooth.update')
+        #lx.eval('edgesmooth.update')
 
 
 def clean_scene():

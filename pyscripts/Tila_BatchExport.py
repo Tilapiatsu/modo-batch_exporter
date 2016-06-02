@@ -18,7 +18,8 @@ currScn = modo.scene.current()
  - Create a class ?
  - extract some methods to other files ( Freeze Transform, Position Offset etc... )
  - Find a way to avoid using Farfarer's edgesmooth methods
- - Create a progress bar while processing
+ - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
+ - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
 
 '''
 

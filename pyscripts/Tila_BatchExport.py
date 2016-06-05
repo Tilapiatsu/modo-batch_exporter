@@ -17,7 +17,6 @@ currScn = modo.scene.current()
  - Refactoring everything ?
  - Create a class ?
  - extract some methods to other files ( Freeze Transform, Position Offset etc... )
- - Find a way to avoid using Farfarer's edgesmooth methods
  - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
 
@@ -517,7 +516,7 @@ def export_selection(output_path, layer_name, export_format):
 
 def export_cage(output_path, export_format):
     # Smooth the mesh entirely
-    lx.eval('edgesmooth.soften connected:true')
+    lx.eval('vertMap.softenNormals connected:true')
     # Apply Cage Morph map
     lx.eval('vertMap.applyMorph %s 1.0' % cageMorphMapName)
     lx.eval('!scene.saveAs "%s" "%s" false' % (output_path, export_format))
@@ -635,8 +634,8 @@ def transform_selected(layer_name):
 def smooth_angle(smoothAngle):
     if smoothAngle_sw:
         processing_log("CalculateNormal with %s degrees smoothing" % smoothAngle)
-        lx.eval('edgesmooth.harden {%s}' % smoothAngle)
-        lx.eval('edgesmooth.update')
+        lx.eval('vertMap.hardenNormals {%s}' % smoothAngle)
+        lx.eval('vertMap.updateNormals')
 
 
 def harden_uv_border(uvMapName):
@@ -644,8 +643,8 @@ def harden_uv_border(uvMapName):
         processing_log("HardenUvBorder = " + uvMapName)
         lx.eval('select.vertexMap {%s} txuv replace' % uvMapName)
         lx.eval('uv.selectBorder')
-        lx.eval('edgesmooth.harden uv')
-        lx.eval('edgesmooth.update')
+        lx.eval('vertMap.hardenNormals uv')
+        lx.eval('vertMap.updateNormals')
         lx.eval('select.type item')
 
 

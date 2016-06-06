@@ -5,6 +5,7 @@ import os
 import sys
 import subprocess
 import modo
+import traceback
 
 scn = modo.Scene()
 currScn = modo.scene.current()
@@ -19,6 +20,7 @@ currScn = modo.scene.current()
  - extract some methods to other files ( Freeze Transform, Position Offset etc... )
  - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
+ - Add export Selected Feature
 
 '''
 
@@ -36,6 +38,7 @@ freezeSca_sw = False
 freezeShe_sw = False
 
 freezeGeo_sw = False
+freezeInstance_sw = True
 
 rotX = 0
 rotY = 0
@@ -218,6 +221,7 @@ def init_arg():
     global freezeShe_sw
 
     global freezeGeo_sw
+    global freezeInstance_sw
 
     global posX
     global posY
@@ -273,6 +277,7 @@ def init_arg():
     freezeShe_sw = get_user_value('freezeShe_sw', False)
 
     freezeGeo_sw = get_user_value('freezeGeo_sw', False)
+    freezeInstance_sw = get_user_value('freezeInstance_sw', True)
 
     posX = get_user_value('posX', 0)
     posY = get_user_value('posY', 0)
@@ -506,7 +511,7 @@ def export_selection(output_path, layer_name, export_format):
 
     lx.eval('!scene.saveAs "%s" "%s" false' % (output_path[0], export_format))
 
-    Export_log(os.path.basename(output_path[0]))
+    export_log(os.path.basename(output_path[0]))
 
     if exportCageMorph_sw:
         export_cage(output_path[1], export_format)
@@ -520,7 +525,7 @@ def export_cage(output_path, export_format):
     # Apply Cage Morph map
     lx.eval('vertMap.applyMorph %s 1.0' % cageMorphMapName)
     lx.eval('!scene.saveAs "%s" "%s" false' % (output_path, export_format))
-    Export_log(os.path.basename(output_path))
+    export_log(os.path.basename(output_path))
 
 
 def construct_file_path(output_dir, layer_name, ext):
@@ -614,6 +619,7 @@ def transform_selected(layer_name):
     if exportFile_sw:
         duplicate_rename(layer_name)
 
+    freeze_instance()
     smooth_angle(smoothAngle)
     harden_uv_border(uvMapName)
     freeze_geo()
@@ -708,6 +714,13 @@ def freeze_geo():
         lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
 
+def freeze_instance():
+    if freezeInstance_sw:
+        if scn.selected[0].type == 'meshInst':
+            transform_log("Freeze Instance")
+            lx.eval('item.setType Mesh')
+
+
 def position_offset(posX, posY, posZ):
     if posX != 0.0 or posY != 0.0 or posZ != 0.0:
         transform_log("Position offset = (%s, %s, %s)" % (posX, posY, posZ))
@@ -776,8 +789,32 @@ def debug(message):
         print_debug_log(message)
 
 
-def Export_log(message):
+def export_log(message):
     print_log("Exporting_File : " + message)
 
 
 flow()
+
+'''
+class CmdMyCustomCommand(lxu.command.BasicCommand):
+    def __init__(self):
+        lxu.command.BasicCommand.__init__(self)
+
+    def cmd_Flags(self):
+        return lx.symbol.fCMD_MODEL | lx.symbol.fCMD_UNDO
+
+    def basic_Enable(self, msg):
+        return True
+
+    def cmd_Interact(self):
+        pass
+
+    def basic_Execute(self, msg, flags):
+        lx.notimpl()
+
+    def cmd_Query(self, index, vaQuery):
+        lx.notimpl()
+
+
+lx.bless(CmdMyCustomCommand, "replace.me")
+'''

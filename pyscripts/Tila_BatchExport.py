@@ -7,6 +7,7 @@ import subprocess
 import modo
 import traceback
 
+
 scn = modo.Scene()
 currScn = modo.scene.current()
 

@@ -5,6 +5,8 @@ import os
 import sys
 import subprocess
 import modo
+
+
 import traceback
 
 
@@ -21,7 +23,7 @@ currScn = modo.scene.current()
  - extract some methods to other files ( Freeze Transform, Position Offset etc... )
  - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
- - Add export Selected Feature
+ - Add export Visible Feature
 
 '''
 
@@ -794,28 +796,3 @@ def export_log(message):
     print_log("Exporting_File : " + message)
 
 
-flow()
-
-'''
-class CmdMyCustomCommand(lxu.command.BasicCommand):
-    def __init__(self):
-        lxu.command.BasicCommand.__init__(self)
-
-    def cmd_Flags(self):
-        return lx.symbol.fCMD_MODEL | lx.symbol.fCMD_UNDO
-
-    def basic_Enable(self, msg):
-        return True
-
-    def cmd_Interact(self):
-        pass
-
-    def basic_Execute(self, msg, flags):
-        lx.notimpl()
-
-    def cmd_Query(self, index, vaQuery):
-        lx.notimpl()
-
-
-lx.bless(CmdMyCustomCommand, "replace.me")
-'''

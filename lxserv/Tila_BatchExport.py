@@ -130,7 +130,6 @@ def init_dialog(dialog_type):
     if dialog_type == 'file_save':
         init_custom_dialog('fileSave', 'SaveFile', ('FBX',), 'FBX file', ('*.FBX',), 'fbx', currentPath[:-4])
 
-
     if dialog_type == "cancel":
         init_message('error', 'Canceled', 'Operation aborded')
         sys.exit()

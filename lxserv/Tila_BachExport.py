@@ -22,8 +22,6 @@ import traceback
 
 
 class TilaBacthExport:
-    currentPath = modo.Scene.filename
-
     def __init__(self, userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, exportFile_sw, scanFiles_sw, exportEach_sw, exportHierarchy_sw, triple_sw, resetPos_sw, resetRot_sw, resetSca_sw, resetShe_sw, freezePos_sw, freezeRot_sw, freezeSca_sw, freezeShe_sw, freezeGeo_sw, freezeInstance_sw, posX, posY, posZ, rotX, rotY, rotZ, scaX, scaY, scaZ, smoothAngle_sw, smoothAngle, hardenUvBorder_sw, uvMapName, exportFormatFbx_sw, exportFormatObj_sw, exportFormatLxo_sw, exportFormatLwo_sw, exportFormatAbc_sw, exportFormatAbchdf_sw, exportFormatDae_sw, exportFormatDxf_sw, exportFormat3dm_sw, exportFormatGeo_sw, exportCageMorph_sw, cageMorphMapName, openDestFolder_sw):
 
         self.userSelection = userSelection

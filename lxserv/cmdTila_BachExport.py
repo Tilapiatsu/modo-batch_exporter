@@ -14,39 +14,17 @@ import traceback
 ############## TODO ###################
 '''
  - find a way to keep last output folder in memory
- - ReWrite with Modo TDSDK
- - Refactoring everything ?
- - Create a class ?
- - extract some methods to other files ( Freeze Transform, Position Offset etc... )
  - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
  - Add export Visible Feature
 
-'''
-'''
-scn = modo.Scene()
-currScn = modo.scene.current()
-
-currentPath = modo.Scene.filename
-if currentPath is None:
-    currentPath = ""
-
-fbx_export_setting = lx.eval1('user.value sceneio.fbx.save.exportType ?')
-
-sceneIndex = lx.eval('query sceneservice scene.index ? current')
-
-userSelection = scn.selected
-userSelectionCount = len(userSelection)
-
-upAxis = lx.eval('pref.value units.upAxis ?')
-iUpAxis = upAxis
 '''
 
 
 class TilaBacthExport:
     currentPath = modo.Scene.filename
 
-    def __init__(self, userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportSetting, exportFile_sw, scanFiles_sw, exportEach_sw, exportHierarchy_sw, triple_sw, resetPos_sw, resetRot_sw, resetSca_sw, resetShe_sw, freezePos_sw, freezeRot_sw, freezeSca_sw, freezeShe_sw, freezeGeo_sw, freezeInstance_sw, posX, posY, posZ, rotX, rotY, rotZ, scaX, scaY, scaZ, smoothAngle_sw, smoothAngle, hardenUvBorder_sw, uvMapName, exportFormatFbx_sw, exportFormatObj_sw, exportFormatLxo_sw, exportFormatLwo_sw, exportFormatAbc_sw, exportFormatAbchdf_sw, exportFormatDae_sw, exportFormatDxf_sw, exportFormat3dm_sw, exportFormatGeo_sw, exportCageMorph_sw, cageMorphMapName, openDestFolder_sw):
+    def __init__(self, userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, exportFile_sw, scanFiles_sw, exportEach_sw, exportHierarchy_sw, triple_sw, resetPos_sw, resetRot_sw, resetSca_sw, resetShe_sw, freezePos_sw, freezeRot_sw, freezeSca_sw, freezeShe_sw, freezeGeo_sw, freezeInstance_sw, posX, posY, posZ, rotX, rotY, rotZ, scaX, scaY, scaZ, smoothAngle_sw, smoothAngle, hardenUvBorder_sw, uvMapName, exportFormatFbx_sw, exportFormatObj_sw, exportFormatLxo_sw, exportFormatLwo_sw, exportFormatAbc_sw, exportFormatAbchdf_sw, exportFormatDae_sw, exportFormatDxf_sw, exportFormat3dm_sw, exportFormatGeo_sw, exportCageMorph_sw, cageMorphMapName, openDestFolder_sw):
 
         self.userSelection = userSelection
         self.userSelectionCount = userSelectionCount
@@ -56,7 +34,8 @@ class TilaBacthExport:
         self.scnIndex = scnIndex
         self.upAxis = upAxis
         self.iUpAxis = iUpAxis
-        self.fbxExportSetting = fbxExportSetting
+        self.fbxExportType = fbxExportType
+        self.fbxTriangulate = fbxTriangulate
 
         self.exportFile_sw = exportFile_sw
         self.scanFiles_sw = scanFiles_sw
@@ -131,17 +110,26 @@ class TilaBacthExport:
     def print_log(message):
         lx.out("TILA_BATCH_EXPORT : " + message)
 
-    @staticmethod
-    def transform_log(message):
-        TilaBacthExport.print_log("Transform_Item : " + message)
+    def transform_log(self, message):
+        self.print_log("Transform_Item : " + message)
 
-    @staticmethod
-    def processing_log(message):
-        TilaBacthExport.print_log("Processing_Item : " + message)
+    def processing_log(self, message):
+        self.print_log("Processing_Item : " + message)
 
-    @staticmethod
-    def export_log(message):
-        TilaBacthExport.print_log("Exporting_File : " + message)
+    def export_log(self, message):
+        self.print_log("Exporting_File : " + message)
+
+    def begining_log(self):
+        self.print_log('')
+        self.print_log('----------------------------------------------------------------------------------------------------')
+        self.print_log('----------------------------------------------BEGIN-------------------------------------------------')
+        self.print_log('----------------------------------------------------------------------------------------------------')
+
+    def ending_log(self):
+        self.print_log('----------------------------------------------------------------------------------------------------')
+        self.print_log('-----------------------------------------------END--------------------------------------------------')
+        self.print_log('----------------------------------------------------------------------------------------------------')
+        self.print_log('')
 
     def init_dialog(self, dialog_type):
         if dialog_type == "input":
@@ -203,6 +191,7 @@ class TilaBacthExport:
         lx.eval('dialog.open')
 
     def process_item(self):
+        self.begining_log()
         if not self.exportFile_sw:  # Transform Selected
             if self.userSelectionCount == 0:  # No file Selected
                 self.init_message('error', 'No item selected', 'Select at least one item')
@@ -274,19 +263,23 @@ class TilaBacthExport:
                     self.open_folder(output_dir)
                 else:
                     self.open_folder(os.path.split(output_dir)[0])
+        self.ending_log()
 
     def batch_export(self, output_dir):
         if self.upAxis != lx.eval('pref.value units.upAxis ?'):
             lx.eval('pref.value units.upAxis %s' % self.upAxis)
 
-        if self.exportHierarchy_sw:
-            lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelectionWithHierarchy')
-        else:
-            lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelection')
+        if self.exportFormatFbx_sw:
+            lx.eval('user.value sceneio.fbx.save.triangulate false')
+            if self.exportHierarchy_sw:
+                lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelectionWithHierarchy')
+            else:
+                lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelection')
 
         if self.exportEach_sw:  # Export each layer separately.
 
             for layer in self.userSelection:
+                print layer.name
                 self.export_loop(output_dir, layer)
                 self.clean_scene()
 
@@ -294,10 +287,11 @@ class TilaBacthExport:
             self.export_loop(output_dir, self.userSelection)
             self.clean_scene()
 
-    def duplicate_rename(self):
+    def duplicate_rename(self, layer_name):
         if self.exportEach_sw:
-            duplicate = self.scn.duplicateItem(self.scn.selected)
-            duplicate.name = '%s_1' % self.scn.selected[0].name
+            duplicate = self.scn.duplicateItem(self.scn.selected[0])
+            duplicate.name = '%s_1' % layer_name
+            self.scn.select(duplicate.name)
         else:
             for item in self.userSelection:
                 layer_name = item.name
@@ -327,15 +321,15 @@ class TilaBacthExport:
             else:
                 self.scn.select(self.userSelection[i], add=True)
 
-    def get_name(self):
+    def get_name(self, layer):
         if self.exportEach_sw:
-            return self.scn.selected[0].name
+            return layer.name
         else:
             return self.scn.name
 
     def set_name(self, layer_name):
         if self.exportEach_sw:
-            self.scn.selected.name = layer_name
+            self.scn.selected[0].name = layer_name
 
         else:
             lx.eval('select.itemType mesh')
@@ -355,7 +349,7 @@ class TilaBacthExport:
         lx.eval('scene.new')
         newScene = lx.eval('query sceneservice scene.index ? current')
         lx.eval('select.itemType mesh')
-        self.scn.removeItems(self.scn.selected)
+        lx.eval('!!item.delete')
         lx.eval('scene.set %s' % self.scnIndex)
         self.select_duplicate(layer_name)
         lx.eval('!layer.import %s {} true true false position:0' % newScene)
@@ -380,8 +374,6 @@ class TilaBacthExport:
         self.export_log(os.path.basename(output_path))
 
     def construct_file_path(self, output_dir, layer_name, ext):
-
-
         if self.scanFiles_sw:
             if self.exportEach_sw:
                 sceneName = self.scn.name
@@ -400,16 +392,16 @@ class TilaBacthExport:
                 return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
 
     def export_loop(self, output_dir, layer):
-        # Get the layer name.
-        layer_name = self.get_name()
-
         if self.exportEach_sw:
             # Select only the mesh item.
-            lx.eval('select.subItem %s set mesh' % layer)
+            self.scn.select(layer.name)
         else:
             self.get_user_selection()
 
-        self.transform_selected()
+        self.transform_selected(layer.name)
+
+        # Get the layer name.
+        layer_name = self.get_name(layer)
 
         self.export_all_format(output_dir, layer_name)
 
@@ -463,36 +455,39 @@ class TilaBacthExport:
         if self.exportHierarchy_sw:
             lx.eval('select.itemHierarchy')
 
-    def transform_selected(self):
+    def transform_selected(self, layer_name=''):
         self.export_hierarchy()
 
         if self.exportFile_sw:
-            self.duplicate_rename()
+            self.duplicate_rename(layer_name)
 
         self.freeze_instance()
         self.smooth_angle()
         self.harden_uv_border()
         self.freeze_geo()
         self.triple()
+
         self.reset_pos()
         self.reset_rot()
         self.reset_sca()
         self.reset_she()
+
         self.position_offset()
-
         self.scale_amount()
-
         self.rot_angle()
+
         self.freeze_rot()
         self.freeze_sca()
         self.freeze_pos()
-
         self.freeze_she()
 
     def smooth_angle(self):
         if self.smoothAngle_sw:
-            self.processing_log("CalculateNormal with %s degrees smoothing" % self.smoothAngle)
-            lx.eval('vertMap.hardenNormals {%s}' % self.smoothAngle)
+            self.processing_log("Harden edges witch are sharper than %s degrees" % self.smoothAngle)
+            currAngle = lx.eval('user.value vnormkit.angle ?')
+            lx.eval('user.value vnormkit.angle %s' % self.smoothAngle)
+            lx.eval('vertMap.hardenNormals angle soften:true')
+            lx.eval('user.value vnormkit.angle %s' % currAngle)
             lx.eval('vertMap.updateNormals')
 
     def harden_uv_border(self):
@@ -596,7 +591,10 @@ class TilaBacthExport:
         self.get_user_selection()
 
         # Put the user's original FBX Export setting back.
-        lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportSetting)
+
+        if self.exportFormatFbx_sw:
+            lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
+            lx.eval('user.value sceneio.fbx.save.triangulate %s' % self.fbxTriangulate)
 
         if self.upAxis != self.iUpAxis:
             lx.eval('pref.value units.upAxis %s' % self.iUpAxis)
@@ -760,7 +758,8 @@ class CmdBatchExport(lxu.command.BasicCommand):
             if currPath is None:
                 currPath = ""
 
-            fbxExportSetting = lx.eval1('user.value sceneio.fbx.save.exportType ?')
+            fbxExportType = lx.eval1('user.value sceneio.fbx.save.exportType ?')
+            fbxTriangulate = lx.eval1('user.value sceneio.fbx.save.triangulate ?')
 
             scnIndex = lx.eval('query sceneservice scene.index ? current')
 
@@ -771,7 +770,7 @@ class CmdBatchExport(lxu.command.BasicCommand):
 
             tbe = TilaBacthExport
 
-            tbe.process_item(tbe(userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportSetting, self.dyna_Bool(0), self.dyna_Bool(1), bool(userValues[2]), bool(userValues[3]), bool(userValues[4]), bool(userValues[5]), bool(userValues[6]), bool(userValues[7]), bool(userValues[8]), bool(userValues[9]), bool(userValues[10]), bool(userValues[11]), bool(userValues[12]), bool(userValues[13]), bool(userValues[14]), userValues[15], userValues[16], userValues[17], userValues[18], userValues[19], userValues[20], userValues[21], userValues[22], userValues[23], bool(userValues[24]), userValues[25], bool(userValues[26]), userValues[27], bool(userValues[28]), bool(userValues[29]), bool(userValues[30]), bool(userValues[31]), bool(userValues[32]), bool(userValues[33]), bool(userValues[34]), bool(userValues[35]), bool(userValues[36]), bool(userValues[37]), bool(userValues[38]), userValues[39], bool(userValues[40])))
+            tbe.process_item(tbe(userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, self.dyna_Bool(0), self.dyna_Bool(1), bool(userValues[2]), bool(userValues[3]), bool(userValues[4]), bool(userValues[5]), bool(userValues[6]), bool(userValues[7]), bool(userValues[8]), bool(userValues[9]), bool(userValues[10]), bool(userValues[11]), bool(userValues[12]), bool(userValues[13]), bool(userValues[14]), userValues[15], userValues[16], userValues[17], userValues[18], userValues[19], userValues[20], userValues[21], userValues[22], userValues[23], bool(userValues[24]), userValues[25], bool(userValues[26]), userValues[27], bool(userValues[28]), bool(userValues[29]), bool(userValues[30]), bool(userValues[31]), bool(userValues[32]), bool(userValues[33]), bool(userValues[34]), bool(userValues[35]), bool(userValues[36]), bool(userValues[37]), bool(userValues[38]), userValues[39], bool(userValues[40])))
         except:
             lx.out(traceback.format_exc())
 

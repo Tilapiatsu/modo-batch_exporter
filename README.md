@@ -1,7 +1,6 @@
-# modo-batch_exporter
+# modo-tila.batchexporter
 Simple python script to batch export mesh items out of modo
-Tested in Modo 902. It's not fully functionnal.
-Only FBX export is Tested.
+Modo 10 Required
 
 Installation
 =======

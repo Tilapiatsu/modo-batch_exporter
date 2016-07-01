@@ -190,14 +190,15 @@ class TilaBacthExport:
 
     def process_item(self):
         self.begining_log()
+
         if not self.exportFile_sw:  # Transform Selected
             if self.userSelectionCount == 0:  # No file Selected
                 self.init_message('error', 'No item selected', 'Select at least one item')
                 sys.exit()
 
-            for item in self.userSelection:
-                self.scn.select(item)
-                self.transform_selected()
+            for i in xrange(0, self.userSelectionCount):
+                self.scn.select(self.userSelection[i])
+                self.transform_selected(index=i)
             self.get_user_selection()
 
         elif not self.scanFiles_sw:  # export selected mesh
@@ -393,10 +394,10 @@ class TilaBacthExport:
         if self.exportEach_sw:
             # Select only the mesh item.
             self.scn.select(layer.name)
+            self.transform_selected(layer.name)
         else:
             self.get_user_selection()
-
-        self.transform_selected(layer.name)
+            self.transform_selected()
 
         # Get the layer name.
         layer_name = self.get_name(layer)
@@ -453,13 +454,13 @@ class TilaBacthExport:
         if self.exportHierarchy_sw:
             lx.eval('select.itemHierarchy')
 
-    def transform_selected(self, layer_name=''):
+    def transform_selected(self, layer_name='', index=0):
         self.export_hierarchy()
 
         if self.exportFile_sw:
             self.duplicate_rename(layer_name)
 
-        self.freeze_instance()
+        self.freeze_instance(index)
         self.smooth_angle()
         self.harden_uv_border()
         self.freeze_geo()
@@ -526,32 +527,49 @@ class TilaBacthExport:
         if self.freezePos_sw:
             self.transform_log("Freeze Position")
             lx.eval('transform.freeze translation')
+            lx.eval('vertMap.updateNormals')
 
     def freeze_rot(self):
         if self.freezeRot_sw:
             self.transform_log("Freeze Rotation")
             lx.eval('transform.freeze rotation')
+            lx.eval('vertMap.updateNormals')
 
-    def freeze_sca(self):
-        if self.freezeSca_sw:
-            self.transform_log("Freeze Scale")
+    def freeze_sca(self, force=False):
+        if self.freezeSca_sw or force:
+            if not force:
+                self.transform_log("Freeze Scale")
             lx.eval('transform.freeze scale')
+            lx.eval('vertMap.updateNormals')
 
     def freeze_she(self):
         if self.freezeShe_sw:
             self.transform_log("Freeze Shear")
             lx.eval('transform.freeze shear')
+            lx.eval('vertMap.updateNormals')
 
     def freeze_geo(self):
         if self.freezeGeo_sw:
             self.transform_log("Freeze Geometry")
             lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
-    def freeze_instance(self):
+    def freeze_instance(self, index=0):
         if self.freezeInstance_sw:
-            if self.scn.selected[0].type == 'meshInst':
-                self.transform_log("Freeze Instance")
-                lx.eval('item.setType Mesh')
+            for i in xrange(0, len(self.scn.selected)):
+                if self.scn.selected[i].type == 'meshInst':
+                    if self.exportEach_sw:
+                        self.transform_log("Freeze Instance")
+                    else:
+                        self.transform_log("Freeze Instance : " + self.scn.selected[i].name)
+                    lx.eval('item.setType Mesh')
+
+                    currScale = self.scn.selected[i].scale
+
+                    if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
+                        self.freeze_sca(True)
+
+                    if not self.exportFile_sw:
+                        self.userSelection[index] = self.scn.selected[i]
 
     def position_offset(self):
         if self.posX != 0.0 or self.posY != 0.0 or self.posZ != 0.0:

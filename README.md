@@ -1,5 +1,6 @@
 # modo-tila.batchexporter
-Simple python script to batch export mesh items out of modo
+Simple python script to batch export mesh items out of modo.
+
 Modo 10 Required
 
 Installation

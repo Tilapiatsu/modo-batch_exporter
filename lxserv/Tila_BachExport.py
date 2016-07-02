@@ -10,15 +10,22 @@ import lxu.command
 import lxu.select
 import traceback
 
-
 ############## TODO ###################
 '''
  - find a way to keep last output folder in memory
  - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
- - Add export Visible Feature
+ - Add "Export Visible" Feature
+ - Add "Merge Mesh" feature
+ - Add "Create UDIM UV From Material Set" Feature
+ - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
 
 '''
+
+
+def enum(*args):
+    enums = dict(zip(args, range(len(args))))
+    return type('Enum', (), enums)
 
 
 class TilaBacthExport:
@@ -89,6 +96,13 @@ class TilaBacthExport:
 
         self.openDestFolder_sw = openDestFolder_sw
 
+        self.meshItemToProceed = []
+        self.meshInstToProceed = []
+        self.proceededMesh = []
+        self.processingItemType = enum('MESHITEM', 'MESHINST')
+
+    # Platform specific Path formating
+
     if sys.platform == 'darwin':
         @staticmethod
         def open_folder(path):
@@ -103,6 +117,28 @@ class TilaBacthExport:
         @staticmethod
         def open_folder(path):
             os.startfile(path)
+
+    # Path Constructor
+
+    def construct_file_path(self, output_dir, layer_name, ext):
+        if self.scanFiles_sw:
+            if self.exportEach_sw:
+                sceneName = self.scn.name
+                return [os.path.join(output_dir, sceneName + '_-_' + layer_name + '.' + ext),
+                        os.path.join(output_dir, sceneName + '_-_' + layer_name
+                                     + '_cage.' + ext)]
+            else:
+                return [os.path.join(output_dir, layer_name + '.' + ext),
+                        os.path.join(output_dir, layer_name + '_cage.' + ext)]
+        else:
+            if self.exportEach_sw:
+                return [os.path.join(output_dir, layer_name + '.' + ext),
+                        os.path.join(output_dir, layer_name + '_cage.' + ext)]
+            else:
+                splited_path = os.path.splitext(output_dir)
+                return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
+
+    # Print Method
 
     @staticmethod
     def print_log(message):
@@ -120,14 +156,28 @@ class TilaBacthExport:
     def begining_log(self):
         self.print_log('')
         self.print_log('----------------------------------------------------------------------------------------------------')
-        self.print_log('----------------------------------------------BEGIN-------------------------------------------------')
+        text = " "
+        if not self.exportFile_sw:
+            text += 'TRANSFORM '
+        else:
+            text += 'EXPORT '
+        text += 'SELECTION'
+        self.print_log('--------------------------------------- ' + text + ' STARTED------------------------------------------')
         self.print_log('----------------------------------------------------------------------------------------------------')
 
     def ending_log(self):
         self.print_log('----------------------------------------------------------------------------------------------------')
-        self.print_log('-----------------------------------------------END--------------------------------------------------')
+        text = " "
+        if not self.exportFile_sw:
+            text += 'TRANSFORM '
+        else:
+            text += 'EXPORT '
+        text += 'SELECTION'
+        self.print_log('---------------------------------------- ' + text + ' FINISHED-------------------------------------------')
         self.print_log('----------------------------------------------------------------------------------------------------')
         self.print_log('')
+
+    # Dialog initialisation
 
     def init_dialog(self, dialog_type):
         if dialog_type == "input":
@@ -188,7 +238,9 @@ class TilaBacthExport:
         lx.eval('dialog.msg {%s}' % message)
         lx.eval('dialog.open')
 
-    def process_item(self):
+    # Loops methods
+
+    def process_items(self):
         self.begining_log()
 
         if not self.exportFile_sw:  # Transform Selected
@@ -196,10 +248,8 @@ class TilaBacthExport:
                 self.init_message('error', 'No item selected', 'Select at least one item')
                 sys.exit()
 
-            for i in xrange(0, self.userSelectionCount):
-                self.scn.select(self.userSelection[i])
-                self.transform_selected(index=i)
-            self.get_user_selection()
+            self.transform_loop()
+            self.scn.select(self.userSelection)
 
         elif not self.scanFiles_sw:  # export selected mesh
             if self.userSelectionCount == 0:  # No file Selected
@@ -262,6 +312,7 @@ class TilaBacthExport:
                     self.open_folder(output_dir)
                 else:
                     self.open_folder(os.path.split(output_dir)[0])
+
         self.ending_log()
 
     def batch_export(self, output_dir):
@@ -275,82 +326,112 @@ class TilaBacthExport:
             else:
                 lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelection')
 
-        if self.exportEach_sw:  # Export each layer separately.
+        self.transform_loop()
 
-            for layer in self.userSelection:
-                print layer.name
-                self.export_loop(output_dir, layer)
-                self.clean_scene()
-
-        else:  # Export all selected layers in one file.
-            self.export_loop(output_dir, self.userSelection)
-            self.clean_scene()
-
-    def duplicate_rename(self, layer_name):
         if self.exportEach_sw:
-            duplicate = self.scn.duplicateItem(self.scn.selected[0])
-            duplicate.name = '%s_1' % layer_name
-            self.scn.select(duplicate.name)
+            for i in xrange(0, len(self.proceededMesh)):
+                item_arr = []
+                item_arr.append(self.proceededMesh[i])
+                self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-2])
         else:
-            for item in self.userSelection:
-                layer_name = item.name
-                duplicate = self.scn.duplicateItem(item)
-                duplicate.name = '%s_1' % layer_name
-            self.select_duplicate(layer_name)
+            self.export_all_format(output_dir, self.proceededMesh, self.scn.name)
 
-    def select_duplicate(self, layer_name):
-        if self.exportEach_sw:
-            self.scn.select(layer_name + '_1')
-        else:
-            self.get_user_selection()
-            for i in xrange(0, self.userSelectionCount):
-                new_layer_name = self.userSelection[i].name
-                if i == 0:
-                    self.scn.select(new_layer_name + '_1')
-                else:
-                    self.scn.select(new_layer_name + '_1', add=True)
+        self.clean_scene()
 
-        if self.exportHierarchy_sw:
-            lx.eval('select.itemHierarchy')
+    def transform_loop(self):
+        self.file_to_proceed_constructor()
 
-    def get_user_selection(self):
-        for i in xrange(0, self.userSelectionCount):
-            if i == 0:
-                self.scn.select(self.userSelection[i])
-            else:
-                self.scn.select(self.userSelection[i], add=True)
+        if len(self.meshInstToProceed) > 0:
+            self.scn.select(self.meshInstToProceed)
+            self.transform_selected(type=self.processingItemType.MESHINST)
 
-    def get_name(self, layer):
-        if self.exportEach_sw:
-            return layer.name
-        else:
-            return self.scn.name
+        if len(self.meshItemToProceed) > 0:
+            self.scn.select(self.meshItemToProceed)
+            self.transform_selected(type=self.processingItemType.MESHITEM)
 
-    def set_name(self, layer_name):
-        if self.exportEach_sw:
-            self.scn.selected[0].name = layer_name
+    def transform_selected(self, type):
+        self.export_hierarchy()
 
-        else:
-            lx.eval('select.itemType mesh')
-            duplicate = self.scn.selected
-            for l in duplicate:
-                self.scn.select(l)
-                current_name = l.name
-                current_name = current_name[:-2]
-                l.name = current_name
-            lx.eval('select.itemType mesh')
+        if self.exportFile_sw:
+            if type == self.processingItemType.MESHITEM:
+                self.duplicate_rename(self.meshItemToProceed)
+            if type == self.processingItemType.MESHINST:
+                self.duplicate_rename(self.meshInstToProceed)
 
-    def export_selection(self, output_path, layer_name, export_format):
-        self.processing_log('.....................................   '
-                       +
-                       layer_name + '   .....................................')
+        self.freeze_instance(type=type)
 
+        self.smooth_angle()
+        self.harden_uv_border()
+        self.freeze_geo()
+        self.triple()
+
+        self.reset_pos()
+        self.reset_rot()
+        self.reset_sca()
+        self.reset_she()
+
+        self.position_offset()
+        self.scale_amount()
+        self.rot_angle()
+
+        self.freeze_rot()
+        self.freeze_sca()
+        self.freeze_pos()
+        self.freeze_she()
+
+    def export_all_format(self, output_dir, layers, layer_name):
+        if self.exportFormatFbx_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'fbx')
+            self.export_selection(output_path, layers, layer_name, 'fbx')
+
+        if self.exportFormatLxo_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'lxo')
+            self.export_selection(output_path, layers, layer_name, '$LXOB')
+
+        if self.exportFormatLwo_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'lwo')
+            self.export_selection(output_path, layers, layer_name, '$NLWO2')
+
+        if self.exportFormatObj_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'obj')
+            self.export_selection(output_path, layers, layer_name, 'wf_OBJ')
+
+        if self.exportFormatDxf_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'dxf')
+            self.export_selection(output_path, layers, layer_name, 'DXF')
+
+        if self.exportFormatDae_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'dae')
+            self.export_selection(output_path, layers, layer_name, 'COLLADA_141')
+
+        if self.exportFormat3dm_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, '3dm')
+            self.export_selection(output_path, layers, layer_name, 'THREEDM')
+
+        if self.exportFormatAbc_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'abc')
+            self.export_selection(output_path, layers, layer_name, 'Alembic')
+
+        if self.exportFormatAbchdf_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'abc')
+            self.export_selection(output_path, layers, layer_name, 'AlembicHDF')
+
+        if self.exportFormatGeo_sw:
+            output_path = self.construct_file_path(output_dir, layer_name, 'geo')
+            self.export_selection(output_path, layers, layer_name, 'vs_GEO')
+
+        lx.eval('scene.set %s' % self.scnIndex)
+        self.scn.select(layers)
+
+        lx.eval('!!item.delete')
+
+    def export_selection(self, output_path, layers, layer_name, export_format):
         lx.eval('scene.new')
         newScene = lx.eval('query sceneservice scene.index ? current')
         lx.eval('select.itemType mesh')
         lx.eval('!!item.delete')
         lx.eval('scene.set %s' % self.scnIndex)
-        self.select_duplicate(layer_name)
+        self.scn.select(layers)
         lx.eval('!layer.import %s {} true true false position:0' % newScene)
         lx.eval('scene.set %s' % newScene)
         self.set_name(layer_name)
@@ -372,113 +453,51 @@ class TilaBacthExport:
         lx.eval('!scene.saveAs "%s" "%s" false' % (output_path, export_format))
         self.export_log(os.path.basename(output_path))
 
-    def construct_file_path(self, output_dir, layer_name, ext):
-        if self.scanFiles_sw:
-            if self.exportEach_sw:
-                sceneName = self.scn.name
-                return [os.path.join(output_dir, sceneName + '_-_' + layer_name + '.' + ext),
-                        os.path.join(output_dir, sceneName + '_-_' + layer_name
-                                     + '_cage.' + ext)]
-            else:
-                return [os.path.join(output_dir, layer_name + '.' + ext),
-                        os.path.join(output_dir, layer_name + '_cage.' + ext)]
-        else:
-            if self.exportEach_sw:
-                return [os.path.join(output_dir, layer_name + '.' + ext),
-                        os.path.join(output_dir, layer_name + '_cage.' + ext)]
-            else:
-                splited_path = os.path.splitext(output_dir)
-                return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
-
-    def export_loop(self, output_dir, layer):
-        if self.exportEach_sw:
-            # Select only the mesh item.
-            self.scn.select(layer.name)
-            self.transform_selected(layer.name)
-        else:
-            self.get_user_selection()
-            self.transform_selected()
-
-        # Get the layer name.
-        layer_name = self.get_name(layer)
-
-        self.export_all_format(output_dir, layer_name)
-
-    def export_all_format(self, output_dir, layer_name):
-        if self.exportFormatFbx_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'fbx')
-            self.export_selection(output_path, layer_name, 'fbx')
-
-        if self.exportFormatLxo_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'lxo')
-            self.export_selection(output_path, layer_name, '$LXOB')
-
-        if self.exportFormatLwo_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'lwo')
-            self.export_selection(output_path, layer_name, '$NLWO2')
-
-        if self.exportFormatObj_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'obj')
-            self.export_selection(output_path, layer_name, 'wf_OBJ')
-
-        if self.exportFormatDxf_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'dxf')
-            self.export_selection(output_path, layer_name, 'DXF')
-
-        if self.exportFormatDae_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'dae')
-            self.export_selection(output_path, layer_name, 'COLLADA_141')
-
-        if self.exportFormat3dm_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, '3dm')
-            self.export_selection(output_path, layer_name, 'THREEDM')
-
-        if self.exportFormatAbc_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'abc')
-            self.export_selection(output_path, layer_name, 'Alembic')
-
-        if self.exportFormatAbchdf_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'abc')
-            self.export_selection(output_path, layer_name, 'AlembicHDF')
-
-        if self.exportFormatGeo_sw:
-            output_path = self.construct_file_path(output_dir, layer_name, 'geo')
-            self.export_selection(output_path, layer_name, 'vs_GEO')
-
-        lx.eval('scene.set %s' % self.scnIndex)
-        self.select_duplicate(layer_name)
-
-        lx.eval('!!item.delete')
-
     def export_hierarchy(self):
         if self.exportHierarchy_sw:
             lx.eval('select.itemHierarchy')
 
-    def transform_selected(self, layer_name='', index=0):
-        self.export_hierarchy()
+    # Helpers, setter/getter, Selector
 
-        if self.exportFile_sw:
-            self.duplicate_rename(layer_name)
+    def file_to_proceed_constructor(self):
+        for item in self.userSelection:
+            if item.type == 'meshInst':
+                self.meshInstToProceed.append(item)
+            if item.type == 'mesh':
+                self.meshItemToProceed.append(item)
 
-        self.freeze_instance(index)
-        self.smooth_angle()
-        self.harden_uv_border()
-        self.freeze_geo()
-        self.triple()
+    def duplicate_rename(self, arr):
+        duplicate_arr = []
+        for item in arr:
+            layer_name = item.name
+            duplicate = self.scn.duplicateItem(item)
+            duplicate.name = '%s_1' % layer_name
+            duplicate_arr.append(duplicate)
+            self.proceededMesh.append(duplicate)
 
-        self.reset_pos()
-        self.reset_rot()
-        self.reset_sca()
-        self.reset_she()
+        self.scn.select(duplicate_arr)
 
-        self.position_offset()
-        self.scale_amount()
-        self.rot_angle()
+    def get_name(self, layer):
+        if self.exportEach_sw:
+            return layer.name
+        else:
+            return self.scn.name
 
-        self.freeze_rot()
-        self.freeze_sca()
-        self.freeze_pos()
-        self.freeze_she()
+    def set_name(self, layer_name):
+        if self.exportEach_sw:
+            self.scn.selected[0].name = layer_name
+
+        else:
+            lx.eval('select.itemType mesh')
+            duplicate = self.scn.selected
+            for l in duplicate:
+                self.scn.select(l)
+                current_name = l.name
+                current_name = current_name[:-2]
+                l.name = current_name
+            lx.eval('select.itemType mesh')
+
+    # Item Processing
 
     def smooth_angle(self):
         if self.smoothAngle_sw:
@@ -526,12 +545,14 @@ class TilaBacthExport:
     def freeze_pos(self):
         if self.freezePos_sw:
             self.transform_log("Freeze Position")
+
             lx.eval('transform.freeze translation')
             lx.eval('vertMap.updateNormals')
 
     def freeze_rot(self):
         if self.freezeRot_sw:
             self.transform_log("Freeze Rotation")
+
             lx.eval('transform.freeze rotation')
             lx.eval('vertMap.updateNormals')
 
@@ -539,12 +560,14 @@ class TilaBacthExport:
         if self.freezeSca_sw or force:
             if not force:
                 self.transform_log("Freeze Scale")
+
             lx.eval('transform.freeze scale')
             lx.eval('vertMap.updateNormals')
 
     def freeze_she(self):
         if self.freezeShe_sw:
             self.transform_log("Freeze Shear")
+
             lx.eval('transform.freeze shear')
             lx.eval('vertMap.updateNormals')
 
@@ -553,23 +576,23 @@ class TilaBacthExport:
             self.transform_log("Freeze Geometry")
             lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
-    def freeze_instance(self, index=0):
-        if self.freezeInstance_sw:
-            for i in xrange(0, len(self.scn.selected)):
-                if self.scn.selected[i].type == 'meshInst':
-                    if self.exportEach_sw:
-                        self.transform_log("Freeze Instance")
-                    else:
-                        self.transform_log("Freeze Instance : " + self.scn.selected[i].name)
-                    lx.eval('item.setType Mesh')
+    def freeze_instance(self, type=0):
+        if type == 1 and self.scn.selected[0].type == 'meshInst':
+            if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
+                self.transform_log("Freeze Instance")
 
+                lx.eval('item.setType Mesh')
+
+                for i in xrange(0, len(self.scn.selected)):
                     currScale = self.scn.selected[i].scale
 
                     if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
                         self.freeze_sca(True)
 
                     if not self.exportFile_sw:
-                        self.userSelection[index] = self.scn.selected[i]
+                        self.userSelection[i] = self.scn.selected[i]
+                    else:
+                        self.proceededMesh[i] = self.scn.selected[i]
 
     def position_offset(self):
         if self.posX != 0.0 or self.posY != 0.0 or self.posZ != 0.0:
@@ -603,8 +626,10 @@ class TilaBacthExport:
             lx.eval('transform.channel rot.Z "%s"' % str(float(self.rotZ) + currRotation.z.get()))
             self.freeze_rot()
 
+    # Cleaning
+
     def clean_scene(self):
-        self.get_user_selection()
+        self.scn.select(self.userSelection)
 
         # Put the user's original FBX Export setting back.
 
@@ -786,7 +811,7 @@ class CmdBatchExport(lxu.command.BasicCommand):
 
             tbe = TilaBacthExport
 
-            tbe.process_item(tbe(userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, self.dyna_Bool(0), self.dyna_Bool(1), bool(userValues[2]), bool(userValues[3]), bool(userValues[4]), bool(userValues[5]), bool(userValues[6]), bool(userValues[7]), bool(userValues[8]), bool(userValues[9]), bool(userValues[10]), bool(userValues[11]), bool(userValues[12]), bool(userValues[13]), bool(userValues[14]), userValues[15], userValues[16], userValues[17], userValues[18], userValues[19], userValues[20], userValues[21], userValues[22], userValues[23], bool(userValues[24]), userValues[25], bool(userValues[26]), userValues[27], bool(userValues[28]), bool(userValues[29]), bool(userValues[30]), bool(userValues[31]), bool(userValues[32]), bool(userValues[33]), bool(userValues[34]), bool(userValues[35]), bool(userValues[36]), bool(userValues[37]), bool(userValues[38]), userValues[39], bool(userValues[40])))
+            tbe.process_items(tbe(userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, self.dyna_Bool(0), self.dyna_Bool(1), bool(userValues[2]), bool(userValues[3]), bool(userValues[4]), bool(userValues[5]), bool(userValues[6]), bool(userValues[7]), bool(userValues[8]), bool(userValues[9]), bool(userValues[10]), bool(userValues[11]), bool(userValues[12]), bool(userValues[13]), bool(userValues[14]), userValues[15], userValues[16], userValues[17], userValues[18], userValues[19], userValues[20], userValues[21], userValues[22], userValues[23], bool(userValues[24]), userValues[25], bool(userValues[26]), userValues[27], bool(userValues[28]), bool(userValues[29]), bool(userValues[30]), bool(userValues[31]), bool(userValues[32]), bool(userValues[33]), bool(userValues[34]), bool(userValues[35]), bool(userValues[36]), bool(userValues[37]), bool(userValues[38]), userValues[39], bool(userValues[40])))
         except:
             lx.out(traceback.format_exc())
 

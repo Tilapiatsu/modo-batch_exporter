@@ -3,6 +3,8 @@ Simple python script to batch export mesh items out of modo.
 
 Modo 10 Required
 
+Tested on Windows only
+
 Installation
 =======
 

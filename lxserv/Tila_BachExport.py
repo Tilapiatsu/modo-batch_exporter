@@ -29,7 +29,60 @@ def enum(*args):
 
 
 class TilaBacthExport:
-    def __init__(self, userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, exportFile_sw, scanFiles_sw, exportEach_sw, exportHierarchy_sw, triple_sw, resetPos_sw, resetRot_sw, resetSca_sw, resetShe_sw, freezePos_sw, freezeRot_sw, freezeSca_sw, freezeShe_sw, freezeGeo_sw, freezeInstance_sw, posX, posY, posZ, rotX, rotY, rotZ, scaX, scaY, scaZ, smoothAngle_sw, smoothAngle, hardenUvBorder_sw, uvMapName, exportFormatFbx_sw, exportFormatObj_sw, exportFormatLxo_sw, exportFormatLwo_sw, exportFormatAbc_sw, exportFormatAbchdf_sw, exportFormatDae_sw, exportFormatDxf_sw, exportFormat3dm_sw, exportFormatGeo_sw, exportCageMorph_sw, cageMorphMapName, openDestFolder_sw):
+    def __init__(self,
+                 userSelection,
+                 userSelectionCount,
+                 scn,
+                 currScn,
+                 currPath,
+                 scnIndex,
+                 upAxis,
+                 iUpAxis,
+                 fbxExportType,
+                 fbxTriangulate,
+                 exportFile_sw,
+                 scanFiles_sw,
+                 exportEach_sw,
+                 exportHierarchy_sw,
+                 triple_sw,
+                 resetPos_sw,
+                 resetRot_sw,
+                 resetSca_sw,
+                 resetShe_sw,
+                 freezePos_sw,
+                 freezeRot_sw,
+                 freezeSca_sw,
+                 freezeShe_sw,
+                 freezeGeo_sw,
+                 freezeInstance_sw,
+                 posX,
+                 posY,
+                 posZ,
+                 rotX,
+                 rotY,
+                 rotZ,
+                 scaX,
+                 scaY,
+                 scaZ,
+                 smoothAngle_sw,
+                 smoothAngle,
+                 hardenUvBorder_sw,
+                 uvMapName,
+                 exportFormatFbx_sw,
+                 exportFormatObj_sw,
+                 exportFormatLxo_sw,
+                 exportFormatLwo_sw,
+                 exportFormatAbc_sw,
+                 exportFormatAbchdf_sw,
+                 exportFormatDae_sw,
+                 exportFormatDxf_sw,
+                 exportFormat3dm_sw,
+                 exportFormatGeo_sw,
+                 exportCageMorph_sw,
+                 cageMorphMapName,
+                 openDestFolder_sw,
+                 applyMorphMap_sw,
+                 morphMapName):
 
         self.userSelection = userSelection
         self.userSelectionCount = userSelectionCount
@@ -95,6 +148,9 @@ class TilaBacthExport:
         self.cageMorphMapName = cageMorphMapName
 
         self.openDestFolder_sw = openDestFolder_sw
+
+        self.applyMorphMap_sw = applyMorphMap_sw
+        self.morphMapName = morphMapName
 
         self.meshItemToProceed = []
         self.meshInstToProceed = []
@@ -362,6 +418,7 @@ class TilaBacthExport:
 
         self.smooth_angle()
         self.harden_uv_border()
+
         self.freeze_geo()
         self.triple()
 
@@ -378,6 +435,8 @@ class TilaBacthExport:
         self.freeze_sca()
         self.freeze_pos()
         self.freeze_she()
+
+        self.apply_morph(self.applyMorphMap_sw, self.morphMapName)
 
     def export_all_format(self, output_dir, layers, layer_name):
         if self.exportFormatFbx_sw:
@@ -448,8 +507,10 @@ class TilaBacthExport:
     def export_cage(self, output_path, export_format):
         # Smooth the mesh entirely
         lx.eval('vertMap.softenNormals connected:true')
+
         # Apply Cage Morph map
-        lx.eval('vertMap.applyMorph %s 1.0' % self.cageMorphMapName)
+        self.apply_morph(True, self.cageMorphMapName)
+
         lx.eval('!scene.saveAs "%s" "%s" false' % (output_path, export_format))
         self.export_log(os.path.basename(output_path))
 
@@ -498,6 +559,11 @@ class TilaBacthExport:
             lx.eval('select.itemType mesh')
 
     # Item Processing
+
+    def apply_morph(self, condition, name):
+        if condition:
+            self.processing_log('Applying Morph Map : ' + name)
+            lx.eval('vertMap.applyMorph %s 1.0' % name)
 
     def smooth_angle(self):
         if self.smoothAngle_sw:
@@ -765,6 +831,12 @@ class CmdBatchExport(lxu.command.BasicCommand):
         self.dyna_Add('openDestFolder_sw', lx.symbol.sTYPE_BOOLEAN)
         self.basic_SetFlags(40, lx.symbol.fCMDARG_OPTIONAL)
 
+        self.dyna_Add('applyMorphMap_sw', lx.symbol.sTYPE_BOOLEAN)
+        self.basic_SetFlags(41, lx.symbol.fCMDARG_OPTIONAL)
+
+        self.dyna_Add('morphMapName', lx.symbol.sTYPE_STRING)
+        self.basic_SetFlags(42, lx.symbol.fCMDARG_OPTIONAL)
+
     def query_User_Value(self, index, name):
         if not self.dyna_IsSet(index):
             return lx.eval('user.value tilaBExp.%s ?' % name)
@@ -811,7 +883,7 @@ class CmdBatchExport(lxu.command.BasicCommand):
 
             tbe = TilaBacthExport
 
-            tbe.process_items(tbe(userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, self.dyna_Bool(0), self.dyna_Bool(1), bool(userValues[2]), bool(userValues[3]), bool(userValues[4]), bool(userValues[5]), bool(userValues[6]), bool(userValues[7]), bool(userValues[8]), bool(userValues[9]), bool(userValues[10]), bool(userValues[11]), bool(userValues[12]), bool(userValues[13]), bool(userValues[14]), userValues[15], userValues[16], userValues[17], userValues[18], userValues[19], userValues[20], userValues[21], userValues[22], userValues[23], bool(userValues[24]), userValues[25], bool(userValues[26]), userValues[27], bool(userValues[28]), bool(userValues[29]), bool(userValues[30]), bool(userValues[31]), bool(userValues[32]), bool(userValues[33]), bool(userValues[34]), bool(userValues[35]), bool(userValues[36]), bool(userValues[37]), bool(userValues[38]), userValues[39], bool(userValues[40])))
+            tbe.process_items(tbe(userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, self.dyna_Bool(0), self.dyna_Bool(1), bool(userValues[2]), bool(userValues[3]), bool(userValues[4]), bool(userValues[5]), bool(userValues[6]), bool(userValues[7]), bool(userValues[8]), bool(userValues[9]), bool(userValues[10]), bool(userValues[11]), bool(userValues[12]), bool(userValues[13]), bool(userValues[14]), userValues[15], userValues[16], userValues[17], userValues[18], userValues[19], userValues[20], userValues[21], userValues[22], userValues[23], bool(userValues[24]), userValues[25], bool(userValues[26]), userValues[27], bool(userValues[28]), bool(userValues[29]), bool(userValues[30]), bool(userValues[31]), bool(userValues[32]), bool(userValues[33]), bool(userValues[34]), bool(userValues[35]), bool(userValues[36]), bool(userValues[37]), bool(userValues[38]), userValues[39], bool(userValues[40]), bool(userValues[41]), userValues[42]))
         except:
             lx.out(traceback.format_exc())
 

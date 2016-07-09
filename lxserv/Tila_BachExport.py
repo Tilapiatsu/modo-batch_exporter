@@ -154,6 +154,7 @@ class TilaBacthExport:
 
         self.meshItemToProceed = []
         self.meshInstToProceed = []
+        self.sortedOriginalItems = []
         self.proceededMesh = []
         self.processingItemType = enum('MESHITEM', 'MESHINST')
 
@@ -388,14 +389,14 @@ class TilaBacthExport:
             for i in xrange(0, len(self.proceededMesh)):
                 item_arr = []
                 item_arr.append(self.proceededMesh[i])
-                self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-2])
+                self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-2], i)
         else:
             self.export_all_format(output_dir, self.proceededMesh, self.scn.name)
 
         self.clean_scene()
 
     def transform_loop(self):
-        self.file_to_proceed_constructor()
+        self.items_to_proceed_constructor()
 
         if len(self.meshInstToProceed) > 0:
             self.scn.select(self.meshInstToProceed)
@@ -410,9 +411,9 @@ class TilaBacthExport:
 
         if self.exportFile_sw:
             if type == self.processingItemType.MESHITEM:
-                self.duplicate_rename(self.meshItemToProceed)
+                self.duplicate_rename(self.meshItemToProceed, '1')
             if type == self.processingItemType.MESHINST:
-                self.duplicate_rename(self.meshInstToProceed)
+                self.duplicate_rename(self.meshInstToProceed, '1')
 
         self.freeze_instance(type=type)
 
@@ -438,71 +439,71 @@ class TilaBacthExport:
 
         self.apply_morph(self.applyMorphMap_sw, self.morphMapName)
 
-    def export_all_format(self, output_dir, layers, layer_name):
+    def export_all_format(self, output_dir, duplicate, layer_name, index=0):
+
+        originalItem = []
+        if self.exportEach_sw:
+            originalItem.append(self.sortedOriginalItems[index])
+        else:
+            originalItem = self.sortedOriginalItems
+
+        self.set_name(originalItem, shrink=False, add=True, layer_name='_0')
+        self.scn.select(duplicate)
+        self.set_name(duplicate, shrink=True, add=True)
+
         if self.exportFormatFbx_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'fbx')
-            self.export_selection(output_path, layers, layer_name, 'fbx')
+            self.export_selection(output_path, 'fbx')
 
         if self.exportFormatLxo_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'lxo')
-            self.export_selection(output_path, layers, layer_name, '$LXOB')
+            self.export_selection(output_path, '$LXOB')
 
         if self.exportFormatLwo_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'lwo')
-            self.export_selection(output_path, layers, layer_name, '$NLWO2')
+            self.export_selection(output_path, '$NLWO2')
 
         if self.exportFormatObj_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'obj')
-            self.export_selection(output_path, layers, layer_name, 'wf_OBJ')
+            self.export_selection(output_path, 'wf_OBJ')
 
         if self.exportFormatDxf_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'dxf')
-            self.export_selection(output_path, layers, layer_name, 'DXF')
+            self.export_selection(output_path, 'DXF')
 
         if self.exportFormatDae_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'dae')
-            self.export_selection(output_path, layers, layer_name, 'COLLADA_141')
+            self.export_selection(output_path, 'COLLADA_141')
 
         if self.exportFormat3dm_sw:
             output_path = self.construct_file_path(output_dir, layer_name, '3dm')
-            self.export_selection(output_path, layers, layer_name, 'THREEDM')
+            self.export_selection(output_path, 'THREEDM')
 
         if self.exportFormatAbc_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'abc')
-            self.export_selection(output_path, layers, layer_name, 'Alembic')
+            self.export_selection(output_path, 'Alembic')
 
         if self.exportFormatAbchdf_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'abc')
-            self.export_selection(output_path, layers, layer_name, 'AlembicHDF')
+            self.export_selection(output_path, 'AlembicHDF')
 
         if self.exportFormatGeo_sw:
             output_path = self.construct_file_path(output_dir, layer_name, 'geo')
-            self.export_selection(output_path, layers, layer_name, 'vs_GEO')
+            self.export_selection(output_path, 'vs_GEO')
 
-        lx.eval('scene.set %s' % self.scnIndex)
-        self.scn.select(layers)
+        self.scn.select(duplicate)
 
         lx.eval('!!item.delete')
 
-    def export_selection(self, output_path, layers, layer_name, export_format):
-        lx.eval('scene.new')
-        newScene = lx.eval('query sceneservice scene.index ? current')
-        lx.eval('select.itemType mesh')
-        lx.eval('!!item.delete')
-        lx.eval('scene.set %s' % self.scnIndex)
-        self.scn.select(layers)
-        lx.eval('!layer.import %s {} true true false position:0' % newScene)
-        lx.eval('scene.set %s' % newScene)
-        self.set_name(layer_name)
+        self.set_name(originalItem, shrink=True, add=True)
 
-        lx.eval('!scene.saveAs "%s" "%s" false' % (output_path[0], export_format))
+    def export_selection(self, output_path, export_format):
+        lx.eval('!scene.saveAs "%s" "%s" true' % (output_path[0], export_format))
 
         self.export_log(os.path.basename(output_path[0]))
 
         if self.exportCageMorph_sw:
             self.export_cage(output_path[1], export_format)
-
-        lx.eval('scene.close')
 
     def export_cage(self, output_path, export_format):
         # Smooth the mesh entirely
@@ -511,7 +512,7 @@ class TilaBacthExport:
         # Apply Cage Morph map
         self.apply_morph(True, self.cageMorphMapName)
 
-        lx.eval('!scene.saveAs "%s" "%s" false' % (output_path, export_format))
+        lx.eval('!scene.saveAs "%s" "%s" true' % (output_path, export_format))
         self.export_log(os.path.basename(output_path))
 
     def export_hierarchy(self):
@@ -520,19 +521,26 @@ class TilaBacthExport:
 
     # Helpers, setter/getter, Selector
 
-    def file_to_proceed_constructor(self):
+    def items_to_proceed_constructor(self):
         for item in self.userSelection:
             if item.type == 'meshInst':
                 self.meshInstToProceed.append(item)
             if item.type == 'mesh':
                 self.meshItemToProceed.append(item)
+        self.sort_original_items()
 
-    def duplicate_rename(self, arr):
+    def sort_original_items(self):
+        for i in self.meshInstToProceed:
+            self.sortedOriginalItems.append(i)
+        for i in self.meshItemToProceed:
+            self.sortedOriginalItems.append(i)
+
+    def duplicate_rename(self, arr, number):
         duplicate_arr = []
         for item in arr:
             layer_name = item.name
             duplicate = self.scn.duplicateItem(item)
-            duplicate.name = '%s_1' % layer_name
+            duplicate.name = '%s_%s' % (layer_name, number)
             duplicate_arr.append(duplicate)
             self.proceededMesh.append(duplicate)
 
@@ -544,19 +552,18 @@ class TilaBacthExport:
         else:
             return self.scn.name
 
-    def set_name(self, layer_name):
-        if self.exportEach_sw:
-            self.scn.selected[0].name = layer_name
+    def set_name(self, arr, shrink, add, layer_name=''):
+        for item in arr:
+            currName = item.name
 
-        else:
-            lx.eval('select.itemType mesh')
-            duplicate = self.scn.selected
-            for l in duplicate:
-                self.scn.select(l)
-                current_name = l.name
-                current_name = current_name[:-2]
-                l.name = current_name
-            lx.eval('select.itemType mesh')
+            if add:
+                if shrink:
+                    currName = currName[:-2]
+                currName += layer_name
+            else:
+                currName = layer_name
+
+            item.name = currName
 
     # Item Processing
 

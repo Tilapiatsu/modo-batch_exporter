@@ -423,6 +423,8 @@ class TilaBacthExport:
         self.freeze_geo()
         self.triple()
 
+        self.apply_morph(self.applyMorphMap_sw, self.morphMapName)
+
         self.reset_pos()
         self.reset_rot()
         self.reset_sca()
@@ -436,8 +438,6 @@ class TilaBacthExport:
         self.freeze_sca()
         self.freeze_pos()
         self.freeze_she()
-
-        self.apply_morph(self.applyMorphMap_sw, self.morphMapName)
 
     def export_all_format(self, output_dir, duplicate, layer_name, index=0):
 

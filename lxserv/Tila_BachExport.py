@@ -377,7 +377,7 @@ class TilaBacthExport:
             lx.eval('pref.value units.upAxis %s' % self.upAxis)
 
         if self.exportFormatFbx_sw:
-            lx.eval('user.value sceneio.fbx.save.triangulate false')
+            #lx.eval('user.value sceneio.fbx.save.triangulate false')
             if self.exportHierarchy_sw:
                 lx.eval('user.value sceneio.fbx.save.exportType FBXExportSelectionWithHierarchy')
             else:
@@ -708,7 +708,7 @@ class TilaBacthExport:
 
         if self.exportFormatFbx_sw:
             lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
-            lx.eval('user.value sceneio.fbx.save.triangulate %s' % self.fbxTriangulate)
+            #lx.eval('user.value sceneio.fbx.save.triangulate %s' % self.fbxTriangulate)
 
         if self.upAxis != self.iUpAxis:
             lx.eval('pref.value units.upAxis %s' % self.iUpAxis)
@@ -879,7 +879,7 @@ class CmdBatchExport(lxu.command.BasicCommand):
                 currPath = ""
 
             fbxExportType = lx.eval1('user.value sceneio.fbx.save.exportType ?')
-            fbxTriangulate = lx.eval1('user.value sceneio.fbx.save.triangulate ?')
+            fbxTriangulate = False
 
             scnIndex = lx.eval('query sceneservice scene.index ? current')
 

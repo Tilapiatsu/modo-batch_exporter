@@ -3,10 +3,12 @@ import dialog
 
 # Item Processing
 
+
 def apply_morph(self, condition, name):
     if condition:
         dialog.processing_log('Applying Morph Map : ' + name)
         lx.eval('vertMap.applyMorph %s 1.0' % name)
+
 
 def smooth_angle(self):
     if self.smoothAngle_sw:
@@ -17,6 +19,7 @@ def smooth_angle(self):
         lx.eval('user.value vnormkit.angle %s' % currAngle)
         lx.eval('vertMap.updateNormals')
 
+
 def harden_uv_border(self):
     if self.hardenUvBorder_sw:
         dialog.processing_log("HardenUvBorder = " + self.uvMapName)
@@ -26,30 +29,36 @@ def harden_uv_border(self):
         lx.eval('vertMap.updateNormals')
         lx.eval('select.type item')
 
+
 def triple(self):
     if self.triple_sw:
         dialog.processing_log("Triangulate")
         lx.eval('poly.triple')
+
 
 def reset_pos(self):
     if self.resetPos_sw:
         dialog.transform_log("Reset Position")
         lx.eval('transform.reset translation')
 
+
 def reset_rot(self):
     if self.resetRot_sw:
         dialog.transform_log("Reset Rotation")
         lx.eval('transform.reset rotation')
+
 
 def reset_sca(self):
     if self.resetSca_sw:
         dialog.transform_log("Reset Scale")
         lx.eval('transform.reset scale')
 
+
 def reset_she(self):
     if self.resetShe_sw:
         dialog.transform_log("Reset Shear")
         lx.eval('transform.reset shear')
+
 
 def freeze_pos(self):
     if self.freezePos_sw:
@@ -58,12 +67,14 @@ def freeze_pos(self):
         lx.eval('transform.freeze translation')
         lx.eval('vertMap.updateNormals')
 
+
 def freeze_rot(self):
     if self.freezeRot_sw:
         dialog.transform_log("Freeze Rotation")
 
         lx.eval('transform.freeze rotation')
         lx.eval('vertMap.updateNormals')
+
 
 def freeze_sca(self, force=False):
     if self.freezeSca_sw or force:
@@ -73,6 +84,7 @@ def freeze_sca(self, force=False):
         lx.eval('transform.freeze scale')
         lx.eval('vertMap.updateNormals')
 
+
 def freeze_she(self):
     if self.freezeShe_sw:
         dialog.transform_log("Freeze Shear")
@@ -80,10 +92,12 @@ def freeze_she(self):
         lx.eval('transform.freeze shear')
         lx.eval('vertMap.updateNormals')
 
+
 def freeze_geo(self):
     if self.freezeGeo_sw:
         dialog.transform_log("Freeze Geometry")
         lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
+
 
 def freeze_instance(self, type=0):
     if type == 1 and self.scn.selected[0].type == 'meshInst':
@@ -103,6 +117,7 @@ def freeze_instance(self, type=0):
                 else:
                     self.proceededMesh[i] = self.scn.selected[i]
 
+
 def position_offset(self):
     if self.posX != 0.0 or self.posY != 0.0 or self.posZ != 0.0:
         dialog.transform_log("Position offset = (%s, %s, %s)" % (self.posX, self.posY, self.posZ))
@@ -113,16 +128,18 @@ def position_offset(self):
         lx.eval('transform.channel pos.Y %s' % str(float(self.posY) + currPosition.y.get()))
         lx.eval('transform.channel pos.Z %s' % str(float(self.posZ) + currPosition.z.get()))
 
+
 def scale_amount(self):
     if self.scaX != 1.0 or self.scaY != 1.0 or self.scaZ != 1.0:
         dialog.transform_log("Scale amount = (%s, %s, %s)" % (self.scaX, self.scaY, self.scaZ))
 
         currScale = self.scn.selected[0].scale
 
-        self.freeze_sca()
+        freeze_sca(self)
         lx.eval('transform.channel scl.X %s' % str(float(self.scaX) * currScale.x.get()))
         lx.eval('transform.channel scl.Y %s' % str(float(self.scaY) * currScale.y.get()))
         lx.eval('transform.channel scl.Z %s' % str(float(self.scaZ) * currScale.z.get()))
+
 
 def rot_angle(self):
     if self.rotX != 0.0 or self.rotY != 0.0 or self.rotZ != 0.0:
@@ -133,4 +150,4 @@ def rot_angle(self):
         lx.eval('transform.channel rot.X "%s"' % str(float(self.rotX) + currRotation.x.get()))
         lx.eval('transform.channel rot.Y "%s"' % str(float(self.rotY) + currRotation.y.get()))
         lx.eval('transform.channel rot.Z "%s"' % str(float(self.rotZ) + currRotation.z.get()))
-        self.freeze_rot()
+        freeze_rot(self)

@@ -1,7 +1,12 @@
+import lx
 import os
 import dialog
+import sys
+import Tila_BatchExportModule as t
+
 
 # Path Constructor
+
 def construct_file_path(self, output_dir, layer_name, ext):
     if self.scanFiles_sw:
         if self.exportEach_sw:
@@ -29,7 +34,7 @@ def items_to_proceed_constructor(self):
             self.meshInstToProceed.append(item)
         if item.type == 'mesh':
             self.meshItemToProceed.append(item)
-    self.sort_original_items()
+    sort_original_items(self)
 
 
 def sort_original_items(self):
@@ -71,6 +76,7 @@ def set_name(self, arr, shrink, add, layer_name=''):
 
         item.name = currName
 
+
 def open_destination_folder(self, output_dir):
     if self.exportFile_sw:
         if self.openDestFolder_sw:
@@ -81,4 +87,27 @@ def open_destination_folder(self, output_dir):
             else:
                 dialog.open_folder(os.path.split(output_dir)[0])
 
-    dialog.ending_log(self)
+
+def check_selection_count(self):
+    if self.userSelectionCount == 0:  # No file Selected
+        dialog.init_message('error', 'No item selected', 'Select at least one item')
+        sys.exit()
+
+
+def getIteratorTemplate(i):
+    i = str(i)
+    iterator = ''
+
+    if lx.eval('pref.value application.indexStyle ?') == t.indexStyle[0]:
+        iterator = ' (' + i + ')'
+
+    elif lx.eval('pref.value application.indexStyle ?') == t.indexStyle[1]:
+        iterator = '(' + i + ')'
+
+    elif lx.eval('pref.value application.indexStyle ?') == t.indexStyle[2]:
+        iterator = ' ' + i
+
+    elif lx.eval('pref.value application.indexStyle ?') == t.indexStyle[3]:
+        iterator = '_' + i
+
+    return iterator

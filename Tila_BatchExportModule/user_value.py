@@ -1,9 +1,9 @@
 import lx
 
+# Querring and Adding User Values
 
 def query_User_Value(self, index, argPrefix, argName):
     if not self.dyna_IsSet(index):
-        print index
         return lx.eval('user.value %s ?' % (argPrefix + argName))
 
 

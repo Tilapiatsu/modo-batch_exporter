@@ -24,9 +24,10 @@ from Tila_BatchExportModule import batch_export
 
 class CmdBatchExport(lxu.command.BasicCommand):
     def __init__(self):
+        lxu.command.BasicCommand.__init__(self)
+
         reload(user_value)
         reload(t)
-        lxu.command.BasicCommand.__init__(self)
 
         user_value.add_User_Values(self, t.userValues)
 
@@ -54,19 +55,22 @@ class CmdBatchExport(lxu.command.BasicCommand):
             if currPath is None:
                 currPath = ""
 
-            fbxExportType = lx.eval1('user.value sceneio.fbx.save.exportType ?')
-            fbxTriangulate = False
-
             scnIndex = lx.eval('query sceneservice scene.index ? current')
-
-            upAxis = lx.eval('pref.value units.upAxis ?')
-            iUpAxis = upAxis
 
             userValues = user_value.query_User_Values(self, 'tilaBExp.')
 
             tbe = batch_export.TilaBacthExport
 
-            tbe.process_items(tbe(userSelection, userSelectionCount, scn, currScn, currPath, scnIndex, upAxis, iUpAxis, fbxExportType, fbxTriangulate, self.dyna_Bool(0), self.dyna_Bool(1), bool(userValues[2]), bool(userValues[3]), bool(userValues[4]), bool(userValues[5]), bool(userValues[6]), bool(userValues[7]), bool(userValues[8]), bool(userValues[9]), bool(userValues[10]), bool(userValues[11]), bool(userValues[12]), bool(userValues[13]), bool(userValues[14]), userValues[15], userValues[16], userValues[17], userValues[18], userValues[19], userValues[20], userValues[21], userValues[22], userValues[23], bool(userValues[24]), userValues[25], bool(userValues[26]), userValues[27], bool(userValues[28]), bool(userValues[29]), bool(userValues[30]), bool(userValues[31]), bool(userValues[32]), bool(userValues[33]), bool(userValues[34]), bool(userValues[35]), bool(userValues[36]), bool(userValues[37]), bool(userValues[38]), userValues[39], bool(userValues[40]), bool(userValues[41]), userValues[42]))
+            userValues[0] = True
+            userValues[1] = False
+
+            tbe.batch_export(tbe(userSelection,
+                                 userSelectionCount,
+                                 scn,
+                                 currScn,
+                                 currPath,
+                                 scnIndex,
+                                 userValues))
         except:
             lx.out(traceback.format_exc())
 

@@ -39,11 +39,11 @@ def export_log(message):
     print_log("Exporting_File : " + message)
 
 
-def begining_log(exportFile_sw):
+def begining_log(self):
     print_log('')
     print_log('----------------------------------------------------------------------------------------------------')
     text = " "
-    if not exportFile_sw:
+    if not self.exportFile_sw:
         text += 'TRANSFORM '
     else:
         text += 'EXPORT '
@@ -52,10 +52,10 @@ def begining_log(exportFile_sw):
     print_log('----------------------------------------------------------------------------------------------------')
 
 
-def ending_log(exportFile_sw):
+def ending_log(self):
     print_log('----------------------------------------------------------------------------------------------------')
     text = " "
-    if not exportFile_sw:
+    if not self.exportFile_sw:
         text += 'TRANSFORM '
     else:
         text += 'EXPORT '
@@ -125,25 +125,3 @@ def init_dialog(dialog_type, currPath):
     if dialog_type == "cancel":
         init_message('error', 'Canceled', 'Operation aborded')
         sys.exit()
-
-
-# Path Constructor
-'''
-def construct_file_path(output_dir, layer_name, ext):
-    if self.scanFiles_sw:
-        if self.exportEach_sw:
-            sceneName = self.scn.name
-            return [os.path.join(output_dir, sceneName + '_-_' + layer_name + '.' + ext),
-                    os.path.join(output_dir, sceneName + '_-_' + layer_name
-                                 + '_cage.' + ext)]
-        else:
-            return [os.path.join(output_dir, layer_name + '.' + ext),
-                    os.path.join(output_dir, layer_name + '_cage.' + ext)]
-    else:
-        if self.exportEach_sw:
-            return [os.path.join(output_dir, layer_name + '.' + ext),
-                    os.path.join(output_dir, layer_name + '_cage.' + ext)]
-        else:
-            splited_path = os.path.splitext(output_dir)
-            return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
-'''

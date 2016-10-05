@@ -91,8 +91,9 @@ curr_path = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(dialog.parentPath(curr_path), "Tila_Config")
 
 
-configFile = 'tila_batchexport.cfg'
-configRoot = 'configuration'
-configSubElement = 'atom'
+config_filename = 'tila_batchexport.cfg'
+config_root = 'configuration'
+config_sub_element = 'atom'
+config_last_directory = 'LastDirectory'
 
-config_file_path = os.path.join(config_path, configFile)
+config_file_path = os.path.join(config_path, config_filename)

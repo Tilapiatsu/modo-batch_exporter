@@ -64,6 +64,14 @@ class CmdBatchExport(lxu.command.BasicCommand):
             userValues[0] = True
             userValues[1] = False
 
+            tbe.export_at_least_one_format(tbe(userSelection,
+                                               userSelectionCount,
+                                               scn,
+                                               currScn,
+                                               currPath,
+                                               scnIndex,
+                                               userValues))
+
             tbe.batch_export(tbe(userSelection,
                                  userSelectionCount,
                                  scn,

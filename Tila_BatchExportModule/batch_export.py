@@ -1,6 +1,7 @@
 import modo
 import lx
 import os
+import sys
 import Tila_BatchExportModule as t
 import dialog
 import item_processing
@@ -21,6 +22,7 @@ class TilaBacthExport:
         reload(dialog)
         reload(item_processing)
         reload(helper)
+        reload(file)
         self.userSelection = userSelection
         self.userSelectionCount = userSelectionCount
         self.scn = scn
@@ -74,10 +76,10 @@ class TilaBacthExport:
 
         self.openDestFolder_sw = bool(userValues[32])
 
-        self.exportFormatFbx_sw = bool(userValues[33])
-        self.exportFormatObj_sw = bool(userValues[34])
-        self.exportFormatLxo_sw = bool(userValues[35])
-        self.exportFormatLwo_sw = bool(userValues[36])
+        self.exportFormatLxo_sw = bool(userValues[33])
+        self.exportFormatLwo_sw = bool(userValues[34])
+        self.exportFormatFbx_sw = bool(userValues[35])
+        self.exportFormatObj_sw = bool(userValues[36])
         self.exportFormatAbc_sw = bool(userValues[37])
         self.exportFormatAbchdf_sw = bool(userValues[38])
         self.exportFormatDae_sw = bool(userValues[39])
@@ -97,6 +99,24 @@ class TilaBacthExport:
 
         t.get_default_settings(self)
         print self.exportFile_sw
+
+    def export_at_least_one_format(self):
+        if not (self.exportFormatFbx_sw
+                or self.exportFormatObj_sw
+                or self.exportFormatLxo_sw
+                or self.exportFormatLwo_sw
+                or self.exportFormatAbc_sw
+                or self.exportFormatAbchdf_sw
+                or self.exportFormatDae_sw
+                or self.exportFormatDxf_sw
+                or self.exportFormat3dm_sw
+                or self.exportFormatGeo_sw
+                or self.exportFormatStl_sw
+                or self.exportFormatX3d_sw
+                or self.exportFormatSvg_sw
+                or self.exportFormatPlt_sw):
+            dialog.init_message('info', 'No export format selected', 'Select at least one export fromat in the form')
+            sys.exit()
 
     # Loops methods
 

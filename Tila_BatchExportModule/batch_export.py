@@ -5,6 +5,7 @@ import Tila_BatchExportModule as t
 import dialog
 import item_processing
 import helper
+from Tila_BatchExportModule import file
 
 
 class TilaBacthExport:
@@ -115,6 +116,7 @@ class TilaBacthExport:
             dialog.init_dialog('cancel', self.currPath)
         else:
             output_dir = lx.eval1('dialog.result ?')
+            file.updateExportPath(output_dir, '')
             self.batch_process(output_dir)
 
         helper.open_destination_folder(self, output_dir)

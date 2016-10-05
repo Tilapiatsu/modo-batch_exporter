@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import lx
+import os
+from Tila_BatchExportModule import dialog
 
 
 def enum(*args):
@@ -84,3 +86,13 @@ exportTypes = [
 processingItemType = enum('MESHITEM', 'MESHINST')
 
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
+
+curr_path = os.path.dirname(os.path.realpath(__file__))
+config_path = os.path.join(dialog.parentPath(curr_path), "Tila_Config")
+
+
+configFile = 'tila_batchexport.cfg'
+configRoot = 'configuration'
+configSubElement = 'atom'
+
+config_file_path = os.path.join(config_path, configFile)

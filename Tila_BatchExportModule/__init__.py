@@ -95,5 +95,8 @@ config_filename = 'tila_batchexport.cfg'
 config_root = 'configuration'
 config_sub_element = 'atom'
 config_last_directory = 'LastDirectory'
+config_export_path = 'ExportPath'
+config_browse_src_path = 'BrowseSrcPath'
+config_browse_dest_path = 'BrowseDestPath'
 
 config_file_path = os.path.join(config_path, config_filename)

@@ -33,27 +33,50 @@ def indent(elem, level=0):
 def initConfigFile(config):
     return ET.Element(config)
 
-def updateExportPath(export_path, browse_path):
+def getLatestPath(attribName):
     if isFileExist(t.config_file_path):
+        configuration = getFileRoot(t.config_file_path)
 
-        tree = ET.parse(t.config_file_path)
-        configuration = tree.getroot()
+        last_dir = configuration.find(t.config_last_directory)
+        return getSubElement(last_dir, 'type', attribName)
+    else:
+        return ''
 
-        for atom in configuration.iter(t.config_last_directory):
-            updateElementIfNeeded(atom, 'ExportPath', export_path)
-            updateElementIfNeeded(atom, 'BrowsPath', browse_path)
+def updateExportPath(export_path, browse_src_path, browse_dest_path):
+    if isFileExist(t.config_file_path):
+        configuration = getFileRoot(t.config_file_path)
+
+        last_dir = configuration.find(t.config_last_directory)
+        updateElementIfNeeded(last_dir, 'type', t.config_export_path, export_path)
+        updateElementIfNeeded(last_dir, 'type', t.config_browse_src_path, browse_src_path)
+        updateElementIfNeeded(last_dir, 'type', t.config_browse_dest_path, browse_dest_path)
 
     else:
         configuration = ET.Element(t.config_root)
-        attribute = ET.SubElement(configuration, t.config_last_directory)
-        ET.SubElement(attribute, t.config_sub_element, type="ExportPath").text = export_path
-        ET.SubElement(attribute, t.config_sub_element, type="BrowsePath").text = browse_path
+        last_dir = ET.SubElement(configuration, t.config_last_directory)
+        ET.SubElement(last_dir, t.config_sub_element, type=t.config_export_path).text = export_path
+        ET.SubElement(last_dir, t.config_sub_element, type=t.config_browse_src_path).text = browse_src_path
+        ET.SubElement(last_dir, t.config_sub_element, type=t.config_browse_dest_path).text = browse_dest_path
 
     writeConfigFile(configuration)
 
-def updateElementIfNeeded(element, name, currValue):
-    if element.get(name) != currValue:
-        element.set(name, currValue)
+
+def updateElementIfNeeded(element, attrib, sub, currValue):
+    for e in element.iter(t.config_sub_element):
+        if e.get(attrib) == sub:
+            path = e.text
+            if path != currValue:
+                e.text = currValue
+
+def getFileRoot(file):
+    tree = ET.parse(file)
+    return tree.getroot()
+
+def getSubElement(element, attrib, sub):
+    for e in element.iter(t.config_sub_element):
+        if e.get(attrib) == sub:
+            return e
+
 
 def isFileExist(filepath):
     if isfile(filepath):

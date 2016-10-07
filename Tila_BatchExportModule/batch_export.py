@@ -98,7 +98,6 @@ class TilaBacthExport:
         self.processingItemType = t.processingItemType
 
         t.get_default_settings(self)
-        print self.exportFile_sw
 
     def export_at_least_one_format(self):
         if not (self.exportFormatFbx_sw
@@ -118,16 +117,26 @@ class TilaBacthExport:
             dialog.init_message('info', 'No export format selected', 'Select at least one export fromat in the form')
             sys.exit()
 
+    def at_least_one_item_selected(self):
+        helper.items_to_proceed_constructor(self)
+        if len(self.meshItemToProceed) == 0 and len(self.meshInstToProceed) == 0:
+            dialog.init_message('info', 'No mesh item selected',
+                                    'Select at least one mesh item')
+            sys.exit()
+
     # Loops methods
 
     def batch_export(self):
         helper.check_selection_count(self)
+        self.at_least_one_item_selected()
 
         dialog.begining_log(self)
 
         if self.exportEach_sw:
+            self.currPath = file.getLatestPath(t.config_export_path)
             dialog.init_dialog("output", self.currPath)
         else:
+            self.currPath = file.getLatestPath(t.config_export_path)
             dialog.init_dialog("file_save", self.currPath)
 
         try:  # output folder dialog
@@ -143,6 +152,7 @@ class TilaBacthExport:
         dialog.ending_log(self)
 
     def batch_folder(self):
+        self.currPath = file.getLatestPath(t.config_browse_src_path)
         dialog.init_dialog("input", self.currPath)
 
         try:  # mesh to process dialog
@@ -151,6 +161,7 @@ class TilaBacthExport:
             dialog.init_dialog('cancel', self.currPath)
         else:
             files = lx.evalN('dialog.result ?')
+            self.currPath = file.getLatestPath(t.config_browse_dest_path)
             dialog.init_dialog("output", self.currPath)
             try:  # output folder dialog
                 lx.eval('dialog.open')
@@ -186,6 +197,7 @@ class TilaBacthExport:
 
     def batch_transform(self):
         helper.check_selection_count(self)
+        self.at_least_one_item_selected()
         dialog.begining_log(self)
 
         self.transform_loop()
@@ -208,7 +220,6 @@ class TilaBacthExport:
         self.clean_scene()
 
     def transform_loop(self):
-        helper.items_to_proceed_constructor(self)
 
         if len(self.meshInstToProceed) > 0:
             self.scn.select(self.meshInstToProceed)

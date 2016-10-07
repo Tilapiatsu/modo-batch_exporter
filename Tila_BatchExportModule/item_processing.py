@@ -1,5 +1,6 @@
 import lx
 import dialog
+import modo
 
 # Item Processing
 
@@ -151,3 +152,8 @@ def rot_angle(self):
         lx.eval('transform.channel rot.Y "%s"' % str(float(self.rotY) + currRotation.y.get()))
         lx.eval('transform.channel rot.Z "%s"' % str(float(self.rotZ) + currRotation.z.get()))
         freeze_rot(self)
+
+
+def merge_mesh(self, item):
+    self.scn.select(item)
+    lx.eval('layer.mergeMeshes true')

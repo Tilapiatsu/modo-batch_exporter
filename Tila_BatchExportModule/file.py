@@ -38,7 +38,7 @@ def getLatestPath(attribName):
         configuration = getFileRoot(t.config_file_path)
 
         last_dir = configuration.find(t.config_last_directory)
-        return getSubElement(last_dir, 'type', attribName)
+        return getSubElement(last_dir, 'type', attribName).text
     else:
         return ''
 
@@ -65,7 +65,7 @@ def updateElementIfNeeded(element, attrib, sub, currValue):
     for e in element.iter(t.config_sub_element):
         if e.get(attrib) == sub:
             path = e.text
-            if path != currValue:
+            if path != currValue and currValue != '':
                 e.text = currValue
 
 def getFileRoot(file):

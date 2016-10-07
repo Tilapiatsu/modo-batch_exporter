@@ -11,7 +11,6 @@ from Tila_BatchExportModule import batch_export
 
 ############## TODO ###################
 '''
- - find a way to keep last output folder in memory
  - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
  - Add "Export Visible" Feature

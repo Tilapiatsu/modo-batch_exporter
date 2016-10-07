@@ -34,62 +34,66 @@ class TilaBacthExport:
         self.scanFiles_sw = bool(userValues[1])
         self.exportEach_sw = bool(userValues[2])
         self.exportHierarchy_sw = bool(userValues[3])
+        self.exportVisible_sw = bool(userValues[4])
 
-        self.triple_sw = bool(userValues[4])
+        self.triple_sw = bool(userValues[5])
+        self.mergeMesh_sw = bool(userValues[6])
+        self.askBeforeOverride_sw = bool(userValues[7])
+        self.udimPerMaterialSet_sw = bool(userValues[8])
 
-        self.resetPos_sw = bool(userValues[5])
-        self.resetRot_sw = bool(userValues[6])
-        self.resetSca_sw = bool(userValues[7])
-        self.resetShe_sw = bool(userValues[8])
+        self.resetPos_sw = bool(userValues[9])
+        self.resetRot_sw = bool(userValues[10])
+        self.resetSca_sw = bool(userValues[11])
+        self.resetShe_sw = bool(userValues[12])
 
-        self.freezePos_sw = bool(userValues[9])
-        self.freezeRot_sw = bool(userValues[10])
-        self.freezeSca_sw = bool(userValues[11])
-        self.freezeShe_sw = bool(userValues[12])
+        self.freezePos_sw = bool(userValues[13])
+        self.freezeRot_sw = bool(userValues[14])
+        self.freezeSca_sw = bool(userValues[15])
+        self.freezeShe_sw = bool(userValues[16])
 
-        self.freezeGeo_sw = bool(userValues[13])
-        self.freezeInstance_sw = bool(userValues[14])
+        self.freezeGeo_sw = bool(userValues[17])
+        self.freezeInstance_sw = bool(userValues[18])
 
-        self.posX = userValues[15]
-        self.posY = userValues[16]
-        self.posZ = userValues[17]
+        self.posX = userValues[19]
+        self.posY = userValues[20]
+        self.posZ = userValues[21]
 
-        self.rotX = userValues[18]
-        self.rotY = userValues[19]
-        self.rotZ = userValues[20]
+        self.rotX = userValues[22]
+        self.rotY = userValues[23]
+        self.rotZ = userValues[24]
 
-        self.scaX = userValues[21]
-        self.scaY = userValues[22]
-        self.scaZ = userValues[23]
+        self.scaX = userValues[25]
+        self.scaY = userValues[26]
+        self.scaZ = userValues[27]
 
-        self.smoothAngle_sw = bool(userValues[24])
-        self.smoothAngle = userValues[25]
+        self.smoothAngle_sw = bool(userValues[28])
+        self.smoothAngle = userValues[29]
 
-        self.hardenUvBorder_sw = bool(userValues[26])
-        self.uvMapName = userValues[27]
+        self.hardenUvBorder_sw = bool(userValues[30])
+        self.uvMapName = userValues[31]
 
-        self.exportCageMorph_sw = bool(userValues[28])
-        self.cageMorphMapName = userValues[29]
+        self.exportCageMorph_sw = bool(userValues[32])
+        self.cageMorphMapName = userValues[33]
 
-        self.applyMorphMap_sw = bool(userValues[30])
-        self.morphMapName = userValues[31]
+        self.applyMorphMap_sw = bool(userValues[34])
+        self.morphMapName = userValues[35]
 
-        self.openDestFolder_sw = bool(userValues[32])
+        self.openDestFolder_sw = bool(userValues[36])
 
-        self.exportFormatLxo_sw = bool(userValues[33])
-        self.exportFormatLwo_sw = bool(userValues[34])
-        self.exportFormatFbx_sw = bool(userValues[35])
-        self.exportFormatObj_sw = bool(userValues[36])
-        self.exportFormatAbc_sw = bool(userValues[37])
-        self.exportFormatAbchdf_sw = bool(userValues[38])
-        self.exportFormatDae_sw = bool(userValues[39])
-        self.exportFormatDxf_sw = bool(userValues[40])
-        self.exportFormat3dm_sw = bool(userValues[41])
-        self.exportFormatGeo_sw = bool(userValues[42])
-        self.exportFormatStl_sw = bool(userValues[43])
-        self.exportFormatX3d_sw = bool(userValues[44])
-        self.exportFormatSvg_sw = bool(userValues[45])
-        self.exportFormatPlt_sw = bool(userValues[46])
+        self.exportFormatLxo_sw = bool(userValues[37])
+        self.exportFormatLwo_sw = bool(userValues[38])
+        self.exportFormatFbx_sw = bool(userValues[39])
+        self.exportFormatObj_sw = bool(userValues[40])
+        self.exportFormatAbc_sw = bool(userValues[41])
+        self.exportFormatAbchdf_sw = bool(userValues[42])
+        self.exportFormatDae_sw = bool(userValues[43])
+        self.exportFormatDxf_sw = bool(userValues[44])
+        self.exportFormat3dm_sw = bool(userValues[45])
+        self.exportFormatGeo_sw = bool(userValues[46])
+        self.exportFormatStl_sw = bool(userValues[47])
+        self.exportFormatX3d_sw = bool(userValues[48])
+        self.exportFormatSvg_sw = bool(userValues[49])
+        self.exportFormatPlt_sw = bool(userValues[50])
 
         self.meshItemToProceed = []
         self.meshInstToProceed = []
@@ -134,6 +138,7 @@ class TilaBacthExport:
 
         if self.exportEach_sw:
             self.currPath = file.getLatestPath(t.config_export_path)
+            print self.currPath
             dialog.init_dialog("output", self.currPath)
         else:
             self.currPath = file.getLatestPath(t.config_export_path)
@@ -145,7 +150,7 @@ class TilaBacthExport:
             dialog.init_dialog('cancel', self.currPath)
         else:
             output_dir = lx.eval1('dialog.result ?')
-            file.updateExportPath(output_dir, '')
+            file.updateExportPath(output_dir, '', '')
             self.batch_process(output_dir)
 
         helper.open_destination_folder(self, output_dir)
@@ -161,6 +166,7 @@ class TilaBacthExport:
             dialog.init_dialog('cancel', self.currPath)
         else:
             files = lx.evalN('dialog.result ?')
+            file.updateExportPath('', os.path.split(files[0])[0], '')
             self.currPath = file.getLatestPath(t.config_browse_dest_path)
             dialog.init_dialog("output", self.currPath)
             try:  # output folder dialog
@@ -169,6 +175,7 @@ class TilaBacthExport:
                 dialog.init_dialog('cancel', self.currPath)
             else:
                 output_dir = lx.eval1('dialog.result ?')
+                file.updateExportPath('', '', output_dir)
 
                 for f in files:
                     dialog.processing_log('.....................................   ' + os.path.basename(
@@ -189,7 +196,7 @@ class TilaBacthExport:
                     self.batch_process(output_dir)
                     lx.eval('!scene.close')
 
-                    dialog.init_message('info', 'Done', 'Operation completed successfully !')
+        dialog.init_message('info', 'Done', 'Operation completed successfully !')
 
         helper.open_destination_folder(self, output_dir)
 
@@ -225,9 +232,19 @@ class TilaBacthExport:
             self.scn.select(self.meshInstToProceed)
             self.transform_selected(type=self.processingItemType.MESHINST)
 
+        instances = self.scn.selected
+
         if len(self.meshItemToProceed) > 0:
             self.scn.select(self.meshItemToProceed)
             self.transform_selected(type=self.processingItemType.MESHITEM)
+
+        mesh = self.scn.selected
+
+        if self.mergeMesh_sw:
+            for i in instances:
+                mesh.append(i)
+
+            #item_processing.merge_mesh(self, mesh)
 
     def transform_selected(self, type):
         self.select_hierarchy()

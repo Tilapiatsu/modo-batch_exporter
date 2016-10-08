@@ -52,6 +52,8 @@ class CmdBatchExport(lxu.command.BasicCommand):
             userValues[0] = True
             userValues[1] = False
 
+            print 'visible = ' + str(userValues[4])
+
             tbe.export_at_least_one_format(tbe(userSelection,
                                                userSelectionCount,
                                                scn,

@@ -110,6 +110,7 @@ class TilaBacthExport:
         self.sortedOriginalItems = []
         self.proceededMesh = []
         self.processingItemType = t.processingItemType
+        self.overrideFiles = ''
 
         t.get_default_settings(self)
 
@@ -387,9 +388,7 @@ class TilaBacthExport:
         self.scn.select('Directional Light')
         lx.eval('!!item.delete')
 
-        lx.eval('!scene.saveAs "%s" %s true' % (output_path[0], export_format))
-
-        dialog.export_log(os.path.basename(output_path[0]))
+        self.save_file(output_path[0], export_format)
 
         if self.exportCageMorph_sw:
             self.export_cage(output_path[1], export_format)
@@ -404,13 +403,25 @@ class TilaBacthExport:
         # Apply Cage Morph map
         item_processing.apply_morph(self, True, self.cageMorphMapName)
 
-        lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
-        dialog.export_log(os.path.basename(output_path))
+        self.save_file(output_path, export_format)
 
     def select_hierarchy(self):
         if self.exportHierarchy_sw:
             lx.eval('select.itemHierarchy')
 
+    def save_file(self, output_path, export_format):
+        if self.file_conflict(output_path) and self.askBeforeOverride_sw:
+            if self.overrideFiles != 'yesToAll' and self.overrideFiles != 'noToAll':
+                self.overrideFiles = dialog.ask_before_override(os.path.split(output_path)[1])
+                if self.overrideFiles == 'cancel':
+                    sys.exit()
+
+            if self.overrideFiles == 'ok' or self.overrideFiles == 'yesToAll':
+                lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
+                dialog.export_log(os.path.basename(output_path))
+        else:
+            lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
+            dialog.export_log(os.path.basename(output_path))
 
     # Cleaning
 
@@ -422,3 +433,7 @@ class TilaBacthExport:
         if self.exportFormatFbx_sw:
             lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
             lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.fbxTriangulate)
+
+    @staticmethod
+    def file_conflict(path):
+        return os.path.isfile(path)

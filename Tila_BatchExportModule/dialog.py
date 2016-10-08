@@ -79,7 +79,7 @@ def init_custom_dialog(type, title, format, uname, ext, save_ext=None, path=None
 
     '''
     lx.eval("dialog.setup %s" % type)
-    lx.eval("dialog.title {%s}" % (title))
+    lx.eval("dialog.title {%s}" % title)
     lx.eval("dialog.fileTypeCustom {%s} {%s} {%s} {%s}" % (format, uname, ext, save_ext))
     if type == 'fileSave' and save_ext != None:
         lx.eval("dialog.fileSaveFormat %s extension" % save_ext)
@@ -95,11 +95,36 @@ def init_custom_dialog(type, title, format, uname, ext, save_ext=None, path=None
 
 
 def init_message(type, title, message):
-    lx.eval('dialog.setup {%s}' % type)
-    lx.eval('dialog.title {%s}' % title)
-    lx.eval('dialog.msg {%s}' % message)
-    lx.eval('dialog.open')
+    try:
+        lx.eval('dialog.setup {%s}' % type)
+        lx.eval('dialog.title {%s}' % title)
+        lx.eval('dialog.msg {%s}' % message)
+        lx.eval('dialog.open')
 
+        if type == 'okCancel' \
+                or type == 'yesNo' \
+                or type == 'yesNoCancel' \
+                or type == 'yesNoAll' \
+                or type == 'yesNoToAll' \
+                or type == 'saveOK' \
+                or type == 'fileOpen' \
+                or type == 'fileOpenMulti' \
+                or type == 'fileSave' \
+                or type == 'dir':
+            return lx.eval('dialog.result ?')
+
+    except:
+        if type == 'okCancel' \
+                or type == 'yesNo' \
+                or type == 'yesNoCancel' \
+                or type == 'yesNoAll' \
+                or type == 'yesNoToAll' \
+                or type == 'saveOK' \
+                or type == 'fileOpen' \
+                or type == 'fileOpenMulti' \
+                or type == 'fileSave' \
+                or type == 'dir':
+            return lx.eval('dialog.result ?')
 
 # Dialog initialisation
 
@@ -125,3 +150,7 @@ def init_dialog(dialog_type, currPath):
     if dialog_type == "cancel":
         init_message('error', 'Canceled', 'Operation aborded')
         sys.exit()
+
+
+def ask_before_override(filename):
+    return init_message('yesNoAll', 'File already exist', 'Do you want to override %s ?' % filename)

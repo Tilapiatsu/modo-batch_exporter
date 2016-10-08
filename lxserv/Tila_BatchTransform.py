@@ -9,17 +9,6 @@ import Tila_BatchExportModule as t
 from Tila_BatchExportModule import user_value
 from Tila_BatchExportModule import batch_export
 
-############## TODO ###################
-'''
- - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
- - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
- - Add "Export Visible" Feature
- - Add "Merge Mesh" feature
- - Add "Create UDIM UV From Material Set" Feature
- - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
-
-'''
-
 
 class CmdBatchExport(lxu.command.BasicCommand):
     def __init__(self):

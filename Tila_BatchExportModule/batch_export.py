@@ -8,6 +8,16 @@ import item_processing
 import helper
 from Tila_BatchExportModule import file
 
+############## TODO ###################
+'''
+ - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
+ - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
+ - Add "Export Visible" Feature
+ - Add "Create UDIM UV From Material Set" Feature
+ - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
+ - Add a rename auto_rename Template when exporting multiple objects : <objectName>_<sceneName>_####_low.<ext>
+
+'''
 
 class TilaBacthExport:
     def __init__(self,
@@ -138,7 +148,6 @@ class TilaBacthExport:
 
         if self.exportEach_sw:
             self.currPath = file.getLatestPath(t.config_export_path)
-            print self.currPath
             dialog.init_dialog("output", self.currPath)
         else:
             self.currPath = file.getLatestPath(t.config_export_path)
@@ -228,23 +237,25 @@ class TilaBacthExport:
 
     def transform_loop(self):
 
+        instances = []
         if len(self.meshInstToProceed) > 0:
             self.scn.select(self.meshInstToProceed)
             self.transform_selected(type=self.processingItemType.MESHINST)
+            instances = self.scn.selected
 
-        instances = self.scn.selected
-
+        meshes = []
         if len(self.meshItemToProceed) > 0:
             self.scn.select(self.meshItemToProceed)
             self.transform_selected(type=self.processingItemType.MESHITEM)
-
-        mesh = self.scn.selected
+            meshes = self.scn.selected
 
         if self.mergeMesh_sw:
             for i in instances:
-                mesh.append(i)
+                meshes.append(i)
 
-            #item_processing.merge_mesh(self, mesh)
+            item_processing.merge_meshes(self, meshes)
+            self.proceededMesh = [self.scn.selected[0]]
+            self.proceededMesh[0].name = os.path.split(self.currPath)[1][:-2]
 
     def transform_selected(self, type):
         self.select_hierarchy()

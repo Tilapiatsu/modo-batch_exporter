@@ -154,6 +154,7 @@ def rot_angle(self):
         freeze_rot(self)
 
 
-def merge_mesh(self, item):
+def merge_meshes(self, item):
     self.scn.select(item)
     lx.eval('layer.mergeMeshes true')
+    dialog.processing_log('Merge Mesh')

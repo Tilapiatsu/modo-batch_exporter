@@ -37,6 +37,7 @@ class CmdBatchExport(lxu.command.BasicCommand):
 
             userSelection = scn.selected
             userSelectionCount = len(userSelection)
+            olderSelection = []
 
             currPath = currScn.filename
 
@@ -49,8 +50,19 @@ class CmdBatchExport(lxu.command.BasicCommand):
 
             tbe = batch_export.TilaBacthExport
 
-            userValues[0] = False
             userValues[1] = False
+            userValues[2] = False
+
+            if bool(userValues[0]):
+                olderSelection = userSelection
+                userSelection = tbe.select_visible_items(tbe(userSelection,
+                                                         userSelectionCount,
+                                                         scn,
+                                                         currScn,
+                                                         currPath,
+                                                         scnIndex,
+                                                         userValues))
+                userSelectionCount = len(userSelection)
 
             tbe.batch_transform(tbe(userSelection,
                                     userSelectionCount,
@@ -59,6 +71,10 @@ class CmdBatchExport(lxu.command.BasicCommand):
                                     currPath,
                                     scnIndex,
                                     userValues))
+
+            if bool(userValues[0]):
+                scn.select(olderSelection)
+
         except:
             lx.out(traceback.format_exc())
 

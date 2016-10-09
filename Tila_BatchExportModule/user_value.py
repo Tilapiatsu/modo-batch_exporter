@@ -1,10 +1,20 @@
 import lx
+import Tila_BatchExportModule as t
 
 # Querring and Adding User Values
 
 def query_User_Value(self, index, argPrefix, argName):
     if not self.dyna_IsSet(index):
         return lx.eval('user.value %s ?' % (argPrefix + argName))
+    else:
+        if t.userValues[index][1] == 'boolean':
+            return self.dyna_Bool(index)
+        if t.userValues[index][1] == 'float':
+            return self.dyna_Float(index)
+        if t.userValues[index][1] == 'integer':
+            return self.dyna_Int(index)
+        if t.userValues[index][1] == 'string':
+            return self.dyna_String(index)
 
 
 def query_User_Values(self, argPrefix):

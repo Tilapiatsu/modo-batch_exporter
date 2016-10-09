@@ -95,35 +95,27 @@ def init_custom_dialog(type, title, format, uname, ext, save_ext=None, path=None
 
 
 def init_message(type, title, message):
+    return_result = type == 'okCancel' \
+                    or type == 'yesNo' \
+                    or type == 'yesNoCancel' \
+                    or type == 'yesNoAll' \
+                    or type == 'yesNoToAll' \
+                    or type == 'saveOK' \
+                    or type == 'fileOpen' \
+                    or type == 'fileOpenMulti' \
+                    or type == 'fileSave' \
+                    or type == 'dir'
     try:
         lx.eval('dialog.setup {%s}' % type)
         lx.eval('dialog.title {%s}' % title)
         lx.eval('dialog.msg {%s}' % message)
         lx.eval('dialog.open')
 
-        if type == 'okCancel' \
-                or type == 'yesNo' \
-                or type == 'yesNoCancel' \
-                or type == 'yesNoAll' \
-                or type == 'yesNoToAll' \
-                or type == 'saveOK' \
-                or type == 'fileOpen' \
-                or type == 'fileOpenMulti' \
-                or type == 'fileSave' \
-                or type == 'dir':
+        if return_result:
             return lx.eval('dialog.result ?')
 
     except:
-        if type == 'okCancel' \
-                or type == 'yesNo' \
-                or type == 'yesNoCancel' \
-                or type == 'yesNoAll' \
-                or type == 'yesNoToAll' \
-                or type == 'saveOK' \
-                or type == 'fileOpen' \
-                or type == 'fileOpenMulti' \
-                or type == 'fileSave' \
-                or type == 'dir':
+        if return_result:
             return lx.eval('dialog.result ?')
 
 # Dialog initialisation

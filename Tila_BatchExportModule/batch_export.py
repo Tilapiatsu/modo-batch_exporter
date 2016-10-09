@@ -12,7 +12,6 @@ from Tila_BatchExportModule import file
 '''
  - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
- - Add "Export Visible" Feature
  - Add "Create UDIM UV From Material Set" Feature
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
  - Add a rename auto_rename Template when exporting multiple objects : <objectName>_<sceneName>_####_low.<ext>
@@ -40,11 +39,11 @@ class TilaBacthExport:
         self.currPath = currPath
         self.scnIndex = scnIndex
 
-        self.exportFile_sw = bool(userValues[0])
-        self.scanFiles_sw = bool(userValues[1])
-        self.exportEach_sw = bool(userValues[2])
-        self.exportHierarchy_sw = bool(userValues[3])
-        self.exportVisible_sw = bool(userValues[4])
+        self.exportVisible_sw = bool(userValues[0])
+        self.exportFile_sw = bool(userValues[1])
+        self.scanFiles_sw = bool(userValues[2])
+        self.exportEach_sw = bool(userValues[3])
+        self.exportHierarchy_sw = bool(userValues[4])
 
         self.triple_sw = bool(userValues[5])
         self.mergeMesh_sw = bool(userValues[6])
@@ -135,8 +134,7 @@ class TilaBacthExport:
     def at_least_one_item_selected(self):
         helper.items_to_proceed_constructor(self)
         if len(self.meshItemToProceed) == 0 and len(self.meshInstToProceed) == 0:
-            dialog.init_message('info', 'No mesh item selected',
-                                    'Select at least one mesh item')
+            dialog.init_message('info', 'No mesh item selected', 'Select at least one mesh item')
             sys.exit()
 
     # Loops methods
@@ -422,6 +420,24 @@ class TilaBacthExport:
         else:
             lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
             dialog.export_log(os.path.basename(output_path))
+
+    def select_visible_items(self):
+        mesh = self.scn.items('mesh')
+        meshInst = self.scn.items('meshInst')
+
+        visible = []
+
+        for item in meshInst:
+            mesh.append(item)
+
+        for item in mesh:
+            visible_channel = item.channel('visible').get()
+            if visible_channel == 'default' or visible_channel == 'on':
+                visible.append(item)
+
+        self.scn.select(visible)
+        return visible
+
 
     # Cleaning
 

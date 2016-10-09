@@ -17,11 +17,11 @@ def get_default_settings(self):
 
 
 userValues = [
+    ['exportVisible_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['exportFile_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['scanFiles_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['exportEach_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['exportHierarchy_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportVisible_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['triple_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['mergeMesh_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['askBeforeOverride_sw', lx.symbol.sTYPE_BOOLEAN, True],

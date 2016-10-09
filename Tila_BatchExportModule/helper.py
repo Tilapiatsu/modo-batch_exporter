@@ -90,7 +90,10 @@ def open_destination_folder(self, output_dir):
 
 def check_selection_count(self):
     if self.userSelectionCount == 0:  # No file Selected
-        dialog.init_message('error', 'No item selected', 'Select at least one item')
+        if self.exportVisible_sw:
+            dialog.init_message('error', 'No item visible', 'At least one mesh item has to be visible')
+        else:
+            dialog.init_message('error', 'No item selected', 'Select at least one mesh item')
         sys.exit()
 
 

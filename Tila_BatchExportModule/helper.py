@@ -114,3 +114,65 @@ def getIteratorTemplate(i):
         iterator = '_' + i
 
     return iterator
+
+
+def get_transformation_count(self):
+    count = 0
+    if self.triple_sw:
+        count += 1
+    if self.udimPerMaterialSet_sw:
+        count += 1
+    if self.resetPos_sw:
+        count += 1
+    if self.resetPos_sw:
+        count += 1
+    if self.resetRot_sw:
+        count += 1
+    if self.resetSca_sw:
+        count += 1
+    if self.resetShe_sw:
+        count += 1
+    if self.freezePos_sw:
+        count += 1
+    if self.freezeRot_sw:
+        count += 1
+    if self.freezeSca_sw:
+        count += 1
+    if self.freezeShe_sw:
+        count += 1
+    if self.freezeGeo_sw:
+        count += 1
+    if self.freezeInstance_sw:
+        count += 1
+    if self.posX != 0 or self.posY != 0 or self.posZ != 0:
+        count += 1
+    if self.rotX != 0 or self.rotY != 0 or self.rotZ != 0:
+        count += 1
+    if self.scaX != 1 or self.scaY != 1 or self.scaZ != 1:
+        count += 1
+    if self.smoothAngle_sw:
+        count += 1
+    if self.hardenUvBorder_sw:
+        count += 1
+    if self.applyMorphMap_sw:
+        count += 1
+
+    return count
+
+
+def get_progression_message(self, message):
+    return 'Item %s / %s || %s' % (self.progression[0], self.progression[1], message)
+
+    # Cleaning
+
+
+def clean_scene(self):
+    self.scn.select(self.userSelection)
+
+    self.progress = None
+
+    # Put the user's original FBX Export setting back.
+
+    if self.exportFormatFbx_sw:
+        lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
+        lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.fbxTriangulate)

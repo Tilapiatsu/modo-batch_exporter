@@ -15,6 +15,7 @@ from Tila_BatchExportModule import file
  - Add "Create UDIM UV From Material Set" Feature
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
  - Add a rename auto_rename Template when exporting multiple objects : <objectName>_<sceneName>_####_low.<ext>
+ - Modify clean_scene method to delete remaining duplicate
 
 '''
 
@@ -63,46 +64,49 @@ class TilaBacthExport:
         self.freezeGeo_sw = bool(userValues[17])
         self.freezeInstance_sw = bool(userValues[18])
 
-        self.posX = userValues[19]
-        self.posY = userValues[20]
-        self.posZ = userValues[21]
+        self.pos_sw = userValues[19]
+        self.posX = userValues[20]
+        self.posY = userValues[21]
+        self.posZ = userValues[22]
 
-        self.rotX = userValues[22]
-        self.rotY = userValues[23]
-        self.rotZ = userValues[24]
+        self.rot_sw = userValues[23]
+        self.rotX = userValues[24]
+        self.rotY = userValues[25]
+        self.rotZ = userValues[26]
 
-        self.scaX = userValues[25]
-        self.scaY = userValues[26]
-        self.scaZ = userValues[27]
+        self.sca_sw = userValues[27]
+        self.scaX = userValues[28]
+        self.scaY = userValues[29]
+        self.scaZ = userValues[30]
 
-        self.smoothAngle_sw = bool(userValues[28])
-        self.smoothAngle = userValues[29]
+        self.smoothAngle_sw = bool(userValues[31])
+        self.smoothAngle = userValues[32]
 
-        self.hardenUvBorder_sw = bool(userValues[30])
-        self.uvMapName = userValues[31]
+        self.hardenUvBorder_sw = bool(userValues[33])
+        self.uvMapName = userValues[34]
 
-        self.exportCageMorph_sw = bool(userValues[32])
-        self.cageMorphMapName = userValues[33]
+        self.exportCageMorph_sw = bool(userValues[35])
+        self.cageMorphMapName = userValues[36]
 
-        self.applyMorphMap_sw = bool(userValues[34])
-        self.morphMapName = userValues[35]
+        self.applyMorphMap_sw = bool(userValues[37])
+        self.morphMapName = userValues[38]
 
-        self.openDestFolder_sw = bool(userValues[36])
+        self.openDestFolder_sw = bool(userValues[39])
 
-        self.exportFormatLxo_sw = bool(userValues[37])
-        self.exportFormatLwo_sw = bool(userValues[38])
-        self.exportFormatFbx_sw = bool(userValues[39])
-        self.exportFormatObj_sw = bool(userValues[40])
-        self.exportFormatAbc_sw = bool(userValues[41])
-        self.exportFormatAbchdf_sw = bool(userValues[42])
-        self.exportFormatDae_sw = bool(userValues[43])
-        self.exportFormatDxf_sw = bool(userValues[44])
-        self.exportFormat3dm_sw = bool(userValues[45])
-        self.exportFormatGeo_sw = bool(userValues[46])
-        self.exportFormatStl_sw = bool(userValues[47])
-        self.exportFormatX3d_sw = bool(userValues[48])
-        self.exportFormatSvg_sw = bool(userValues[49])
-        self.exportFormatPlt_sw = bool(userValues[50])
+        self.exportFormatLxo_sw = bool(userValues[40])
+        self.exportFormatLwo_sw = bool(userValues[41])
+        self.exportFormatFbx_sw = bool(userValues[42])
+        self.exportFormatObj_sw = bool(userValues[43])
+        self.exportFormatAbc_sw = bool(userValues[44])
+        self.exportFormatAbchdf_sw = bool(userValues[45])
+        self.exportFormatDae_sw = bool(userValues[46])
+        self.exportFormatDxf_sw = bool(userValues[47])
+        self.exportFormat3dm_sw = bool(userValues[48])
+        self.exportFormatGeo_sw = bool(userValues[49])
+        self.exportFormatStl_sw = bool(userValues[50])
+        self.exportFormatX3d_sw = bool(userValues[51])
+        self.exportFormatSvg_sw = bool(userValues[52])
+        self.exportFormatPlt_sw = bool(userValues[53])
 
         self.meshItemToProceed = []
         self.meshInstToProceed = []
@@ -110,6 +114,8 @@ class TilaBacthExport:
         self.proceededMesh = []
         self.processingItemType = t.processingItemType
         self.overrideFiles = ''
+        self.progress = None
+        self.progression = [0, 0]
 
         t.get_default_settings(self)
 
@@ -216,7 +222,7 @@ class TilaBacthExport:
         dialog.begining_log(self)
 
         self.transform_loop()
-        self.scn.select(self.userSelection)
+        self.scn.select(self.proceededMesh)
         dialog.ending_log(self)
 
     def batch_process(self, output_dir):
@@ -224,15 +230,22 @@ class TilaBacthExport:
 
         self.transform_loop()
 
+        self.progress = dialog.init_progress_bar(len(self.proceededMesh), 'Exporting ...')
+        self.progression[1] = len(self.proceededMesh)
+        self.progression[0] = 0
+
         if self.exportEach_sw:
             for i in xrange(0, len(self.proceededMesh)):
                 item_arr = []
                 item_arr.append(self.proceededMesh[i])
+
+                dialog.increment_progress_bar(self, self.progress[0], self.progression)
+
                 self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-2], i)
         else:
             self.export_all_format(output_dir, self.proceededMesh, self.scn.name)
 
-        self.clean_scene()
+        helper.clean_scene(self)
 
     def transform_loop(self):
 
@@ -258,6 +271,10 @@ class TilaBacthExport:
 
     def transform_selected(self, type):
         self.select_hierarchy()
+
+        self.progression = [0, helper.get_transformation_count(self)]
+
+        self.progress = dialog.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
         if self.exportFile_sw:
             if type == self.processingItemType.MESHITEM:
@@ -288,6 +305,9 @@ class TilaBacthExport:
         item_processing.freeze_sca(self)
         item_processing.freeze_pos(self)
         item_processing.freeze_she(self)
+
+        dialog.deallocate_dialog_svc(self.progress[1])
+        self.progress = None
 
     def export_all_format(self, output_dir, duplicate, layer_name, index=0):
         originalItem = []
@@ -416,10 +436,12 @@ class TilaBacthExport:
 
             if self.overrideFiles == 'ok' or self.overrideFiles == 'yesToAll':
                 lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
-                dialog.export_log(os.path.basename(output_path))
+                message = helper.get_progression_message(self, os.path.basename(output_path))
+                dialog.export_log(message)
         else:
             lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
-            dialog.export_log(os.path.basename(output_path))
+            message = helper.get_progression_message(self, os.path.basename(output_path))
+            dialog.export_log(message)
 
     def select_visible_items(self):
         mesh = self.scn.items('mesh')
@@ -437,18 +459,6 @@ class TilaBacthExport:
 
         self.scn.select(visible)
         return visible
-
-
-    # Cleaning
-
-    def clean_scene(self):
-        self.scn.select(self.userSelection)
-
-        # Put the user's original FBX Export setting back.
-
-        if self.exportFormatFbx_sw:
-            lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
-            lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.fbxTriangulate)
 
     @staticmethod
     def file_conflict(path):

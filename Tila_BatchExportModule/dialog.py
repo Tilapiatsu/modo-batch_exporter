@@ -2,6 +2,7 @@ import lx
 import os
 import sys
 import subprocess
+from Tila_BatchExportModule import helper
 
 if sys.platform == 'darwin':
     def open_folder(path):
@@ -146,3 +147,30 @@ def init_dialog(dialog_type, currPath):
 
 def ask_before_override(filename):
     return init_message('yesNoAll', 'File already exist', 'Do you want to override %s ?' % filename)
+
+
+def init_progress_bar(itemCount, message):
+    dialog_svc = lx.service.StdDialog()
+    mymonitor = lx.object.Monitor(dialog_svc.MonitorAllocate(message))
+    mymonitor.Initialize(itemCount)
+    return mymonitor, dialog_svc
+
+
+def increment_progress_bar(self, monitor, progression):
+    try:
+        monitor.Increment(1)
+        progression[0] += 1
+    except:
+        lx.service.StdDialog().MonitorRelease()
+        helper.clean_scene(self)
+        init_message('info', 'Aborded', 'Operation Aborded !')
+        sys.exit()
+
+
+def update_progression_message(message, progression):
+    monitor = init_progress_bar(progression[1], str(progression[0]) + ' / ' + str(progression[1]) + ' || ' + message)
+    return monitor
+
+
+def deallocate_dialog_svc(dialog_svc):
+    dialog_svc.MonitorRelease()

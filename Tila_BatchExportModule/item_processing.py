@@ -4,16 +4,29 @@ import modo
 
 # Item Processing
 
+def get_progression_message(self, message):
+    return '%s / %s || %s' % (self.progression[0], self.progression[1], message)
+
+def increment_progress_bar(self, progress):
+    if progress is not None:
+        dialog.increment_progress_bar(self, progress[0], self.progression)
+
 
 def apply_morph(self, condition, name):
     if condition:
-        dialog.processing_log('Applying Morph Map : ' + name)
+        message = 'Applying Morph Map : ' + name
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.processing_log(message)
         lx.eval('vertMap.applyMorph %s 1.0' % name)
 
 
 def smooth_angle(self):
     if self.smoothAngle_sw:
-        dialog.processing_log("Harden edges witch are sharper than %s degrees" % self.smoothAngle)
+        message = "Harden edges witch are sharper than %s degrees" % self.smoothAngle
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.processing_log(message)
         currAngle = lx.eval('user.value vnormkit.angle ?')
         lx.eval('user.value vnormkit.angle %s' % self.smoothAngle)
         lx.eval('vertMap.hardenNormals angle soften:true')
@@ -23,7 +36,10 @@ def smooth_angle(self):
 
 def harden_uv_border(self):
     if self.hardenUvBorder_sw:
-        dialog.processing_log("HardenUvBorder = " + self.uvMapName)
+        message = "HardenUvBorder = " + self.uvMapName
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.processing_log(message)
         lx.eval('select.vertexMap {%s} txuv replace' % self.uvMapName)
         lx.eval('uv.selectBorder')
         lx.eval('vertMap.hardenNormals uv')
@@ -33,62 +49,89 @@ def harden_uv_border(self):
 
 def triple(self):
     if self.triple_sw:
-        dialog.processing_log("Triangulate")
+        message = "Triangulate"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.processing_log(message)
         lx.eval('poly.triple')
 
 
 def reset_pos(self):
     if self.resetPos_sw:
-        dialog.transform_log("Reset Position")
+        message = "Reset Position"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
         lx.eval('transform.reset translation')
 
 
 def reset_rot(self):
     if self.resetRot_sw:
-        dialog.transform_log("Reset Rotation")
+        message = "Reset Rotation"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
         lx.eval('transform.reset rotation')
 
 
 def reset_sca(self):
     if self.resetSca_sw:
-        dialog.transform_log("Reset Scale")
+        message = "Reset Scale"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
         lx.eval('transform.reset scale')
 
 
 def reset_she(self):
     if self.resetShe_sw:
-        dialog.transform_log("Reset Shear")
+        message = "Reset Shear"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
         lx.eval('transform.reset shear')
 
 
 def freeze_pos(self):
     if self.freezePos_sw:
-        dialog.transform_log("Freeze Position")
+        message = "Freeze Position"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
 
         lx.eval('transform.freeze translation')
-        lx.eval('vertMap.updateNormals')
+        #lx.eval('vertMap.updateNormals')
 
 
 def freeze_rot(self):
     if self.freezeRot_sw:
-        dialog.transform_log("Freeze Rotation")
+        message = "Freeze Rotation"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
 
         lx.eval('transform.freeze rotation')
-        lx.eval('vertMap.updateNormals')
+        #lx.eval('vertMap.updateNormals')
 
 
 def freeze_sca(self, force=False):
     if self.freezeSca_sw or force:
         if not force:
-            dialog.transform_log("Freeze Scale")
+            message = "Freeze Scale"
+            message = get_progression_message(self, message)
+            increment_progress_bar(self, self.progress)
+            dialog.transform_log(message)
 
         lx.eval('transform.freeze scale')
-        lx.eval('vertMap.updateNormals')
+        #lx.eval('vertMap.updateNormals')
 
 
 def freeze_she(self):
     if self.freezeShe_sw:
-        dialog.transform_log("Freeze Shear")
+        message = "Freeze Shear"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
 
         lx.eval('transform.freeze shear')
         lx.eval('vertMap.updateNormals')
@@ -96,14 +139,20 @@ def freeze_she(self):
 
 def freeze_geo(self):
     if self.freezeGeo_sw:
-        dialog.transform_log("Freeze Geometry")
+        message = "Freeze Geometry"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
         lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
 
 def freeze_instance(self, type=0):
     if type == 1 and self.scn.selected[0].type == 'meshInst':
         if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
-            dialog.transform_log("Freeze Instance")
+            message = "Freeze Instance"
+            message = get_progression_message(self, message)
+            increment_progress_bar(self, self.progress)
+            dialog.transform_log(message)
 
             lx.eval('item.setType Mesh')
 
@@ -120,8 +169,11 @@ def freeze_instance(self, type=0):
 
 
 def position_offset(self):
-    if self.posX != 0.0 or self.posY != 0.0 or self.posZ != 0.0:
-        dialog.transform_log("Position offset = (%s, %s, %s)" % (self.posX, self.posY, self.posZ))
+    if (self.posX != 0.0 or self.posY != 0.0 or self.posZ != 0.0) and self.pos_sw:
+        message = "Position offset = (%s, %s, %s)" % (self.posX, self.posY, self.posZ)
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
 
         currPosition = self.scn.selected[0].position
 
@@ -131,8 +183,11 @@ def position_offset(self):
 
 
 def scale_amount(self):
-    if self.scaX != 1.0 or self.scaY != 1.0 or self.scaZ != 1.0:
-        dialog.transform_log("Scale amount = (%s, %s, %s)" % (self.scaX, self.scaY, self.scaZ))
+    if (self.scaX != 1.0 or self.scaY != 1.0 or self.scaZ != 1.0) and self.sca_sw:
+        message = "Scale amount = (%s, %s, %s)" % (self.scaX, self.scaY, self.scaZ)
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
 
         currScale = self.scn.selected[0].scale
 
@@ -143,8 +198,11 @@ def scale_amount(self):
 
 
 def rot_angle(self):
-    if self.rotX != 0.0 or self.rotY != 0.0 or self.rotZ != 0.0:
-        dialog.transform_log("Rotation Angle = (%s, %s, %s)" % (self.rotX, self.rotY, self.rotZ))
+    if (self.rotX != 0.0 or self.rotY != 0.0 or self.rotZ != 0.0) and self.rot_sw:
+        message = "Rotation Angle = (%s, %s, %s)" % (self.rotX, self.rotY, self.rotZ)
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
 
         currRotation = self.scn.selected[0].rotation
         lx.eval('transform.freeze rotation')
@@ -155,6 +213,9 @@ def rot_angle(self):
 
 
 def merge_meshes(self, item):
+    message = 'Merging Meshes'
+    message = get_progression_message(self, message)
+    increment_progress_bar(self, self.progress)
+    dialog.processing_log(message)
     self.scn.select(item)
     lx.eval('layer.mergeMeshes true')
-    dialog.processing_log('Merge Mesh')

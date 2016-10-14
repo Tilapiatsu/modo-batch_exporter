@@ -14,6 +14,7 @@ def get_default_settings(self):
     if self.exportFormatFbx_sw:
         self.fbxExportType = lx.eval('user.value sceneio.fbx.save.exportType ?')
         self.fbxTriangulate = lx.eval('user.value sceneio.fbx.save.surfaceRefining ?')
+        self.fbxFormat = lx.eval('user.value sceneio.fbx.save.format ?')
 
 
 userValues = [

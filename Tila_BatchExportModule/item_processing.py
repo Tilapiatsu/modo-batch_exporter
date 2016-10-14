@@ -175,11 +175,17 @@ def position_offset(self):
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
 
-        currPosition = self.scn.selected[0].position
+        selection = self.scn.selected
 
-        lx.eval('transform.channel pos.X %s' % str(float(self.posX) + currPosition.x.get()))
-        lx.eval('transform.channel pos.Y %s' % str(float(self.posY) + currPosition.y.get()))
-        lx.eval('transform.channel pos.Z %s' % str(float(self.posZ) + currPosition.z.get()))
+        for i in self.scn.selected:
+            self.scn.select(i)
+            currPosition = i.position
+
+            lx.eval('transform.channel pos.X %s' % str(float(self.posX) + currPosition.x.get()))
+            lx.eval('transform.channel pos.Y %s' % str(float(self.posY) + currPosition.y.get()))
+            lx.eval('transform.channel pos.Z %s' % str(float(self.posZ) + currPosition.z.get()))
+
+        self.scn.select(selection)
 
 
 def scale_amount(self):
@@ -189,12 +195,18 @@ def scale_amount(self):
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
 
-        currScale = self.scn.selected[0].scale
+        selection = self.scn.selected
 
-        freeze_sca(self)
-        lx.eval('transform.channel scl.X %s' % str(float(self.scaX) * currScale.x.get()))
-        lx.eval('transform.channel scl.Y %s' % str(float(self.scaY) * currScale.y.get()))
-        lx.eval('transform.channel scl.Z %s' % str(float(self.scaZ) * currScale.z.get()))
+        for i in self.scn.selected:
+            self.scn.select(i)
+            currScale = i.scale
+
+            freeze_sca(self)
+            lx.eval('transform.channel scl.X %s' % str(float(self.scaX) * currScale.x.get()))
+            lx.eval('transform.channel scl.Y %s' % str(float(self.scaY) * currScale.y.get()))
+            lx.eval('transform.channel scl.Z %s' % str(float(self.scaZ) * currScale.z.get()))
+
+        self.scn.select(selection)
 
 
 def rot_angle(self):
@@ -204,12 +216,19 @@ def rot_angle(self):
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
 
-        currRotation = self.scn.selected[0].rotation
-        lx.eval('transform.freeze rotation')
-        lx.eval('transform.channel rot.X "%s"' % str(float(self.rotX) + currRotation.x.get()))
-        lx.eval('transform.channel rot.Y "%s"' % str(float(self.rotY) + currRotation.y.get()))
-        lx.eval('transform.channel rot.Z "%s"' % str(float(self.rotZ) + currRotation.z.get()))
-        freeze_rot(self)
+        selection = self.scn.selected
+
+        for i in self.scn.selected:
+            self.scn.select(i)
+            currRotation = i.rotation
+
+            lx.eval('transform.freeze rotation')
+            lx.eval('transform.channel rot.X "%s"' % str(float(self.rotX) + currRotation.x.get()))
+            lx.eval('transform.channel rot.Y "%s"' % str(float(self.rotY) + currRotation.y.get()))
+            lx.eval('transform.channel rot.Z "%s"' % str(float(self.rotZ) + currRotation.z.get()))
+
+        self.scn.select(selection)
+        #freeze_rot(self)
 
 
 def merge_meshes(self, item):

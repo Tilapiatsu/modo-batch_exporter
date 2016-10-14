@@ -163,16 +163,21 @@ def get_transformation_count(self):
 def get_progression_message(self, message):
     return 'Item %s / %s || %s' % (self.progression[0], self.progression[1], message)
 
+
+def safe_select(self, arr):
+    for i in arr:
+        if i is not None:
+            self.scn.select(i)
+
     # Cleaning
 
 
 def clean_scene(self):
     self.scn.select(self.userSelection)
 
-    self.progress = None
-
     # Put the user's original FBX Export setting back.
 
     if self.exportFormatFbx_sw:
         lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
         lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.fbxTriangulate)
+        lx.eval('user.value sceneio.fbx.save.format %s' % self.fbxFormat)

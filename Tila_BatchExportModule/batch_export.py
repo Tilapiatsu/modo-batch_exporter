@@ -10,7 +10,6 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
- - Create a progress bar https://gist.github.com/tcrowson/e3d401055739d1a72863
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
  - Add "Create UDIM UV From Material Set" Feature
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
@@ -201,7 +200,6 @@ class TilaBacthExport:
                     # if ext == 'fbx'
                     lx.eval('select.itemType mesh')
 
-                    scnIndex = lx.eval('query sceneservice scene.index ? current')
                     self.userSelection = self.scn.selected
                     self.userSelectionCount = len(self.userSelection)
 
@@ -246,6 +244,7 @@ class TilaBacthExport:
         else:
             self.export_all_format(output_dir, self.proceededMesh, self.scn.name)
 
+        self.progress = None
         helper.clean_scene(self)
 
     def transform_loop(self):
@@ -332,8 +331,9 @@ class TilaBacthExport:
 
         if self.exportFormatFbx_sw:
             output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[2][0])
-            lx.eval('user.value sceneio.fbx.save.exportType scene')
+            lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')
             lx.eval('user.value sceneio.fbx.save.surfaceRefining subDivs')
+            lx.eval('user.value sceneio.fbx.save.format FBXLATEST')
             self.export_selection(duplicate, output_path, t.exportTypes[2][1])
 
         if self.exportFormatObj_sw:
@@ -382,46 +382,37 @@ class TilaBacthExport:
 
         self.scn.select(duplicate)
 
-
         lx.eval('!!item.delete')
 
         helper.set_name(self, originalItem, shrink=True, add=True)
 
     def export_selection(self, item, output_path, export_format):
-        try:
-            lx.eval("scene.new")
-            self.tempScnID = lx.eval('query sceneservice scene.index ? current')
+        lx.eval("scene.new")
+        self.tempScnID = lx.eval('query sceneservice scene.index ? current')
 
-            self.scn.select('Mesh')
-            lx.eval('!!item.delete')
+        self.scn.select('Mesh')
+        lx.eval('!!item.delete')
 
-            lx.eval('scene.set %s' % self.scnIndex)
-            self.scn.select(item)
+        lx.eval('scene.set %s' % self.scnIndex)
+        self.scn.select(item)
 
-            lx.eval('!!layer.import %s {} true true position:0' % self.tempScnID)
+        lx.eval('!!layer.import %s {} true true move:false position:0' % self.tempScnID)
 
-            lx.eval('scene.set %s' % self.tempScnID)
+        lx.eval('scene.set %s' % self.tempScnID)
 
-            self.scn.select('Camera')
-            lx.eval('!!item.delete')
+        self.scn.select('Camera')
+        lx.eval('!!item.delete')
 
-            self.scn.select('Directional Light')
-            lx.eval('!!item.delete')
+        self.scn.select('Directional Light')
+        lx.eval('!!item.delete')
 
-            self.save_file(output_path[0], export_format)
+        self.save_file(output_path[0], export_format)
 
-            if self.exportCageMorph_sw:
-                self.export_cage(output_path[1], export_format)
+        if self.exportCageMorph_sw:
+            self.export_cage(output_path[1], export_format)
 
-            lx.eval('!!scene.close')
-            lx.eval('scene.set %s' % self.scnIndex)
-        except RuntimeError:
-            if lx.eval('query sceneservice scene.index ? current') == self.tempScnID:
-                lx.eval('!!scene.close')
-                lx.eval('scene.set %s' % self.scnIndex)
-
-            self.scn.select(self.proceededMesh)
-            lx.eval('!!item.delete')
+        lx.eval('!!scene.close')
+        lx.eval('scene.set %s' % self.scnIndex)
 
     def export_cage(self, output_path, export_format):
         # Smooth the mesh entirely
@@ -444,13 +435,14 @@ class TilaBacthExport:
                     sys.exit()
 
             if self.overrideFiles == 'ok' or self.overrideFiles == 'yesToAll':
-                lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
-                message = helper.get_progression_message(self, os.path.basename(output_path))
-                dialog.export_log(message)
+                self.save_command(output_path, export_format)
         else:
-            lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
-            message = helper.get_progression_message(self, os.path.basename(output_path))
-            dialog.export_log(message)
+            self.save_command(output_path, export_format)
+
+    def save_command(self, output_path, export_format):
+        lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
+        message = helper.get_progression_message(self, os.path.basename(output_path))
+        dialog.export_log(message)
 
     def select_visible_items(self):
         mesh = self.scn.items('mesh')

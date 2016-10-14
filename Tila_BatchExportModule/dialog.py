@@ -163,17 +163,13 @@ def increment_progress_bar(self, monitor, progression):
     except:
         lx.service.StdDialog().MonitorRelease()
 
-        '''
         if lx.eval('query sceneservice scene.index ? current') == self.tempScnID:
             lx.eval('!!scene.close')
             lx.eval('scene.set %s' % self.scnIndex)
 
-        self.scn.select(self.proceededMesh)
+        helper.safe_select(self, self.proceededMesh)
         lx.eval('!!item.delete')
-        '''
-
-        #helper.clean_scene(self)
-        init_message('info', 'Aborded', 'Operation Aborded !')
+        helper.clean_scene(self)
         sys.exit()
 
 

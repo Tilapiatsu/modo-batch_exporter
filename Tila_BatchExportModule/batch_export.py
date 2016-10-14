@@ -15,7 +15,7 @@ from Tila_BatchExportModule import file
  - Add "Create UDIM UV From Material Set" Feature
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
  - Add a rename auto_rename Template when exporting multiple objects : <objectName>_<sceneName>_####_low.<ext>
- - Modify clean_scene method to delete remaining duplicate
+ - Modify clean_scene method to delete remaining duplicates
 
 '''
 
@@ -116,6 +116,7 @@ class TilaBacthExport:
         self.overrideFiles = ''
         self.progress = None
         self.progression = [0, 0]
+        self.tempScnID = None
 
         t.get_default_settings(self)
 
@@ -381,38 +382,46 @@ class TilaBacthExport:
 
         self.scn.select(duplicate)
 
+
         lx.eval('!!item.delete')
 
         helper.set_name(self, originalItem, shrink=True, add=True)
 
     def export_selection(self, item, output_path, export_format):
+        try:
+            lx.eval("scene.new")
+            self.tempScnID = lx.eval('query sceneservice scene.index ? current')
 
-        lx.eval("scene.new")
-        newScnIndex = lx.eval('query sceneservice scene.index ? current')
+            self.scn.select('Mesh')
+            lx.eval('!!item.delete')
 
-        self.scn.select('Mesh')
-        lx.eval('!!item.delete')
+            lx.eval('scene.set %s' % self.scnIndex)
+            self.scn.select(item)
 
-        lx.eval('scene.set %s' % self.scnIndex)
-        self.scn.select(item)
+            lx.eval('!!layer.import %s {} true true position:0' % self.tempScnID)
 
-        lx.eval('!!layer.import %s {} true true position:0' % newScnIndex)
+            lx.eval('scene.set %s' % self.tempScnID)
 
-        lx.eval('scene.set %s' % newScnIndex)
+            self.scn.select('Camera')
+            lx.eval('!!item.delete')
 
-        self.scn.select('Camera')
-        lx.eval('!!item.delete')
+            self.scn.select('Directional Light')
+            lx.eval('!!item.delete')
 
-        self.scn.select('Directional Light')
-        lx.eval('!!item.delete')
+            self.save_file(output_path[0], export_format)
 
-        self.save_file(output_path[0], export_format)
+            if self.exportCageMorph_sw:
+                self.export_cage(output_path[1], export_format)
 
-        if self.exportCageMorph_sw:
-            self.export_cage(output_path[1], export_format)
+            lx.eval('!!scene.close')
+            lx.eval('scene.set %s' % self.scnIndex)
+        except RuntimeError:
+            if lx.eval('query sceneservice scene.index ? current') == self.tempScnID:
+                lx.eval('!!scene.close')
+                lx.eval('scene.set %s' % self.scnIndex)
 
-        lx.eval('!!scene.close')
-        lx.eval('scene.set %s' % self.scnIndex)
+            self.scn.select(self.proceededMesh)
+            lx.eval('!!item.delete')
 
     def export_cage(self, output_path, export_format):
         # Smooth the mesh entirely

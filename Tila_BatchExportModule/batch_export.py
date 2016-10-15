@@ -15,7 +15,7 @@ from Tila_BatchExportModule import file
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
  - Add a rename auto_rename Template when exporting multiple objects : <objectName>_<sceneName>_####_low.<ext>
  - Modify clean_scene method to delete remaining duplicates
-
+ - Try to export more Item Types : camera, light, replicator, rig etc... ( cf compatibleItemType in __init__.py )
 '''
 
 class TilaBacthExport:
@@ -111,6 +111,7 @@ class TilaBacthExport:
         self.meshInstToProceed = []
         self.sortedOriginalItems = []
         self.proceededMesh = []
+        self.proceededMeshIndex = 0
         self.processingItemType = t.processingItemType
         self.overrideFiles = ''
         self.progress = None
@@ -237,6 +238,7 @@ class TilaBacthExport:
             for i in xrange(0, len(self.proceededMesh)):
                 item_arr = []
                 item_arr.append(self.proceededMesh[i])
+                self.proceededMeshIndex = i
 
                 dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
@@ -245,7 +247,7 @@ class TilaBacthExport:
             self.export_all_format(output_dir, self.proceededMesh, self.scn.name)
 
         self.progress = None
-        helper.clean_scene(self)
+        helper.revert_scene_preferences(self)
 
     def transform_loop(self):
 
@@ -272,7 +274,7 @@ class TilaBacthExport:
     def transform_selected(self, type):
         self.select_hierarchy()
 
-        self.progression = [0, helper.get_transformation_count(self)]
+        self.progression = [1, helper.get_transformation_count(self)]
 
         self.progress = dialog.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
@@ -308,6 +310,7 @@ class TilaBacthExport:
 
         dialog.deallocate_dialog_svc(self.progress[1])
         self.progress = None
+
 
     def export_all_format(self, output_dir, duplicate, layer_name, index=0):
         originalItem = []
@@ -432,7 +435,7 @@ class TilaBacthExport:
             if self.overrideFiles != 'yesToAll' and self.overrideFiles != 'noToAll':
                 self.overrideFiles = dialog.ask_before_override(os.path.split(output_path)[1])
                 if self.overrideFiles == 'cancel':
-                    sys.exit()
+                    helper.clean_duplicates(self, closeScene=True)
 
             if self.overrideFiles == 'ok' or self.overrideFiles == 'yesToAll':
                 self.save_command(output_path, export_format)
@@ -440,9 +443,13 @@ class TilaBacthExport:
             self.save_command(output_path, export_format)
 
     def save_command(self, output_path, export_format):
-        lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
-        message = helper.get_progression_message(self, os.path.basename(output_path))
-        dialog.export_log(message)
+        try:
+            lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
+            message = helper.get_progression_message(self, os.path.basename(output_path))
+            dialog.export_log(message)
+
+        except RuntimeError:
+            helper.clean_duplicates(self, closeScene=True)
 
     def select_visible_items(self):
         mesh = self.scn.items('mesh')

@@ -1,4 +1,5 @@
 import lx
+import modo
 import os
 import dialog
 import sys
@@ -124,8 +125,6 @@ def get_transformation_count(self):
         count += 1
     if self.resetPos_sw:
         count += 1
-    if self.resetPos_sw:
-        count += 1
     if self.resetRot_sw:
         count += 1
     if self.resetSca_sw:
@@ -142,13 +141,13 @@ def get_transformation_count(self):
         count += 1
     if self.freezeGeo_sw:
         count += 1
-    if self.freezeInstance_sw:
+    if self.scn.selected[0].type == 'meshInst' and (self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw))):
         count += 1
-    if self.posX != 0 or self.posY != 0 or self.posZ != 0:
+    if (self.posX != 0 or self.posY != 0 or self.posZ != 0) and self.pos_sw:
         count += 1
-    if self.rotX != 0 or self.rotY != 0 or self.rotZ != 0:
+    if (self.rotX != 0 or self.rotY != 0 or self.rotZ != 0) and self.rot_sw:
         count += 1
-    if self.scaX != 1 or self.scaY != 1 or self.scaZ != 1:
+    if (self.scaX != 1 or self.scaY != 1 or self.scaZ != 1) and self.sca_sw:
         count += 1
     if self.smoothAngle_sw:
         count += 1
@@ -164,15 +163,30 @@ def get_progression_message(self, message):
     return 'Item %s / %s || %s' % (self.progression[0], self.progression[1], message)
 
 
-def safe_select(self, arr):
-    for i in arr:
-        if i is not None:
-            self.scn.select(i)
+def safe_select(tuple):
+    first = False
+    for i in tuple:
+        if isItemTypeCompatibile(i):
+            if not first:
+                first = True
+                modo.item.Item.select(i, True)
+            else:
+                modo.item.Item.select(i)
+
+
+def isItemTypeCompatibile(item):
+    for type in t.compatibleItemType:
+        try:
+            if str(item.type) == type:
+                return True
+        except AttributeError:
+            break
+    return False
 
     # Cleaning
 
 
-def clean_scene(self):
+def revert_scene_preferences(self):
     self.scn.select(self.userSelection)
 
     # Put the user's original FBX Export setting back.
@@ -181,3 +195,15 @@ def clean_scene(self):
         lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
         lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.fbxTriangulate)
         lx.eval('user.value sceneio.fbx.save.format %s' % self.fbxFormat)
+
+def clean_duplicates(self, closeScene=False):
+    if closeScene:
+        if lx.eval('query sceneservice scene.index ? current') == self.tempScnID:
+            lx.eval('!!scene.close')
+            lx.eval('scene.set %s' % self.scnIndex)
+
+    safe_select(self.proceededMesh)
+    lx.eval('!!item.delete')
+    set_name(self, [self.sortedOriginalItems[self.proceededMeshIndex]], shrink=True, add=True)
+    revert_scene_preferences(self)
+    sys.exit()

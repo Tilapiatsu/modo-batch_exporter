@@ -156,21 +156,18 @@ def init_progress_bar(itemCount, message):
     return mymonitor, dialog_svc
 
 
-def increment_progress_bar(self, monitor, progression):
+def increment_progress_bar(self, monitor, progression, transform=False):
     try:
         monitor.Increment(1)
         progression[0] += 1
+        return True
     except:
+        if transform:
+            helper.safe_select(self.proceededMesh)
+            lx.eval('!!item.delete')
+
         lx.service.StdDialog().MonitorRelease()
-
-        if lx.eval('query sceneservice scene.index ? current') == self.tempScnID:
-            lx.eval('!!scene.close')
-            lx.eval('scene.set %s' % self.scnIndex)
-
-        helper.safe_select(self, self.proceededMesh)
-        lx.eval('!!item.delete')
-        helper.clean_scene(self)
-        sys.exit()
+        return False
 
 
 def update_progression_message(message, progression):

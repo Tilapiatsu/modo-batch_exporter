@@ -93,6 +93,37 @@ exportTypes = [
 
 processingItemType = enum('MESHITEM', 'MESHINST')
 
+compatibleItemType = ['mesh',
+                      'meshInst',
+                      'camera',
+                      'light',
+                      'txtrLocator',
+                      'backdrop',
+                      'groupLocator',
+                      'replicator',
+                      'surfGen',
+                      'locator',
+                      'deform',
+                      'locdeform',
+                      'deformGroup',
+                      'deformMDD2',
+                      'morphDeform',
+                      'itemInfluence',
+                      'genInfluence',
+                      'deform.push',
+                      'deform.wrap',
+                      'softLag',
+                      'ABCCurvesDeform.sample',
+                      'ABCdeform.sample',
+                      'force.root',
+                      'baseVolume',
+                      'chanModify',
+                      'itemModify',
+                      'meshoperation',
+                      'chanEffect',
+                      'defaultShader',
+                      'defaultShader']
+
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
 
 curr_path = os.path.dirname(os.path.realpath(__file__))

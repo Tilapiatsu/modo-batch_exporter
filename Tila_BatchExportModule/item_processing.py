@@ -1,15 +1,18 @@
 import lx
 import dialog
-import modo
+import sys
 
 # Item Processing
+
 
 def get_progression_message(self, message):
     return '%s / %s || %s' % (self.progression[0], self.progression[1], message)
 
+
 def increment_progress_bar(self, progress):
     if progress is not None:
-        dialog.increment_progress_bar(self, progress[0], self.progression)
+        if not dialog.increment_progress_bar(self, progress[0], self.progression, transform=True):
+            sys.exit()
 
 
 def apply_morph(self, condition, name):

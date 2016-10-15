@@ -10,12 +10,12 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
- - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
- - Add "Create UDIM UV From Material Set" Feature
- - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
- - Add a rename auto_rename Template when exporting multiple objects : <objectName>_<sceneName>_####_low.<ext>
- - Modify clean_scene method to delete remaining duplicates
+ - Add a preset saver/loader : Save a .cfg file that contain all the settings of the kit for better reusability
  - Try to export more Item Types : camera, light, replicator, rig etc... ( cf compatibleItemType in __init__.py )
+ - check export for procedural geometry and fusion item
+ - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
+ - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
+ - Add a rename auto_rename Template when exporting multiple objects : <objectName>_<sceneName>_####_low.<ext>
 '''
 
 class TilaBacthExport:

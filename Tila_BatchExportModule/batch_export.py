@@ -48,64 +48,63 @@ class TilaBacthExport:
         self.triple_sw = bool(userValues[5])
         self.mergeMesh_sw = bool(userValues[6])
         self.askBeforeOverride_sw = bool(userValues[7])
-        self.udimPerMaterialSet_sw = bool(userValues[8])
 
-        self.resetPos_sw = bool(userValues[9])
-        self.resetRot_sw = bool(userValues[10])
-        self.resetSca_sw = bool(userValues[11])
-        self.resetShe_sw = bool(userValues[12])
+        self.resetPos_sw = bool(userValues[8])
+        self.resetRot_sw = bool(userValues[8])
+        self.resetSca_sw = bool(userValues[10])
+        self.resetShe_sw = bool(userValues[11])
 
-        self.freezePos_sw = bool(userValues[13])
-        self.freezeRot_sw = bool(userValues[14])
-        self.freezeSca_sw = bool(userValues[15])
-        self.freezeShe_sw = bool(userValues[16])
+        self.freezePos_sw = bool(userValues[12])
+        self.freezeRot_sw = bool(userValues[13])
+        self.freezeSca_sw = bool(userValues[14])
+        self.freezeShe_sw = bool(userValues[15])
 
-        self.freezeGeo_sw = bool(userValues[17])
-        self.freezeInstance_sw = bool(userValues[18])
+        self.freezeGeo_sw = bool(userValues[16])
+        self.freezeInstance_sw = bool(userValues[17])
 
-        self.pos_sw = userValues[19]
-        self.posX = userValues[20]
-        self.posY = userValues[21]
-        self.posZ = userValues[22]
+        self.pos_sw = userValues[18]
+        self.posX = userValues[19]
+        self.posY = userValues[20]
+        self.posZ = userValues[21]
 
-        self.rot_sw = userValues[23]
-        self.rotX = userValues[24]
-        self.rotY = userValues[25]
-        self.rotZ = userValues[26]
+        self.rot_sw = userValues[22]
+        self.rotX = userValues[23]
+        self.rotY = userValues[24]
+        self.rotZ = userValues[25]
 
-        self.sca_sw = userValues[27]
-        self.scaX = userValues[28]
-        self.scaY = userValues[29]
-        self.scaZ = userValues[30]
+        self.sca_sw = userValues[26]
+        self.scaX = userValues[27]
+        self.scaY = userValues[28]
+        self.scaZ = userValues[29]
 
-        self.smoothAngle_sw = bool(userValues[31])
-        self.smoothAngle = userValues[32]
+        self.smoothAngle_sw = bool(userValues[30])
+        self.smoothAngle = userValues[31]
 
-        self.hardenUvBorder_sw = bool(userValues[33])
-        self.uvMapName = userValues[34]
+        self.hardenUvBorder_sw = bool(userValues[32])
+        self.uvMapName = userValues[33]
 
-        self.exportCageMorph_sw = bool(userValues[35])
-        self.cageMorphMapName = userValues[36]
+        self.exportCageMorph_sw = bool(userValues[34])
+        self.cageMorphMapName = userValues[35]
 
-        self.applyMorphMap_sw = bool(userValues[37])
-        self.morphMapName = userValues[38]
+        self.applyMorphMap_sw = bool(userValues[36])
+        self.morphMapName = userValues[37]
 
-        self.openDestFolder_sw = bool(userValues[39])
+        self.openDestFolder_sw = bool(userValues[38])
 
-        self.exportFormatLxo_sw = bool(userValues[40])
-        self.exportFormatLwo_sw = bool(userValues[41])
-        self.exportFormatFbx_sw = bool(userValues[42])
-        self.exportFormatObj_sw = bool(userValues[43])
-        self.exportFormatAbc_sw = bool(userValues[44])
-        self.exportFormatAbchdf_sw = bool(userValues[45])
-        self.exportFormatDae_sw = bool(userValues[46])
-        self.exportFormatDxf_sw = bool(userValues[47])
-        self.exportFormat3dm_sw = bool(userValues[48])
-        self.exportFormatGeo_sw = bool(userValues[49])
-        self.exportFormatStl_sw = bool(userValues[50])
-        self.exportFormatX3d_sw = bool(userValues[51])
-        self.exportFormatSvg_sw = bool(userValues[52])
-        self.exportFormatPlt_sw = bool(userValues[53])
+        self.exportFormatLxo_sw = bool(userValues[39])
+        self.exportFormatLwo_sw = bool(userValues[40])
+        self.exportFormatFbx_sw = bool(userValues[41])
+        self.exportFormatObj_sw = bool(userValues[42])
+        self.exportFormatAbc_sw = bool(userValues[43])
+        self.exportFormatAbchdf_sw = bool(userValues[44])
+        self.exportFormatDae_sw = bool(userValues[45])
+        self.exportFormatDxf_sw = bool(userValues[46])
+        self.exportFormat3dm_sw = bool(userValues[47])
+        self.exportFormatGeo_sw = bool(userValues[48])
+        self.exportFormatStl_sw = bool(userValues[49])
+        self.exportFormatX3d_sw = bool(userValues[50])
+        self.exportFormatSvg_sw = bool(userValues[51])
+        self.exportFormatPlt_sw = bool(userValues[52])
 
         self.meshItemToProceed = []
         self.meshInstToProceed = []

@@ -46,7 +46,7 @@ class CmdBatchExport(lxu.command.BasicCommand):
 
             scnIndex = lx.eval('query sceneservice scene.index ? current')
 
-            userValues = user_value.query_User_Values(self, 'tilaBExp.')
+            userValues = user_value.query_User_Values(self, t.kit_prefix)
 
             tbe = batch_export.TilaBacthExport
 

@@ -26,7 +26,6 @@ userValues = [
     ['triple_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['mergeMesh_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['askBeforeOverride_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['udimPerMaterialSet_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['resetPos_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['resetRot_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['resetSca_sw', lx.symbol.sTYPE_BOOLEAN, True],
@@ -71,7 +70,8 @@ userValues = [
     ['exportFormatStl_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['exportFormatX3d_sw', lx.symbol.sTYPE_BOOLEAN, True],
     ['exportFormatSvg_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatPlt_sw', lx.symbol.sTYPE_BOOLEAN, True]
+    ['exportFormatPlt_sw', lx.symbol.sTYPE_BOOLEAN, True],
+    ['presetName', lx.symbol.sTYPE_STRING, True]
     ]
 
 exportTypes = [
@@ -126,8 +126,13 @@ compatibleItemType = ['mesh',
 
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
 
+kit_prefix = 'tilaBExp.'
+preset_hash = '70945661220'
+
 curr_path = os.path.dirname(os.path.realpath(__file__))
-config_path = os.path.join(dialog.parentPath(curr_path), "Tila_Config")
+root_path = dialog.parentPath(curr_path)
+config_path = os.path.join(root_path, "Tila_Config")
+preset_path = os.path.join(root_path, "Tila_Preset")
 
 
 config_filename = 'tila_batchexport.cfg'
@@ -137,5 +142,6 @@ config_last_directory = 'LastDirectory'
 config_export_path = 'ExportPath'
 config_browse_src_path = 'BrowseSrcPath'
 config_browse_dest_path = 'BrowseDestPath'
+config_export_settings = 'ExportSettings'
 
 config_file_path = os.path.join(config_path, config_filename)

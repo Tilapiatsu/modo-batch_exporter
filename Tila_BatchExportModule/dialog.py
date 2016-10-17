@@ -177,3 +177,33 @@ def update_progression_message(message, progression):
 
 def deallocate_dialog_svc(dialog_svc):
     dialog_svc.MonitorRelease()
+
+def textInputDialog(title):
+    """Opens a text input dialog and returns it. When None is returned it means the user cancelled the dialog."""
+
+    # Create a random name for the transient user value
+    import tempfile
+    randname = tempfile._RandomNameSequence().next()
+
+    # Create a lambda shortcut for executing commands to save some typing
+    cmdSvc = lx.service.Command()
+    execCmd = lambda text : cmdSvc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, text)
+
+    # Create a transient user value to use as text input dialog
+    execCmd( 'user.defNew %s string' % randname )
+    execCmd( 'user.def %s transient true' % randname )
+    execCmd( 'user.def %s username "%s"' % (randname, title) )
+
+    # Show the modal input dialog
+    try:
+        execCmd( 'user.value %s' % randname )
+    except RuntimeError:
+
+        # User cancelled
+        return None
+
+    # Fetch and return the user value's string content
+    uservalue = lx.service.ScriptSys().UserValueLookup(randname)
+    result = uservalue.GetString()
+
+    return result

@@ -90,4 +90,4 @@ class CmdBatchExport(lxu.command.BasicCommand):
         lx.notimpl()
 
 
-lx.bless(CmdBatchExport, "tila.batchexport")
+lx.bless(CmdBatchExport, t.TILA_BATCH_EXPORT)

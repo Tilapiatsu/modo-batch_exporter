@@ -16,62 +16,61 @@ def get_default_settings(self):
         self.fbxTriangulate = lx.eval('user.value sceneio.fbx.save.surfaceRefining ?')
         self.fbxFormat = lx.eval('user.value sceneio.fbx.save.format ?')
 
-
 userValues = [
-    ['exportVisible_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFile_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['scanFiles_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportEach_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportHierarchy_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['triple_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['mergeMesh_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['askBeforeOverride_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['resetPos_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['resetRot_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['resetSca_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['resetShe_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['freezePos_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['freezeRot_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['freezeSca_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['freezeShe_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['freezeGeo_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['freezeInstance_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['pos_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['posX', lx.symbol.sTYPE_FLOAT, True],
-    ['posY', lx.symbol.sTYPE_FLOAT, True],
-    ['posZ', lx.symbol.sTYPE_FLOAT, True],
-    ['rot_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['rotX', lx.symbol.sTYPE_FLOAT, True],
-    ['rotY', lx.symbol.sTYPE_FLOAT, True],
-    ['rotZ', lx.symbol.sTYPE_FLOAT, True],
-    ['sca_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['scaX', lx.symbol.sTYPE_FLOAT, True],
-    ['scaY', lx.symbol.sTYPE_FLOAT, True],
-    ['scaZ', lx.symbol.sTYPE_FLOAT, True],
-    ['smoothAngle_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['smoothAngle', lx.symbol.sTYPE_FLOAT, True],
-    ['hardenUvBorder_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['uvMapName', lx.symbol.sTYPE_STRING, True],
-    ['exportCageMorph_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['cageMorphMapName', lx.symbol.sTYPE_STRING, True],
-    ['applyMorphMap_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['morphMapName', lx.symbol.sTYPE_STRING, True],
-    ['openDestFolder_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatLxo_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatLwo_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatFbx_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatObj_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatAbc_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatAbchdf_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatDae_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatDxf_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormat3dm_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatGeo_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatStl_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatX3d_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatSvg_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['exportFormatPlt_sw', lx.symbol.sTYPE_BOOLEAN, True],
-    ['presetName', lx.symbol.sTYPE_STRING, True]
+    ['exportVisible_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFile_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['scanFiles_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportEach_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportHierarchy_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['triple_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['mergeMesh_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['askBeforeOverride_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['resetPos_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['resetRot_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['resetSca_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['resetShe_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['freezePos_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['freezeRot_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['freezeSca_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['freezeShe_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['freezeGeo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['freezeInstance_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['pos_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['posX', lx.symbol.sTYPE_FLOAT, True, 0],
+    ['posY', lx.symbol.sTYPE_FLOAT, True, 0],
+    ['posZ', lx.symbol.sTYPE_FLOAT, True, 0],
+    ['rot_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['rotX', lx.symbol.sTYPE_FLOAT, True, 0],
+    ['rotY', lx.symbol.sTYPE_FLOAT, True, 0],
+    ['rotZ', lx.symbol.sTYPE_FLOAT, True, 0],
+    ['sca_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['scaX', lx.symbol.sTYPE_FLOAT, True, 1],
+    ['scaY', lx.symbol.sTYPE_FLOAT, True, 1],
+    ['scaZ', lx.symbol.sTYPE_FLOAT, True, 1],
+    ['smoothAngle_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['smoothAngle', lx.symbol.sTYPE_FLOAT, True, 40],
+    ['hardenUvBorder_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['uvMapName', lx.symbol.sTYPE_STRING, True, 'Texture'],
+    ['exportCageMorph_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['cageMorphMapName', lx.symbol.sTYPE_STRING, True, 'Cage'],
+    ['applyMorphMap_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['morphMapName', lx.symbol.sTYPE_STRING, True, 'Exploded'],
+    ['openDestFolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 1],
+    ['exportFormatLxo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatLwo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatFbx_sw', lx.symbol.sTYPE_BOOLEAN, True, 1],
+    ['exportFormatObj_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatAbc_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatAbchdf_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatDae_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatDxf_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormat3dm_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatGeo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatStl_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatX3d_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatSvg_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['exportFormatPlt_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['presetName', lx.symbol.sTYPE_STRING, True, 'None']
     ]
 
 exportTypes = [
@@ -125,6 +124,17 @@ compatibleItemType = ['mesh',
                       'defaultShader']
 
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
+
+TILA_BATCH_EXPORT = "tila.batchexport"
+TILA_BATCH_TRANSFORM = "tila.batchtransform"
+TILA_BATCH_FOLDER = "tila.batchfolder"
+TILA_OPEN_EXPORT_FOLDER = "tila.openexportfolder"
+TILA_EXPORT_PRESET = "tila.exportpreset"
+REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
+
+g_dialog_svc = lx.service.StdDialog()
+g_msg_svc    = lx.service.Message ()
+g_msg        = lx.object.Message (g_msg_svc.Allocate ())
 
 kit_prefix = 'tilaBExp.'
 preset_hash = '70945661220'

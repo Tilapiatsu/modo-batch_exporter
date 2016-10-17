@@ -196,6 +196,7 @@ def revert_scene_preferences(self):
         lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.fbxTriangulate)
         lx.eval('user.value sceneio.fbx.save.format %s' % self.fbxFormat)
 
+
 def clean_duplicates(self, closeScene=False):
     if closeScene:
         if lx.eval('query sceneservice scene.index ? current') == self.tempScnID:
@@ -207,3 +208,12 @@ def clean_duplicates(self, closeScene=False):
     set_name(self, [self.sortedOriginalItems[self.proceededMeshIndex]], shrink=True, add=True)
     revert_scene_preferences(self)
     sys.exit()
+
+
+def construct_dict_from_arr(arr, keySubIndex):
+    d = {}
+
+    for i in arr:
+        d[i[0]] = i[keySubIndex]
+
+    return d

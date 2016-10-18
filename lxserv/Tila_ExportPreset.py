@@ -12,6 +12,7 @@ from os.path import join as pjoin
 from os.path import normpath
 import re
 
+
 from collections import namedtuple, OrderedDict, Iterable
 
 from new import classobj
@@ -51,23 +52,6 @@ def getMsgText (tableName, keyName=None, index=None, *args):
     service = lx.service.Message()
     msg = findAndFormatMsg (tableName, keyName, index, *args)
     return service.MessageText (msg)
-
-
-class PopUp(lxifc.UIValueHints):
-    def __init__(self, items):
-        self._items = items
-
-    def uiv_Flags(self):
-        return lx.symbol.fVALHINT_POPUPS
-
-    def uiv_PopCount(self):
-        return len(self._items[0])
-
-    def uiv_PopUserName(self,index):
-        return self._items[1][index]
-
-    def uiv_PopInternalName(self,index):
-        return self._items[0][index]
 
 
 class PersistenceWrapper(object):
@@ -158,8 +142,6 @@ class PersistenceWrapper(object):
         try:
             return lxu.object.Attributes(atom).Get(0)
         except RuntimeError:
-            if key == OPT_GAME_EXPORT_PATH:
-                return ''
             return None
 
     def __setitem__(self, key, value):
@@ -207,11 +189,6 @@ class PersistenceWrapper(object):
         return self.fields.keys()
 
     def hashes(self):
-        # h = self.config.hash_main
-        # result = []
-        # for i in xrange(h.Count()):
-        # h.Select(i)
-        # result.append(h.Hash())
         return self._hashes
 
 
@@ -227,7 +204,7 @@ class ExportPresets(PersistenceWrapper):
 
     def __init__(self):
 
-        super(self.__class__, self).__init__(name="GamePresets", hashtype="GamePreset", fields=self.__class__.fields)
+        super(self.__class__, self).__init__(name="ExportPresets", hashtype="ExportPreset", fields=self.__class__.fields)
 
         # Buffer that is populated when user changes settings.
         # needed to test if the preset state is changed from the original stored in the config.
@@ -237,8 +214,8 @@ class ExportPresets(PersistenceWrapper):
         atom = self.config.atoms['selection']
         atom.Append()
 
-        if 'none' not in self._hashes:
-            self.addPreset('none')
+        if 'default' not in self._hashes:
+            self.addPreset('default')
 
             # Apply initial default values
             for key, value in ExportPresets.defaults.items():
@@ -246,7 +223,7 @@ class ExportPresets(PersistenceWrapper):
 
             self.pushToConfig()
 
-            self.activeHash = 'none'
+            self.activeHash = 'default'
 
             # Write selection to config
             lxu.object.Attributes(atom).SetString(0, self.activeHash)
@@ -292,7 +269,7 @@ class ExportPresets(PersistenceWrapper):
                 value = self.getValue(sourcePresetName, key)
                 self[key] = value
 
-        self[OPT_GAME_USERNAME] = userName
+        self['presetName'] = userName
 
         self.pushToConfig()
 
@@ -319,21 +296,10 @@ class ExportPresets(PersistenceWrapper):
             h.Select(i)
 
             key = h.Hash()
-            username = lxu.object.Attributes(self.config.atoms[OPT_GAME_USERNAME]).Get(0)
+            username = lxu.object.Attributes(self.config.atoms['presetName']).Get(0)
             result[key] = username
 
         return result
-
-    @property
-    def userName(self):
-        h = self.config.hash_main
-        return lxu.object.Attributes(self.config.atoms[OPT_GAME_USERNAME]).Get(0)
-
-    @property
-    def attributeFields(self):
-        '''Returns a dictionary without the keys that are not meant to be exposed as command attribute.'''
-        ignore = ('key', OPT_GAME_USERNAME)
-        return {key: value for key, value in self.fields.iteritems() if key not in ignore}
 
     def __setitem__(self, key, value):
         self._buffer[key] = value
@@ -390,6 +356,9 @@ class ExportPresets(PersistenceWrapper):
         return presetName in self.hashes()
 
 
+exportPresets = ExportPresets()
+
+
 class CmdExportPresets(lxu.command.BasicCommand):
     # Class level attributes
     _previousModifiedState = False
@@ -429,21 +398,15 @@ class CmdExportPresets(lxu.command.BasicCommand):
                 newname = dialog.textInputDialog(textRenamePresetTitle)
                 if newname:
                     exportPresets.addPreset(newname, doCopyValuesFromPrevious=True)
-                    fbxPresets.addPreset(newname)
 
-                    # Ensure the newly selected fbx preset is stored
-                    # Remove spaces and make lower case
-                    internalName = newname.translate(None, ' ').lower()
-                    exportPresets[OPT_GAME_FBX_PRESET] = internalName
                     exportPresets.pushToConfig()
 
             elif presetName == 'store':
                 exportPresets.pushToConfig()
-                fbxPresets.pushToConfig()
 
             elif presetName == 'remove':
 
-                if exportPresets.selected in ['unity', 'ue4']:
+                if exportPresets.selected in ['default']:
                     textCannotDelete = getMsgText('gameExport', 'cannotDeleteBuiltin')
                     modo.dialogs.alert('Info', textCannotDelete)
                     return
@@ -468,12 +431,6 @@ class CmdExportPresets(lxu.command.BasicCommand):
                     exportPresets.selected = presetName
                     exportPresets.pullFromConfig()
 
-                    try:
-                        fbxPresets.selectPreset(exportPresets[OPT_GAME_FBX_PRESET])
-                        fbxPresets.pushUserValues()
-                    except LookupError:
-                        pass
-
             doNotify = True
 
         # Notify UI elements
@@ -488,38 +445,28 @@ class CmdExportPresets(lxu.command.BasicCommand):
             keys = userNamesDict.keys()
             values = userNamesDict.values()
 
-            noneName = 'None'
+            noneName = 'Default'
 
             # If the preset has been modified, display a star in front of the name
-            if exportPresets.isModified or fbxPresets.isModified:
+            if exportPresets.isModified:
                 index = keys.index(exportPresets.selected)
                 values[index] = values[index] + '*'
-                noneName = 'None*'
+                noneName = 'Default*'
 
-            notInList = lambda a: a not in ('none', 'none', 'None', 'off*', 'Off*', 'None*')
+            notInList = lambda a: a not in ('none', 'None', 'off*', 'Off*', 'None*', 'default', 'default*', 'Default', 'Default*')
 
             keys = filter(notInList, keys)
             values = filter(notInList, values)
 
             # Generate list of two tuples where the first one contains lower case keys and the
             # second one contains the "nicer" user names.
-            keys = tuple(['none'] + keys + ['new', 'store', 'remove'])
+            keys = tuple(['default'] + keys + ['new', 'store', 'remove'])
             userNames = tuple([noneName] + values + ['(New Preset)', '(Store Preset)', '(Remove Preset)'])
 
             return PopUp([keys, userNames])
 
-    def cmd_NotifyAddClient(self, argument, object):
-        self.notifier = self.not_svc.Spawn(FOLDERBROWSE_NOTIFIER, "")
-        self.notifier.AddClient(object)
-
-        self.fbxnotifier = self.not_svc.Spawn(t.REFRESH_ASTERISK_NOTIFIER, "")
-        self.fbxnotifier.AddClient(object)
-
-    def cmd_NotifyRemoveClient(self, object):
-        self.notifier.RemoveClient(object)
-        self.fbxnotifier.RemoveClient(object)
-
-exportPresets = ExportPresets()
+# bless() the command to register it as a plugin
+lx.bless(CmdExportPresets, t.TILA_EXPORT_PRESET)
 
 
 class UpdateAsteriskNotifier(lxifc.Notifier):
@@ -563,6 +510,120 @@ class UpdateAsteriskNotifier(lxifc.Notifier):
 
 lx.bless(UpdateAsteriskNotifier, t.REFRESH_ASTERISK_NOTIFIER)
 
-# bless() the command to register it as a plugin
-lx.bless(CmdExportPresets, t.TILA_EXPORT_PRESET)
 
+class PopUp(lxifc.UIValueHints):
+    def __init__(self, items):
+        self._items = items
+
+    def uiv_Flags(self):
+        return lx.symbol.fVALHINT_POPUPS
+
+    def uiv_PopCount(self):
+        return len(self._items[0])
+
+    def uiv_PopUserName(self,index):
+        return self._items[1][index]
+
+    def uiv_PopInternalName(self,index):
+        return self._items[0][index]
+
+
+fields = helper.construct_dict_from_arr(t.userValues, 1)
+
+_previousModificationState = False
+
+
+def createGenericAttributeCommand(argName, argType):
+    def __init__(self):
+        lxu.command.BasicCommand.__init__(self)
+
+        self.dyna_Add(argName, argType)
+        self.basic_SetFlags(0, lx.symbol.fCMDARG_QUERY)
+
+        self.argName = argName
+        self.argType = argType
+
+    def cmd_Flags(self):
+        return lx.symbol.fCMD_MODEL | lx.symbol.fCMD_UNDO
+
+    def attrSetterFunc(self, argType):
+        if self.argType == lx.symbol.sTYPE_STRING:
+            return self.attr_SetString
+
+        elif self.argType in (lx.symbol.sTYPE_INTEGER, lx.symbol.sTYPE_BOOLEAN):
+            return self.attr_SetInt
+
+        elif self.argType == lx.symbol.sTYPE_FLOAT:
+            return self.attr_SetFlt
+        return None
+
+    def attrGetterFunc(self, argType):
+        if self.argType == lx.symbol.sTYPE_STRING:
+            return self.dyna_String
+
+        elif self.argType in (lx.symbol.sTYPE_INTEGER, lx.symbol.sTYPE_BOOLEAN):
+            return self.dyna_Int
+
+        elif self.argType == lx.symbol.sTYPE_FLOAT:
+            return self.dyna_Float
+        return None
+
+    def basic_Execute(self, msg, flags):
+
+        if self.dyna_IsSet(0):
+
+            getter = self.attrGetterFunc(self.argType)
+            value = getter(0)
+
+            exportPresets[self.argName] = value
+
+            # This block exist to ensure the UI form is only refreshed once
+            # when the state of the preset changes from modified to unmodified.
+            global _previousModificationState
+            modified = exportPresets.isModified
+            if modified != _previousModificationState:
+                UpdateAsteriskNotifier.reset()
+            _previousModificationState = modified
+
+            UpdateAsteriskNotifier().NotifyPresetChanged()
+
+    def cmd_Query(self, index, vaQuery):
+
+        va = lx.object.ValueArray()
+        va.set(vaQuery)
+
+        if index == 0:
+
+            value = exportPresets[self.argName]
+
+            if self.argType == lx.symbol.sTYPE_STRING:
+                va.AddString(value)
+
+            elif self.argType in (lx.symbol.sTYPE_INTEGER, lx.symbol.sTYPE_BOOLEAN):
+                va.AddInt(value)
+
+            elif self.argType == lx.symbol.sTYPE_FLOAT:
+                va.AddFloat(value)
+
+    def arg_UIValueHints(self, index):
+
+        if index != 0:
+            return
+
+    cls_dict = {
+        '__init__': __init__,
+        'cmd_Flags': cmd_Flags,
+        'basic_Execute': basic_Execute,
+        'cmd_Query': cmd_Query,
+        'attrSetterFunc': attrSetterFunc,
+        'attrGetterFunc': attrGetterFunc,
+        'arg_UIValueHints': arg_UIValueHints,
+    }
+
+    cls = classobj('CmdPreset%s' % argName, (lxu.command.BasicCommand,), cls_dict)
+
+    lx.bless(cls, "%s%s" % (t.kit_prefix, argName))
+
+
+for argName, argType in fields.iteritems():
+    createGenericAttributeCommand(argName, argType)

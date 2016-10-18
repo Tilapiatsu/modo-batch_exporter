@@ -183,6 +183,14 @@ def isItemTypeCompatibile(item):
             break
     return False
 
+def construct_dict_from_arr(arr, keySubIndex):
+    d = {}
+
+    for i in arr:
+        d[i[0]] = i[keySubIndex]
+
+    return d
+
     # Cleaning
 
 
@@ -208,12 +216,3 @@ def clean_duplicates(self, closeScene=False):
     set_name(self, [self.sortedOriginalItems[self.proceededMeshIndex]], shrink=True, add=True)
     revert_scene_preferences(self)
     sys.exit()
-
-
-def construct_dict_from_arr(arr, keySubIndex):
-    d = {}
-
-    for i in arr:
-        d[i[0]] = i[keySubIndex]
-
-    return d

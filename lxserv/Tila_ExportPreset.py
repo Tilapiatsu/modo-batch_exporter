@@ -158,8 +158,6 @@ class PersistenceWrapper(object):
         try:
             return lxu.object.Attributes(atom).Get(0)
         except RuntimeError:
-            if key == OPT_GAME_EXPORT_PATH:
-                return ''
             return None
 
     def __setitem__(self, key, value):
@@ -292,7 +290,7 @@ class ExportPresets(PersistenceWrapper):
                 value = self.getValue(sourcePresetName, key)
                 self[key] = value
 
-        self[OPT_GAME_USERNAME] = userName
+        self['presetName'] = userName
 
         self.pushToConfig()
 
@@ -319,7 +317,7 @@ class ExportPresets(PersistenceWrapper):
             h.Select(i)
 
             key = h.Hash()
-            username = lxu.object.Attributes(self.config.atoms[OPT_GAME_USERNAME]).Get(0)
+            username = lxu.object.Attributes(self.config.atoms['presetName']).Get(0)
             result[key] = username
 
         return result
@@ -327,12 +325,12 @@ class ExportPresets(PersistenceWrapper):
     @property
     def userName(self):
         h = self.config.hash_main
-        return lxu.object.Attributes(self.config.atoms[OPT_GAME_USERNAME]).Get(0)
+        return lxu.object.Attributes(self.config.atoms['presetName']).Get(0)
 
     @property
     def attributeFields(self):
         '''Returns a dictionary without the keys that are not meant to be exposed as command attribute.'''
-        ignore = ('key', OPT_GAME_USERNAME)
+        ignore = ('key', 'presetName')
         return {key: value for key, value in self.fields.iteritems() if key not in ignore}
 
     def __setitem__(self, key, value):
@@ -429,17 +427,11 @@ class CmdExportPresets(lxu.command.BasicCommand):
                 newname = dialog.textInputDialog(textRenamePresetTitle)
                 if newname:
                     exportPresets.addPreset(newname, doCopyValuesFromPrevious=True)
-                    fbxPresets.addPreset(newname)
 
-                    # Ensure the newly selected fbx preset is stored
-                    # Remove spaces and make lower case
-                    internalName = newname.translate(None, ' ').lower()
-                    exportPresets[OPT_GAME_FBX_PRESET] = internalName
                     exportPresets.pushToConfig()
 
             elif presetName == 'store':
                 exportPresets.pushToConfig()
-                fbxPresets.pushToConfig()
 
             elif presetName == 'remove':
 
@@ -468,12 +460,6 @@ class CmdExportPresets(lxu.command.BasicCommand):
                     exportPresets.selected = presetName
                     exportPresets.pullFromConfig()
 
-                    try:
-                        fbxPresets.selectPreset(exportPresets[OPT_GAME_FBX_PRESET])
-                        fbxPresets.pushUserValues()
-                    except LookupError:
-                        pass
-
             doNotify = True
 
         # Notify UI elements
@@ -491,7 +477,7 @@ class CmdExportPresets(lxu.command.BasicCommand):
             noneName = 'None'
 
             # If the preset has been modified, display a star in front of the name
-            if exportPresets.isModified or fbxPresets.isModified:
+            if exportPresets.isModified:
                 index = keys.index(exportPresets.selected)
                 values[index] = values[index] + '*'
                 noneName = 'None*'
@@ -509,9 +495,6 @@ class CmdExportPresets(lxu.command.BasicCommand):
             return PopUp([keys, userNames])
 
     def cmd_NotifyAddClient(self, argument, object):
-        self.notifier = self.not_svc.Spawn(FOLDERBROWSE_NOTIFIER, "")
-        self.notifier.AddClient(object)
-
         self.fbxnotifier = self.not_svc.Spawn(t.REFRESH_ASTERISK_NOTIFIER, "")
         self.fbxnotifier.AddClient(object)
 

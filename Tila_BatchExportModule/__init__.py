@@ -16,6 +16,7 @@ def get_default_settings(self):
         self.fbxTriangulate = lx.eval('user.value sceneio.fbx.save.surfaceRefining ?')
         self.fbxFormat = lx.eval('user.value sceneio.fbx.save.format ?')
 
+
 userValues = [
     ['exportVisible_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFile_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],

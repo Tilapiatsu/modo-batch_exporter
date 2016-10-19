@@ -338,7 +338,6 @@ class ExportPresets(PersistenceWrapper):
         parentInstance = super(self.__class__, self)
 
         for argName in self.keys():
-
             # Is value stored in both, the buffer and the config?
             isInBuffer = argName in self._buffer
             isInConfig = parentInstance.__contains__(argName)
@@ -569,7 +568,6 @@ def createGenericAttributeCommand(argName, argType):
         return None
 
     def basic_Execute(self, msg, flags):
-
         if self.dyna_IsSet(0):
 
             getter = self.attrGetterFunc(self.argType)

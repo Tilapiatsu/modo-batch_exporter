@@ -4,7 +4,7 @@ import Tila_BatchExportModule as t
 # Querring and Adding User Values
 
 def query_User_Value(self, index, argPrefix, argName):
-    if not self.dyna_IsSet(index):
+    if not self.dyna_IsSet(index) and argName != t.TILA_PRESET_NAME:
         return lx.eval('user.value %s ?' % (argPrefix + argName))
     else:
         if t.userValues[index][1] == 'boolean':

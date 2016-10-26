@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import lx
+import lxu
 import os
 from Tila_BatchExportModule import dialog
 
@@ -15,6 +16,14 @@ def get_default_settings(self):
         self.fbxExportType = lx.eval('user.value sceneio.fbx.save.exportType ?')
         self.fbxTriangulate = lx.eval('user.value sceneio.fbx.save.surfaceRefining ?')
         self.fbxFormat = lx.eval('user.value sceneio.fbx.save.format ?')
+
+TILA_BATCH_EXPORT = "tila.batchexport"
+TILA_BATCH_TRANSFORM = "tila.batchtransform"
+TILA_BATCH_FOLDER = "tila.batchfolder"
+TILA_OPEN_EXPORT_FOLDER = "tila.openexportfolder"
+TILA_EXPORT_PRESET = "tila.exportpreset"
+TILA_PRESET_NAME = 'presetName'
+REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 
 
 userValues = [
@@ -71,7 +80,7 @@ userValues = [
     ['exportFormatX3d_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatSvg_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatPlt_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
-    ['presetName', lx.symbol.sTYPE_STRING, True, 'None']
+    [TILA_PRESET_NAME, lx.symbol.sTYPE_STRING, True, 'none']
     ]
 
 exportTypes = [
@@ -125,13 +134,6 @@ compatibleItemType = ['mesh',
                       'defaultShader']
 
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
-
-TILA_BATCH_EXPORT = "tila.batchexport"
-TILA_BATCH_TRANSFORM = "tila.batchtransform"
-TILA_BATCH_FOLDER = "tila.batchfolder"
-TILA_OPEN_EXPORT_FOLDER = "tila.openexportfolder"
-TILA_EXPORT_PRESET = "tila.exportpreset"
-REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 
 g_dialog_svc = lx.service.StdDialog()
 g_msg_svc    = lx.service.Message ()

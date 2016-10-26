@@ -121,8 +121,6 @@ def get_transformation_count(self):
     count = 0
     if self.triple_sw:
         count += 1
-    if self.udimPerMaterialSet_sw:
-        count += 1
     if self.resetPos_sw:
         count += 1
     if self.resetRot_sw:

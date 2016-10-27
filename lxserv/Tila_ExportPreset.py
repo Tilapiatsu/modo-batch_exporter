@@ -292,10 +292,10 @@ class ExportPresets(PersistenceWrapper):
         atom = self.config.atoms['selection']
         atom.Append()
 
-        if 'none' not in self.hashes():
-            self.insertHash('none', 'none')
+        if 'default' not in self.hashes():
+            self.insertHash('default', 'default')
             self.pullUserValues()
-            self.activeHash = 'none'
+            self.activeHash = 'default'
 
             # Write selection to config
             lxu.object.Attributes(atom).SetString(0, self.activeHash)
@@ -385,7 +385,7 @@ class ExportPresets(PersistenceWrapper):
     def removeCurrentPreset(self):
 
         self.removeHash(self.activeHash)
-        self.activeHash = 'none'
+        self.activeHash = 'default'
         self.pushUserValues()
 
         # Write selection to config
@@ -473,7 +473,7 @@ class CmdExportPresets(lxu.command.BasicCommand):
                 exportPresets.addPreset(newname)
 
         elif presetName == 'store':
-            if exportPresets.activeHash in ['none', 'default']:
+            if exportPresets.activeHash in ['default']:
                 textCannotDeleteBuiltins = getMsgText('gameExport', 'cannotDeleteBuiltin')
                 modo.dialogs.alert('Info', textCannotDeleteBuiltins)
                 return
@@ -481,7 +481,7 @@ class CmdExportPresets(lxu.command.BasicCommand):
 
         elif presetName == 'remove':
 
-            if exportPresets.activeHash in ['none', 'default']:
+            if exportPresets.activeHash in ['default']:
                 textCannotDeleteBuiltins = getMsgText('gameExport', 'cannotDeleteBuiltin')
                 modo.dialogs.alert('Info', textCannotDeleteBuiltins)
                 return
@@ -493,14 +493,14 @@ class CmdExportPresets(lxu.command.BasicCommand):
             if modo.dialogs.okCancel(textConfirmTitle, textConfirm) != 'ok':
                 return
 
-            # Removes current preset and selects 'none'
+            # Removes current preset and selects 'default'
             exportPresets.removeCurrentPreset()
 
         else:
             if presetName in exportPresets._hashes:
 
-                # When the user changes from 'none' to another preset, store the 'none' values first.
-                if exportPresets.activeHash == 'none' and presetName != 'none':
+                # When the user changes from 'default' to another preset, store the 'default' values first.
+                if exportPresets.activeHash == 'default' and presetName != 'default':
                     exportPresets.pullUserValues()
 
                 exportPresets.selectPreset(presetName)
@@ -515,17 +515,17 @@ class CmdExportPresets(lxu.command.BasicCommand):
 
             keys = exportPresets.hashes()
             values = [exportPresets.hashUserName(key) for key in keys]
-            noneName = 'None'
+            noneName = 'Default'
             # If the preset has been modified, display a star in front of the name
             if exportPresets.isModified:
                 index = keys.index(exportPresets.activeHash)
                 values[index] = values[index] + '*'
-                noneName = 'None*'
+                noneName = 'Dfault*'
 
             # Removing the 'none' entry to insert it at the beginning again below,
             # just to make it always appear first in the popup list.
 
-            notInList = lambda a: a not in ('none', 'None', 'none*', 'None*')
+            notInList = lambda a: a not in ('default', 'Default', 'default*', 'Default*')
 
             keys = filter(notInList, keys)
             values = filter(notInList, values)
@@ -533,7 +533,7 @@ class CmdExportPresets(lxu.command.BasicCommand):
 
             # Generate list of two tuples where the first one contains lower case keys and the
             # second one contains the "nicer" user names.
-            keys = tuple(['none'] + keys + ['new', 'store', 'remove'])
+            keys = tuple(['default'] + keys + ['new', 'store', 'remove'])
             userNames = tuple([noneName] + values + ['(New Preset)', '(Store Preset)', '(Remove Preset)'])
             return PopUp([keys, userNames])
 

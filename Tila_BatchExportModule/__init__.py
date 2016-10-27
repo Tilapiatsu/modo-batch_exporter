@@ -80,7 +80,7 @@ userValues = [
     ['exportFormatX3d_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatSvg_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatPlt_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
-    [TILA_PRESET_NAME, lx.symbol.sTYPE_STRING, True, 'none']
+    [TILA_PRESET_NAME, lx.symbol.sTYPE_STRING, True, 'default']
     ]
 
 exportTypes = [

@@ -509,15 +509,16 @@ class TilaBacthExport:
             helper.clean_duplicates(self, closeScene=True)
 
     def select_visible_items(self):
-        mesh = self.scn.items('mesh')
-        meshInst = self.scn.items('meshInst')
+        mesh = self.scn.items(t.itemType['MESH'])
+        meshInstance = self.scn.items(t.itemType['MESH_INSTANCE'])
+        meshFusion = self.scn.items(t.itemType['MESH_FUSION'])
+        meshReplicator = self.scn.items(t.itemType['REPLICATOR'])
+
+        compatible = mesh + meshInstance + meshFusion + meshReplicator
 
         visible = []
 
-        for item in meshInst:
-            mesh.append(item)
-
-        for item in mesh:
+        for item in compatible:
             visible_channel = item.channel('visible').get()
             if visible_channel == 'default' or visible_channel == 'on':
                 visible.append(item)

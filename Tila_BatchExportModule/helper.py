@@ -31,24 +31,32 @@ def construct_file_path(self, output_dir, layer_name, ext):
 
 def items_to_proceed_constructor(self):
     for item in self.userSelection:
-        if item.type == 'meshInst':
+        if item.type == t.itemType['MESH_INSTANCE']:
             self.meshInstToProceed.append(item)
-        if item.type == 'mesh':
+        if item.type == t.itemType['MESH']:
             self.meshItemToProceed.append(item)
+        if item.type == t.itemType['REPLICATOR']:
+            self.meshReplToProceed.append(item)
+        '''
+        if item.type == t.compatibleItemType['MESH_FUSION']:
+            self.meshFusionToProceed.append(item)
+        '''
     sort_original_items(self)
 
 
 def sort_original_items(self):
-    for i in self.meshInstToProceed:
-        self.sortedOriginalItems.append(i)
-    for i in self.meshItemToProceed:
-        self.sortedOriginalItems.append(i)
+    self.sortedOriginalItems = self.meshInstToProceed +\
+                               self.meshFusionToProceed +\
+                               self.meshItemToProceed +\
+                               self.meshReplToProceed
 
 
 def duplicate_rename(self, arr, number):
     duplicate_arr = []
     for item in arr:
         layer_name = item.name
+        if item.type == t.itemType['MESH_FUSION']:
+            select_hierarchy(self, force=True)
         duplicate = self.scn.duplicateItem(item)
         duplicate.name = '%s_%s' % (layer_name, number)
         duplicate_arr.append(duplicate)
@@ -117,6 +125,23 @@ def getIteratorTemplate(i):
     return iterator
 
 
+def getLatestItemCreated(self, name):
+    i = 1
+    item = None
+    while True:
+        try:
+            if i == 1 :
+                item = modo.Item(name)
+            else:
+                item = modo.Item('%s%s' % (name, getIteratorTemplate(i)))
+                print item.name
+            i = i + 1
+        except :
+            break
+
+    return item
+
+
 def get_transformation_count(self):
     count = 0
     if self.triple_sw:
@@ -139,7 +164,9 @@ def get_transformation_count(self):
         count += 1
     if self.freezeGeo_sw:
         count += 1
-    if self.scn.selected[0].type == 'meshInst' and (self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw))):
+    if self.scn.selected[0].type == t.itemType['MESH_INSTANCE'] and (self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw))):
+        count += 1
+    if self.scn.selected[0].type == t.itemType['REPLICATOR']:
         count += 1
     if (self.posX != 0 or self.posY != 0 or self.posZ != 0) and self.pos_sw:
         count += 1
@@ -173,7 +200,7 @@ def safe_select(tuple):
 
 
 def isItemTypeCompatibile(item):
-    for type in t.compatibleItemType:
+    for type in t.itemType:
         try:
             if str(item.type) == type:
                 return True
@@ -189,7 +216,12 @@ def construct_dict_from_arr(arr, keySubIndex):
 
     return d
 
-    # Cleaning
+
+def select_hierarchy(self, force=False):
+    if self.exportHierarchy_sw or force:
+        lx.eval('select.itemHierarchy')
+
+# Cleaning
 
 
 def revert_scene_preferences(self):

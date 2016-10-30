@@ -1,6 +1,10 @@
 import lx
+import modo
 import dialog
 import sys
+import time
+import Tila_BatchExportModule as t
+from Tila_BatchExportModule import helper
 
 # Item Processing
 
@@ -149,26 +153,100 @@ def freeze_geo(self):
         lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
 
-def freeze_instance(self, type=0):
-    if type == 1 and self.scn.selected[0].type == 'meshInst':
+def freeze_instance(self, type='meshInst', update_arr=True):
+    compatibleType = [t.itemType['MESH_INSTANCE']]
+    if type in compatibleType and self.scn.selected[0].type in compatibleType:
         if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
             message = "Freeze Instance"
             message = get_progression_message(self, message)
             increment_progress_bar(self, self.progress)
             dialog.transform_log(message)
 
-            lx.eval('item.setType Mesh')
+            lx.eval('item.setType.mesh')
 
-            for i in xrange(0, len(self.scn.selected)):
-                currScale = self.scn.selected[i].scale
+            frozenItem_arr = []
+
+            selection = self.scn.selected
+            for i in xrange(0, len(selection)):
+
+                item = selection[i]
+                item.select(replace=True)
+
+                currScale = item.scale
 
                 if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
                     self.freeze_sca(True)
 
+                frozenItem_arr.append(item)
+
                 if not self.exportFile_sw:
-                    self.userSelection[i] = self.scn.selected[i]
-                else:
-                    self.proceededMesh[i] = self.scn.selected[i]
+                    self.userSelection[i] = item
+                elif update_arr:
+                    self.proceededMesh[i] = item
+
+
+def freeze_meshfusion(self, type):
+    if type == t.itemType['MESH_FUSION']:
+
+        message = "Freeze MeshFusion"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
+
+        selection = self.scn.selected
+        for i in xrange(0, len(selection)):
+            self.scn.select(selection[i])
+            name = self.scn.selected[0].name
+            lx.eval('item.channel OutputMeshMode outModeFinalParts')
+            lx.eval('user.value sdf.outDup false')
+            lx.eval('user.value sdf.meshOutName "%s"' % name)
+            lx.eval('!!@tila.meshout')
+            selection[i] = self.scn.item(name)
+            self.scn.select(selection)
+
+
+def freeze_replicator(self, type, update_arr=True):
+    if type == t.itemType['REPLICATOR']:
+
+        message = "Freeze Replicator"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
+
+        frozenItem_arr = []
+
+        selection = self.scn.selected
+        for i in xrange(0, len(selection)):
+            selection[i].select(replace=True)
+            originalName = self.scn.selected[0].name
+
+            lx.eval('replicator.freeze')
+
+            item = modo.Item(originalName)
+            children = item.children()
+
+            self.scn.select(children)
+
+            lx.eval('item.setType.mesh')
+            lx.eval('layer.mergeMeshes true')
+
+            frozenItem = modo.Item(self.scn.selected[0].name)
+            frozenItem.setParent()
+
+            self.scn.select(item)
+
+            lx.eval('!!item.delete')
+
+            frozenItem.name = originalName
+
+            frozenItem_arr.append(frozenItem)
+
+            if not self.exportFile_sw:
+                self.userSelection[i] = frozenItem
+            elif update_arr:
+                self.proceededMesh[i] = frozenItem
+
+        self.scn.select(frozenItem_arr)
 
 
 def position_offset(self):

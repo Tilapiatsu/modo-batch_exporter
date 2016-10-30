@@ -10,7 +10,6 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
- - Add a preset saver/loader : Save a .cfg file that contain all the settings of the kit for better reusability
  - Try to export more Item Types : camera, light, replicator, rig etc... ( cf compatibleItemType in __init__.py )
  - check export for procedural geometry and fusion item
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
@@ -161,10 +160,11 @@ class TilaBacthExport:
 
         self.meshItemToProceed = []
         self.meshInstToProceed = []
+        self.meshFusionToProceed = []
+        self.meshReplToProceed = []
         self.sortedOriginalItems = []
         self.proceededMesh = []
         self.proceededMeshIndex = 0
-        self.processingItemType = t.processingItemType
         self.overrideFiles = ''
         self.progress = None
         self.progression = [0, 0]
@@ -192,7 +192,7 @@ class TilaBacthExport:
 
     def at_least_one_item_selected(self):
         helper.items_to_proceed_constructor(self)
-        if len(self.meshItemToProceed) == 0 and len(self.meshInstToProceed) == 0:
+        if len(self.meshItemToProceed + self.meshInstToProceed + self.meshFusionToProceed + self.meshReplToProceed) == 0:
             dialog.init_message('info', 'No mesh item selected', 'Select at least one mesh item')
             sys.exit()
 
@@ -278,7 +278,7 @@ class TilaBacthExport:
         dialog.ending_log(self)
 
     def batch_process(self, output_dir):
-        self.select_hierarchy()
+        helper.select_hierarchy(self)
 
         self.transform_loop()
 
@@ -303,40 +303,49 @@ class TilaBacthExport:
 
     def transform_loop(self):
 
-        instances = []
-        if len(self.meshInstToProceed) > 0:
-            self.scn.select(self.meshInstToProceed)
-            self.transform_selected(type=self.processingItemType.MESHINST)
-            instances = self.scn.selected
+        instances = self.transform_type(self.meshInstToProceed, t.itemType['MESH_INSTANCE'])
 
-        meshes = []
-        if len(self.meshItemToProceed) > 0:
-            self.scn.select(self.meshItemToProceed)
-            self.transform_selected(type=self.processingItemType.MESHITEM)
-            meshes = self.scn.selected
+        meshes = self.transform_type(self.meshItemToProceed, t.itemType['MESH'])
+
+        fusion = self.transform_type(self.meshFusionToProceed, t.itemType['MESH_FUSION'])
+
+        replicator = self.transform_type(self.meshReplToProceed, t.itemType['REPLICATOR'])
 
         if self.mergeMesh_sw:
-            for i in instances:
-                meshes.append(i)
+            meshes = meshes + instances + fusion + replicator
 
             item_processing.merge_meshes(self, meshes)
             self.proceededMesh = [self.scn.selected[0]]
             self.proceededMesh[0].name = os.path.split(self.currPath)[1][:-2]
 
+    def transform_type(self, type_item_arr, type):
+        item_arr = []
+        if len(type_item_arr) > 0:
+            self.scn.select(type_item_arr)
+            self.transform_selected(type=type)
+            item_arr = self.scn.selected
+
+        return item_arr
+
     def transform_selected(self, type):
-        self.select_hierarchy()
+        helper.select_hierarchy(self)
 
         self.progression = [1, helper.get_transformation_count(self)]
 
         self.progress = dialog.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
         if self.exportFile_sw:
-            if type == self.processingItemType.MESHITEM:
+            if type == t.itemType['MESH']:
                 helper.duplicate_rename(self, self.meshItemToProceed, '1')
-            if type == self.processingItemType.MESHINST:
+            if type == t.itemType['MESH_INSTANCE']:
                 helper.duplicate_rename(self, self.meshInstToProceed, '1')
+            if type == t.itemType['MESH_FUSION']:
+                helper.duplicate_rename(self, self.meshFusionToProceed, '1')
+            if type == t.itemType['REPLICATOR']:
+                helper.duplicate_rename(self, self.meshReplToProceed, '1')
 
         item_processing.freeze_instance(self, type=type)
+        item_processing.freeze_replicator(self, type=type)
 
         item_processing.smooth_angle(self)
         item_processing.harden_uv_border(self)
@@ -477,10 +486,6 @@ class TilaBacthExport:
         item_processing.apply_morph(self, True, self.cageMorphMapName)
 
         self.save_file(output_path, export_format)
-
-    def select_hierarchy(self):
-        if self.exportHierarchy_sw:
-            lx.eval('select.itemHierarchy')
 
     def save_file(self, output_path, export_format):
         if self.file_conflict(output_path) and self.askBeforeOverride_sw:

@@ -5,24 +5,13 @@ import lxu
 import lxifc
 import lxu.command
 import lxu.service
-import lxu.utils
-import os
 import modo
-import shutil
-from os.path import join as pjoin
-from os.path import normpath
-import re
 
+from collections import OrderedDict
 
-from collections import namedtuple, OrderedDict, Iterable
-
-from new import classobj
-
-from os.path import isfile
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import helper
 from Tila_BatchExportModule import dialog
-from Tila_BatchExportModule import file
 
 
 def tilaBExpUserValues():
@@ -520,7 +509,7 @@ class CmdExportPresets(lxu.command.BasicCommand):
             if exportPresets.isModified:
                 index = keys.index(exportPresets.activeHash)
                 values[index] = values[index] + '*'
-                noneName = 'Dfault*'
+                noneName = 'Default*'
 
             # Removing the 'none' entry to insert it at the beginning again below,
             # just to make it always appear first in the popup list.

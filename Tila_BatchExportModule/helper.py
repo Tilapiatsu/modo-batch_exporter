@@ -64,6 +64,8 @@ def duplicate_rename(self, arr, number):
 
     self.scn.select(duplicate_arr)
 
+    return len(self.proceededMesh) - len(duplicate_arr)
+
 
 def get_name(self, layer):
     if self.exportEach_sw:

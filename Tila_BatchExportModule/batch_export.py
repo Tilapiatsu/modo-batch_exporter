@@ -305,16 +305,16 @@ class TilaBacthExport:
 
         instances = self.transform_type(self.meshInstToProceed, t.itemType['MESH_INSTANCE'])
 
-        meshes = self.transform_type(self.meshItemToProceed, t.itemType['MESH'])
-
         fusion = self.transform_type(self.meshFusionToProceed, t.itemType['MESH_FUSION'])
 
         replicator = self.transform_type(self.meshReplToProceed, t.itemType['REPLICATOR'])
 
-        if self.mergeMesh_sw:
-            meshes = meshes + instances + fusion + replicator
+        meshes = self.transform_type(self.meshItemToProceed, t.itemType['MESH'])
 
-            item_processing.merge_meshes(self, meshes)
+        if self.mergeMesh_sw:
+            transformed = meshes + instances + fusion + replicator
+
+            item_processing.merge_meshes(self, transformed)
             self.proceededMesh = [self.scn.selected[0]]
             self.proceededMesh[0].name = os.path.split(self.currPath)[1][:-2]
 
@@ -334,18 +334,20 @@ class TilaBacthExport:
 
         self.progress = dialog.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
+        first_index = 0
+
         if self.exportFile_sw:
             if type == t.itemType['MESH']:
-                helper.duplicate_rename(self, self.meshItemToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshItemToProceed, '1')
             if type == t.itemType['MESH_INSTANCE']:
-                helper.duplicate_rename(self, self.meshInstToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshInstToProceed, '1')
             if type == t.itemType['MESH_FUSION']:
-                helper.duplicate_rename(self, self.meshFusionToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshFusionToProceed, '1')
             if type == t.itemType['REPLICATOR']:
-                helper.duplicate_rename(self, self.meshReplToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshReplToProceed, '1')
 
-        item_processing.freeze_instance(self, type=type)
-        item_processing.freeze_replicator(self, type=type)
+        item_processing.freeze_instance(self, type=type, first_index=first_index)
+        item_processing.freeze_replicator(self, type=type, first_index=first_index)
 
         item_processing.smooth_angle(self)
         item_processing.harden_uv_border(self)

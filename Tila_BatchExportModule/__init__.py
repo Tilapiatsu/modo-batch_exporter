@@ -22,12 +22,18 @@ TILA_BATCH_TRANSFORM = "tila.batchtransform"
 TILA_BATCH_FOLDER = "tila.batchfolder"
 TILA_OPEN_EXPORT_FOLDER = "tila.openexportfolder"
 TILA_EXPORT_PRESET = "tila.exportpreset"
+
 TILA_PRESET_NAME = 'presetName'
+TILA_EXPORT_VISIBLE = 'exportVisible_sw'
+
+TILA_DUPLICATE_SUFFIX = 'tila_duplicate'
+TILA_BACKUP_SUFFIX = 'tila_backup'
+
 REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 
 
 userValues = [
-    ['exportVisible_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['TILA_EXPORT_VISIBLE', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFile_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['scanFiles_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportEach_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
@@ -101,36 +107,36 @@ exportTypes = [
 ]
 
 itemType = {'MESH': 'mesh',
-            'MESH_INSTANCE':'meshInst',
-            'MESH_FUSION':'sdf.item',
-            'CAMERA':'camera',
-            'LIGHT':'light',
-            'TEXTURE_LOCATOR':'txtrLocator',
-            'BACKDROP':'backdrop',
-            'GROUP_LOCATOR':'groupLocator',
-            'REPLICATOR':'replicator',
-            'SURFACE_GENERATOR':'surfGen',
-            'LOCATOR':'locator',
-            'DEFORM':'deform',
-            'LOCATOR_DEFORM':'locdeform',
-            'DEFORM_GROUP':'deformGroup',
-            'DEFORM_MDD2':'deformMDD2',
-            'MORPH_DEFORM':'morphDeform',
-            'ITEM_INFLUENCE':'itemInfluence',
-            'GEN_INFLUENCE':'genInfluence',
-            'DEFORM_PUSH':'deform.push',
-            'DEFORM_WARP':'deform.wrap',
-            'SOFT_LAG':'softLag',
-            'ABC_CURVE_DEFORM':'ABCCurvesDeform.sample',
-            'ABC_DEFORM':'ABCdeform.sample',
-            'FORCE_ROOT':'force.root',
-            'BASE_VOLUME':'baseVolume',
-            'CHANNEL_MODIFY':'chanModify',
-            'ITEM_MODIFY':'itemModify',
-            'MESH_OPERATION':'meshoperation',
-            'CHANNEL_EFFECT':'chanEffect',
-            'DEFAULT_SHADER':'defaultShader',
-            'ADVANCED_MATERIAL':'advancedMaterial'}
+            'MESH_INSTANCE': 'meshInst',
+            'MESH_FUSION': 'sdf.item',
+            'CAMERA': 'camera',
+            'LIGHT': 'light',
+            'TEXTURE_LOCATOR': 'txtrLocator',
+            'BACKDROP': 'backdrop',
+            'GROUP_LOCATOR': 'groupLocator',
+            'REPLICATOR': 'replicator',
+            'SURFACE_GENERATOR': 'surfGen',
+            'LOCATOR': 'locator',
+            'DEFORM': 'deform',
+            'LOCATOR_DEFORM': 'locdeform',
+            'DEFORM_GROUP': 'deformGroup',
+            'DEFORM_MDD2': 'deformMDD2',
+            'MORPH_DEFORM': 'morphDeform',
+            'ITEM_INFLUENCE': 'itemInfluence',
+            'GEN_INFLUENCE': 'genInfluence',
+            'DEFORM_PUSH': 'deform.push',
+            'DEFORM_WARP': 'deform.wrap',
+            'SOFT_LAG': 'softLag',
+            'ABC_CURVE_DEFORM': 'ABCCurvesDeform.sample',
+            'ABC_DEFORM': 'ABCdeform.sample',
+            'FORCE_ROOT': 'force.root',
+            'BASE_VOLUME': 'baseVolume',
+            'CHANNEL_MODIFY': 'chanModify',
+            'ITEM_MODIFY': 'itemModify',
+            'MESH_OPERATION': 'meshoperation',
+            'CHANNEL_EFFECT': 'chanEffect',
+            'DEFAULT_SHADER': 'defaultShader',
+            'ADVANCED_MATERIAL': 'advancedMaterial'}
 
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
 

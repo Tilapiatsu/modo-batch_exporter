@@ -61,6 +61,8 @@ class CmdBatchExport(lxu.command.BasicCommand):
                                                scnIndex,
                                                userValues))
 
+            print userValues[0]
+
             if bool(userValues[0]):
                 olderSelection = userSelection
                 userSelection = tbe.select_visible_items(tbe(userSelection,

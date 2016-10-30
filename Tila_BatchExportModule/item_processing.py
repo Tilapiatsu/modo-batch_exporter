@@ -153,7 +153,7 @@ def freeze_geo(self):
         lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
 
 
-def freeze_instance(self, type='meshInst', update_arr=True):
+def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
     compatibleType = [t.itemType['MESH_INSTANCE']]
     if type in compatibleType and self.scn.selected[0].type in compatibleType:
         if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
@@ -180,9 +180,9 @@ def freeze_instance(self, type='meshInst', update_arr=True):
                 frozenItem_arr.append(item)
 
                 if not self.exportFile_sw:
-                    self.userSelection[i] = item
+                    self.userSelection[first_index + i] = item
                 elif update_arr:
-                    self.proceededMesh[i] = item
+                    self.proceededMesh[first_index + i] = item
 
 
 def freeze_meshfusion(self, type):
@@ -205,7 +205,7 @@ def freeze_meshfusion(self, type):
             self.scn.select(selection)
 
 
-def freeze_replicator(self, type, update_arr=True):
+def freeze_replicator(self, type, update_arr=True, first_index=0):
     if type == t.itemType['REPLICATOR']:
 
         message = "Freeze Replicator"
@@ -242,9 +242,9 @@ def freeze_replicator(self, type, update_arr=True):
             frozenItem_arr.append(frozenItem)
 
             if not self.exportFile_sw:
-                self.userSelection[i] = frozenItem
+                self.userSelection[first_index + i] = frozenItem
             elif update_arr:
-                self.proceededMesh[i] = frozenItem
+                self.proceededMesh[first_index + i] = frozenItem
 
         self.scn.select(frozenItem_arr)
 

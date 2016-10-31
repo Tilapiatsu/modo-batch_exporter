@@ -42,7 +42,7 @@ class CmdBatchExport(lxu.command.BasicCommand):
             currPath = currScn.filename
 
             if currPath is None:
-                currPath = ""
+                currPath = ''
 
             scnIndex = lx.eval('query sceneservice scene.index ? current')
 
@@ -60,8 +60,6 @@ class CmdBatchExport(lxu.command.BasicCommand):
                                                currPath,
                                                scnIndex,
                                                userValues))
-
-            print userValues[0]
 
             if bool(userValues[0]):
                 olderSelection = userSelection

@@ -9,9 +9,9 @@ import Tila_BatchExportModule as t
 # Path Constructor
 
 def construct_file_path(self, output_dir, layer_name, ext):
+    sceneName = os.path.splitext(self.scn.name)[0]
     if self.scanFiles_sw:
         if self.exportEach_sw:
-            sceneName = self.scn.name
             return [os.path.join(output_dir, sceneName + '_-_' + layer_name + '.' + ext),
                     os.path.join(output_dir, sceneName + '_-_' + layer_name
                                  + '_cage.' + ext)]
@@ -23,8 +23,8 @@ def construct_file_path(self, output_dir, layer_name, ext):
             return [os.path.join(output_dir, layer_name + '.' + ext),
                     os.path.join(output_dir, layer_name + '_cage.' + ext)]
         else:
-            splited_path = os.path.splitext(output_dir)
-            return [output_dir, splited_path[0] + '_cage' + splited_path[1]]
+            return [os.path.join(output_dir, sceneName + '.' + ext),
+                    os.path.join(output_dir, sceneName + '_cage.' + ext)]
 
 
 # Helpers, setter/getter, Selector
@@ -51,14 +51,14 @@ def sort_original_items(self):
                                self.meshReplToProceed
 
 
-def duplicate_rename(self, arr, number):
+def duplicate_rename(self, arr, suffix):
     duplicate_arr = []
     for item in arr:
         layer_name = item.name
         if item.type == t.itemType['MESH_FUSION']:
             select_hierarchy(self, force=True)
         duplicate = self.scn.duplicateItem(item)
-        duplicate.name = '%s_%s' % (layer_name, number)
+        duplicate.name = '%s%s' % (layer_name, suffix)
         duplicate_arr.append(duplicate)
         self.proceededMesh.append(duplicate)
 
@@ -74,16 +74,13 @@ def get_name(self, layer):
         return self.scn.name
 
 
-def set_name(self, arr, shrink, add, layer_name=''):
+def set_name(arr, shrink=0, suffix=''):
     for item in arr:
         currName = item.name
 
-        if add:
-            if shrink:
-                currName = currName[:-2]
-            currName += layer_name
-        else:
-            currName = layer_name
+        if shrink:
+            currName = currName[:-shrink]
+        currName = '%s%s' % (currName, suffix)
 
         item.name = currName
 
@@ -91,12 +88,8 @@ def set_name(self, arr, shrink, add, layer_name=''):
 def open_destination_folder(self, output_dir):
     if self.exportFile_sw:
         if self.openDestFolder_sw:
-            if self.scanFiles_sw:
-                dialog.open_folder(output_dir)
-            if self.exportEach_sw:
-                dialog.open_folder(output_dir)
-            else:
-                dialog.open_folder(os.path.split(output_dir)[0])
+            dialog.open_folder(output_dir)
+
 
 
 def check_selection_count(self):
@@ -127,18 +120,18 @@ def getIteratorTemplate(i):
     return iterator
 
 
-def getLatestItemCreated(self, name):
+def getLatestItemCreated(name):
     i = 1
     item = None
     while True:
         try:
-            if i == 1 :
+            if i == 1:
                 item = modo.Item(name)
             else:
                 item = modo.Item('%s%s' % (name, getIteratorTemplate(i)))
                 print item.name
-            i = i + 1
-        except :
+            i += 1
+        except:
             break
 
     return item
@@ -202,7 +195,7 @@ def safe_select(tuple):
 
 
 def isItemTypeCompatibile(item):
-    for type in t.itemType:
+    for type in t.itemType.values():
         try:
             if str(item.type) == type:
                 return True
@@ -245,6 +238,6 @@ def clean_duplicates(self, closeScene=False):
 
     safe_select(self.proceededMesh)
     lx.eval('!!item.delete')
-    set_name(self, [self.sortedOriginalItems[self.proceededMeshIndex]], shrink=True, add=True)
+    set_name([self.sortedOriginalItems[self.proceededMeshIndex]], shrink=len(t.TILA_BACKUP_SUFFIX))
     revert_scene_preferences(self)
     sys.exit()

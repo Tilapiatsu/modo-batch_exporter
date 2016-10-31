@@ -190,11 +190,14 @@ class TilaBacthExport:
             dialog.init_message('info', 'No export format selected', 'Select at least one export fromat in the form')
             sys.exit()
 
-    def at_least_one_item_selected(self):
+    def at_least_one_item_selected(self, exit=True):
         helper.items_to_proceed_constructor(self)
-        if len(self.meshItemToProceed + self.meshInstToProceed + self.meshFusionToProceed + self.meshReplToProceed) == 0:
-            dialog.init_message('info', 'No mesh item selected', 'Select at least one mesh item')
-            sys.exit()
+        if len(self.meshItemToProceed + self.meshInstToProceed + self.meshReplToProceed + self.meshFusionToProceed) == 0:
+            if exit:
+                dialog.init_message('info', 'No mesh item selected', 'Select at least one mesh item')
+                sys.exit()
+            else:
+                return True
 
     # Loops methods
 
@@ -204,12 +207,9 @@ class TilaBacthExport:
 
         dialog.begining_log(self)
 
-        if self.exportEach_sw:
-            self.currPath = file.getLatestPath(t.config_export_path)
-            dialog.init_dialog("output", self.currPath)
-        else:
-            self.currPath = file.getLatestPath(t.config_export_path)
-            dialog.init_dialog("file_save", self.currPath)
+        self.currPath = file.getLatestPath(t.config_export_path)
+
+        dialog.init_dialog("output", self.currPath)
 
         try:  # output folder dialog
             lx.eval('dialog.open')
@@ -218,7 +218,7 @@ class TilaBacthExport:
         else:
             output_dir = lx.eval1('dialog.result ?')
             file.updateExportPath(output_dir, '', '')
-            self.batch_process(output_dir)
+            self.batch_process(output_dir, os.path.splitext(self.scn.name))
 
         helper.open_destination_folder(self, output_dir)
         dialog.ending_log(self)
@@ -250,8 +250,9 @@ class TilaBacthExport:
 
                     lx.eval('!scene.open "%s" normal' % f)
 
-                    # if ext == 'fbx'
-                    lx.eval('select.itemType mesh')
+                    lx.eval('select.itemType %s mode:add' % t.itemType['MESH'])
+                    lx.eval('select.itemType %s mode:add' % t.itemType['MESH_INSTANCE'])
+                    lx.eval('select.itemType %s mode:add' % t.itemType['REPLICATOR'])
 
                     self.userSelection = self.scn.selected
                     self.userSelectionCount = len(self.userSelection)
@@ -259,7 +260,24 @@ class TilaBacthExport:
                     dialog.print_log('.....................................   ' + str(
                         self.userSelectionCount) + ' mesh item founded   .....................................')
 
-                    self.batch_process(output_dir)
+                    if self.at_least_one_item_selected(exit=False):
+                        lx.eval('!scene.close')
+                        continue
+
+                    self.batch_process(output_dir, os.path.splitext(os.path.basename(f))[0])
+
+                    self.meshItemToProceed = []
+                    self.meshInstToProceed = []
+                    self.meshFusionToProceed = []
+                    self.meshReplToProceed = []
+                    self.sortedOriginalItems = []
+                    self.proceededMesh = []
+                    self.proceededMeshIndex = 0
+                    self.overrideFiles = ''
+                    self.progress = None
+                    self.progression = [0, 0]
+                    self.tempScnID = None
+
                     lx.eval('!scene.close')
 
         dialog.init_message('info', 'Done', 'Operation completed successfully !')
@@ -277,7 +295,7 @@ class TilaBacthExport:
         self.scn.select(self.proceededMesh)
         dialog.ending_log(self)
 
-    def batch_process(self, output_dir):
+    def batch_process(self, output_dir, filename):
         helper.select_hierarchy(self)
 
         self.transform_loop()
@@ -285,6 +303,8 @@ class TilaBacthExport:
         self.progress = dialog.init_progress_bar(len(self.proceededMesh), 'Exporting ...')
         self.progression[1] = len(self.proceededMesh)
         self.progression[0] = 0
+
+        helper.set_name(self.sortedOriginalItems, suffix=t.TILA_BACKUP_SUFFIX)
 
         if self.exportEach_sw:
             for i in xrange(0, len(self.proceededMesh)):
@@ -294,9 +314,11 @@ class TilaBacthExport:
 
                 dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
-                self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-2], i)
+                self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-len(t.TILA_DUPLICATE_SUFFIX)])
         else:
-            self.export_all_format(output_dir, self.proceededMesh, self.scn.name)
+            self.export_all_format(output_dir, self.proceededMesh, filename)
+
+        helper.set_name(self.sortedOriginalItems, shrink=len(t.TILA_BACKUP_SUFFIX))
 
         self.progress = None
         helper.revert_scene_preferences(self)
@@ -316,7 +338,7 @@ class TilaBacthExport:
 
             item_processing.merge_meshes(self, transformed)
             self.proceededMesh = [self.scn.selected[0]]
-            self.proceededMesh[0].name = os.path.split(self.currPath)[1][:-2]
+            self.proceededMesh[0].name = os.path.splitext(self.scn.name)[0]
 
     def transform_type(self, type_item_arr, type):
         item_arr = []
@@ -338,13 +360,13 @@ class TilaBacthExport:
 
         if self.exportFile_sw:
             if type == t.itemType['MESH']:
-                first_index = helper.duplicate_rename(self, self.meshItemToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshItemToProceed, t.TILA_DUPLICATE_SUFFIX)
             if type == t.itemType['MESH_INSTANCE']:
-                first_index = helper.duplicate_rename(self, self.meshInstToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshInstToProceed, t.TILA_DUPLICATE_SUFFIX)
             if type == t.itemType['MESH_FUSION']:
-                first_index = helper.duplicate_rename(self, self.meshFusionToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshFusionToProceed, t.TILA_DUPLICATE_SUFFIX)
             if type == t.itemType['REPLICATOR']:
-                first_index = helper.duplicate_rename(self, self.meshReplToProceed, '1')
+                first_index = helper.duplicate_rename(self, self.meshReplToProceed, t.TILA_DUPLICATE_SUFFIX)
 
         item_processing.freeze_instance(self, type=type, first_index=first_index)
         item_processing.freeze_replicator(self, type=type, first_index=first_index)
@@ -374,18 +396,10 @@ class TilaBacthExport:
         dialog.deallocate_dialog_svc(self.progress[1])
         self.progress = None
 
+    def export_all_format(self, output_dir, duplicate, layer_name):
 
-    def export_all_format(self, output_dir, duplicate, layer_name, index=0):
-        originalItem = []
-
-        if self.exportEach_sw:
-            originalItem.append(self.sortedOriginalItems[index])
-        else:
-            originalItem = self.sortedOriginalItems
-
-        helper.set_name(self, originalItem, shrink=False, add=True, layer_name='_0')
         self.scn.select(duplicate)
-        helper.set_name(self, duplicate, shrink=True, add=True)
+        helper.set_name(duplicate, shrink=len(t.TILA_DUPLICATE_SUFFIX))
 
         if self.exportFormatLxo_sw:
             output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[0][0])
@@ -449,8 +463,6 @@ class TilaBacthExport:
         self.scn.select(duplicate)
 
         lx.eval('!!item.delete')
-
-        helper.set_name(self, originalItem, shrink=True, add=True)
 
     def export_selection(self, item, output_path, export_format):
         lx.eval("scene.new")

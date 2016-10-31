@@ -26,8 +26,8 @@ TILA_EXPORT_PRESET = "tila.exportpreset"
 TILA_PRESET_NAME = 'presetName'
 TILA_EXPORT_VISIBLE = 'exportVisible_sw'
 
-TILA_DUPLICATE_SUFFIX = 'tila_duplicate'
-TILA_BACKUP_SUFFIX = 'tila_backup'
+TILA_DUPLICATE_SUFFIX = '_tila_duplicate'
+TILA_BACKUP_SUFFIX = '_tila_backup'
 
 REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 

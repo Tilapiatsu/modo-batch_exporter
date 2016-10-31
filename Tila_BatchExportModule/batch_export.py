@@ -164,6 +164,7 @@ class TilaBacthExport:
         self.meshReplToProceed = []
         self.sortedOriginalItems = []
         self.proceededMesh = []
+        self.replicatorSource = {}
         self.proceededMeshIndex = 0
         self.overrideFiles = ''
         self.progress = None
@@ -291,12 +292,18 @@ class TilaBacthExport:
         self.at_least_one_item_selected()
         dialog.begining_log(self)
 
+        if len(self.meshReplToProceed) > 0:
+            self.replicatorSource = helper.get_replicator_source(self, self.meshReplToProceed)
+
         self.transform_loop()
         self.scn.select(self.proceededMesh)
         dialog.ending_log(self)
 
     def batch_process(self, output_dir, filename):
         helper.select_hierarchy(self)
+
+        if len(self.meshReplToProceed) > 0:
+            self.replicatorSource = helper.get_replicator_source(self, self.meshReplToProceed)
 
         self.transform_loop()
 

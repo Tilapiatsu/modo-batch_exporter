@@ -230,6 +230,10 @@ def freeze_replicator(self, type, update_arr=True, first_index=0):
             lx.eval('item.setType.mesh')
             lx.eval('layer.mergeMeshes true')
 
+            trimed_selection = selection[i:]
+            print trimed_selection
+            helper.replace_replicator_source(self, trimed_selection)
+
             frozenItem = modo.Item(self.scn.selected[0].name)
             frozenItem.setParent()
 

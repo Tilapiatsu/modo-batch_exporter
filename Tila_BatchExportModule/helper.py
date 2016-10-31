@@ -129,7 +129,6 @@ def getLatestItemCreated(name):
                 item = modo.Item(name)
             else:
                 item = modo.Item('%s%s' % (name, getIteratorTemplate(i)))
-                print item.name
             i += 1
         except:
             break
@@ -215,6 +214,48 @@ def construct_dict_from_arr(arr, keySubIndex):
 def select_hierarchy(self, force=False):
     if self.exportHierarchy_sw or force:
         lx.eval('select.itemHierarchy')
+
+
+def get_replicator_source(self, replicator_arr):
+    result_dict = {}
+    selection = self.scn.selected
+
+    for i in replicator_arr:
+        self.scn.select(i)
+        source_arr = lx.eval('replicator.source ?')
+
+        result_dict[i.name] = source_arr
+
+    self.scn.select(selection)
+
+    return result_dict
+
+
+def replace_replicator_source(self, item_arr):
+    selection = self.scn.selected
+    for i in item_arr:
+        for k, v in self.replicatorSource.iteritems():
+            if i.name[:-len(t.TILA_DUPLICATE_SUFFIX)] == k:
+                self.scn.select(i)
+
+                source_name = concatetate_string_arr([v], ';')
+                print source_name
+                lx.eval('replicator.source %s' % source_name)
+
+    self.scn.select(selection)
+
+
+def concatetate_string_arr(arr, separator):
+
+    string = ''
+    index = 0
+    for i in xrange(len(arr)):
+        if i == 0:
+            string += arr[i]
+        else:
+            string += separator + arr[i]
+
+    return string
 
 # Cleaning
 

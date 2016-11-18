@@ -11,7 +11,7 @@ This kit allow you to perform complex export task with ease.
 * When kit bashing, you may want to work with all items away from each other. When exporting you may want to put all items back to the world origin.
 * You may want to process very dense meshes or hundreds. You can batch process files or directory on your drive without having to load them one by one or waiting for them to load.
 
-This kit helps you with these tasks by pre-processing mesh items before exporting without modifiying the sources meshes. Your scene stay untoutched : it allow you to have a better iterative workflow and spending less time in conforming your object. In addition, you can save all your settings into a preset.
+This kit helps you with these tasks by **pre-processing mesh items before exporting without modifiying the sources meshes**. Your scene stay untoutched : it allow you to have a better iterative workflow and spending less time in conforming your object. In addition, you can save all your settings into a preset.
 
 ***
 

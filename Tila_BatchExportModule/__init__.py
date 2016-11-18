@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import lx
-import lxu
 import os
 from Tila_BatchExportModule import dialog
 

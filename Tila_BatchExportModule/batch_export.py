@@ -235,6 +235,7 @@ class TilaBacthExport:
             output_dir = lx.eval1('dialog.result ?')
             file.updateExportPath(output_dir, '', '')
             self.batch_process(output_dir, os.path.splitext(self.scn.name))
+            helper.revert_initial_parameter(self)
 
         helper.open_destination_folder(self, output_dir)
         dialog.ending_log(self)
@@ -260,6 +261,13 @@ class TilaBacthExport:
                 output_dir = lx.eval1('dialog.result ?')
                 file.updateExportPath('', '', output_dir)
 
+                file_count = len(files)
+
+                self.progress = dialog.init_progress_bar(file_count, 'Exporting files...')
+
+                self.progression[1] = file_count
+                self.progression[0] = 0
+
                 for f in files:
                     dialog.processing_log('.....................................   ' + os.path.basename(
                         f) + '   .....................................')
@@ -281,6 +289,8 @@ class TilaBacthExport:
                         continue
 
                     self.batch_process(output_dir, os.path.splitext(os.path.basename(f))[0])
+
+                    dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
                     helper.revert_initial_parameter(self)
 
@@ -326,6 +336,13 @@ class TilaBacthExport:
                         for f in subfiles:
                             files.append(f)
 
+                file_count = len(files)
+
+                self.progress = dialog.init_progress_bar(file_count, 'Exporting files...')
+
+                self.progression[1] = file_count
+                self.progression[0] = 0
+
                 for f in files:
                     dialog.processing_log('.....................................   ' + os.path.basename(
                         f) + '   .....................................')
@@ -353,9 +370,13 @@ class TilaBacthExport:
 
                     self.batch_process(output_subdir, os.path.splitext(os.path.basename(f))[0])
 
+                    dialog.increment_progress_bar(self, self.progress[0], self.progression)
+
                     helper.revert_initial_parameter(self)
 
                     lx.eval('!scene.close')
+
+                #dialog.deallocate_dialog_svc(self.progress[1])
 
         dialog.init_message('info', 'Done', 'Operation completed successfully ! %s file(s) exported' % self.exportedFileCount)
 
@@ -402,10 +423,10 @@ class TilaBacthExport:
                 self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-len(t.TILA_DUPLICATE_SUFFIX)])
         else:
             self.export_all_format(output_dir, self.proceededMesh, filename)
+            dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
         helper.set_name(self.sortedOriginalItems, shrink=len(t.TILA_BACKUP_SUFFIX))
 
-        self.progress = None
         helper.revert_scene_preferences(self)
 
     def transform_loop(self):

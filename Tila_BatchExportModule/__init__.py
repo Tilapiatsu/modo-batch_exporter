@@ -110,7 +110,7 @@ exportTypes = [
     ['plt', 'HPGL_PLT']
 ]
 
-compatibleFormat = [exportTypes[i][0] for i in xrange(len(exportTypes))]
+compatibleImportFormat = [exportTypes[i][0] for i in xrange(len(exportTypes))]
 
 itemType = {'MESH': 'mesh',
             'MESH_INSTANCE': 'meshInst',
@@ -143,6 +143,10 @@ itemType = {'MESH': 'mesh',
             'CHANNEL_EFFECT': 'chanEffect',
             'DEFAULT_SHADER': 'defaultShader',
             'ADVANCED_MATERIAL': 'advancedMaterial'}
+
+compatibleItemType = {'MESH': 'mesh',
+                      'MESH_INSTANCE': 'meshInst',
+                      'REPLICATOR': 'replicator'}
 
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
 

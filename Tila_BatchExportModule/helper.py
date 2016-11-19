@@ -39,24 +39,15 @@ def construct_file_path(self, output_dir, layer_name, ext):
 
 def items_to_proceed_constructor(self):
     for item in self.userSelection:
-        if item.type == t.itemType['MESH_INSTANCE']:
-            self.meshInstToProceed.append(item)
-        if item.type == t.itemType['MESH']:
-            self.meshItemToProceed.append(item)
-        if item.type == t.itemType['REPLICATOR']:
-            self.meshReplToProceed.append(item)
-        '''
-        if item.type == t.compatibleItemType['MESH_FUSION']:
-            self.meshFusionToProceed.append(item)
-        '''
+        for type in list(t.compatibleItemType.viewkeys()):
+            if item.type == t.compatibleItemType[type]:
+                self.itemToProceed_dict[type].append(item)
     sort_original_items(self)
 
 
 def sort_original_items(self):
-    self.sortedOriginalItems = self.meshInstToProceed +\
-                               self.meshFusionToProceed +\
-                               self.meshItemToProceed +\
-                               self.meshReplToProceed
+    for type in list(t.compatibleItemType.viewkeys()):
+        self.sortedOriginalItems += self.itemToProceed_dict[type]
 
 
 def duplicate_rename(self, arr, suffix):
@@ -307,6 +298,19 @@ def create_folder_if_necessary(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+
+def select_compatible_item_type():
+    for type in list(t.compatibleItemType.viewvalues()):
+         lx.eval('select.itemType %s mode:add' % type)
+
+
+def init_item_to_proceed_dict():
+    arr = {}
+    for type in list(t.compatibleItemType.viewkeys()):
+        arr[type] = []
+
+    return arr
+
 # Cleaning
 
 
@@ -332,3 +336,14 @@ def clean_duplicates(self, closeScene=False):
     set_name([self.sortedOriginalItems[self.proceededMeshIndex]], shrink=len(t.TILA_BACKUP_SUFFIX))
     revert_scene_preferences(self)
     sys.exit()
+
+
+def revert_initial_parameter(self):
+    self.itemToProceed_dict = init_item_to_proceed_dict()
+    self.sortedOriginalItems = []
+    self.proceededMesh = []
+    self.replicatorSource = {}
+    self.proceededMeshIndex = 0
+    self.progress = None
+    self.progression = [0, 0]
+    self.tempScnID = None

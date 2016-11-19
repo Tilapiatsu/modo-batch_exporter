@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Tila_BatchExporter.iml" filepath="$PROJECT_DIR$/.idea/Tila_BatchExporter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Tila_MatcapManager/.idea/Tila_MatcapHandler.iml" filepath="$PROJECT_DIR$/../Tila_MatcapManager/.idea/Tila_MatcapHandler.iml" />
     </modules>
   </component>
 </project>

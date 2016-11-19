@@ -150,7 +150,7 @@ def freeze_geo(self):
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
-        lx.eval('poly.freeze twoPoints false 2 true true true true 5.0 false Morph')
+        lx.eval('poly.freeze polyline false 2 true true true false 4.0 false Morph')
 
 
 def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):

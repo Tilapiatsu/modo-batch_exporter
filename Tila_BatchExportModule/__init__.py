@@ -32,9 +32,10 @@ REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 
 
 userValues = [
-    ['TILA_EXPORT_VISIBLE', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    [TILA_EXPORT_VISIBLE, lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFile_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['scanFiles_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['scanFolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportEach_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportHierarchy_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['triple_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
@@ -71,6 +72,10 @@ userValues = [
     ['applyMorphMap_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['morphMapName', lx.symbol.sTYPE_STRING, True, 'Exploded'],
     ['openDestFolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 1],
+    ['createFormatSubfolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['processSubfolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['subfolderDepth', lx.symbol.sTYPE_INTEGER, True, 1],
+    ['formatFilter', lx.symbol.sTYPE_STRING, True, 'fbx,obj'],
     ['exportFormatLxo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatLwo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatFbx_sw', lx.symbol.sTYPE_BOOLEAN, True, 1],
@@ -104,6 +109,8 @@ exportTypes = [
     ['svg', 'SVG_SceneSaver'],
     ['plt', 'HPGL_PLT']
 ]
+
+compatibleFormat = [exportTypes[i][0] for i in xrange(len(exportTypes))]
 
 itemType = {'MESH': 'mesh',
             'MESH_INSTANCE': 'meshInst',

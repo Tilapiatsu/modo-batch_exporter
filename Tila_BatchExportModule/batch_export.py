@@ -1,6 +1,7 @@
 import modo
 import lx
 import os
+from os.path import isfile
 import sys
 import Tila_BatchExportModule as t
 import dialog
@@ -44,6 +45,8 @@ class TilaBacthExport:
         self.exportFile_sw = bool(userValues[index])
         index += 1
         self.scanFiles_sw = bool(userValues[index])
+        index += 1
+        self.scanFolder_sw = bool(userValues[index])
         index += 1
         self.exportEach_sw = bool(userValues[index])
         index += 1
@@ -128,6 +131,15 @@ class TilaBacthExport:
         index += 1
 
         self.openDestFolder_sw = bool(userValues[index])
+        index += 1
+
+        self.createFormatSubfolder_sw = bool(userValues[index])
+        index += 1
+        self.processSubfolder_sw = bool(userValues[index])
+        index += 1
+        self.subfolderDepth = userValues[index]
+        index += 1
+        self.formatFilter = userValues[index]
         index += 1
 
         self.exportFormatLxo_sw = bool(userValues[index])
@@ -224,7 +236,7 @@ class TilaBacthExport:
         helper.open_destination_folder(self, output_dir)
         dialog.ending_log(self)
 
-    def batch_folder(self):
+    def batch_files(self):
         self.currPath = file.getLatestPath(t.config_browse_src_path)
         dialog.init_dialog("input", self.currPath)
 
@@ -274,7 +286,86 @@ class TilaBacthExport:
                     self.sortedOriginalItems = []
                     self.proceededMesh = []
                     self.proceededMeshIndex = 0
-                    self.overrideFiles = ''
+                    self.progress = None
+                    self.progression = [0, 0]
+                    self.tempScnID = None
+
+                    lx.eval('!scene.close')
+
+        dialog.init_message('info', 'Done', 'Operation completed successfully !')
+
+        helper.open_destination_folder(self, output_dir)
+
+        dialog.ending_log(self)
+
+    def batch_folder(self):
+        self.currPath = file.getLatestPath(t.config_browse_src_path)
+        dialog.init_dialog("input_path", self.currPath)
+
+        try:  # mesh to process dialog
+            lx.eval('dialog.open')
+        except:
+            dialog.init_dialog('cancel', self.currPath)
+        else:
+            input_dir = lx.eval1('dialog.result ?')
+            file.updateExportPath('', input_dir, '')
+            self.currPath = file.getLatestPath(t.config_browse_dest_path)
+            dialog.init_dialog("output", self.currPath)
+            try:  # output folder dialog
+                lx.eval('dialog.open')
+            except:
+                dialog.init_dialog('cancel', self.currPath)
+            else:
+                output_dir = lx.eval1('dialog.result ?')
+                file.updateExportPath('', '', output_dir)
+
+                if not self.processSubfolder_sw:
+                    format = helper.filter_format(self.formatFilter, t.compatibleFormat)
+                    files = helper.get_files_of_type(input_dir, format)
+                else:
+                    input_subdir = helper.get_recursive_subdir([input_dir], self.subfolderDepth)
+                    files = []
+                    format = helper.filter_format(self.formatFilter, t.compatibleFormat)
+                    for subdir in input_subdir:
+                        subfiles = helper.get_files_of_type(subdir, format)
+
+                        for f in subfiles:
+                            files.append(f)
+
+                for f in files:
+                    dialog.processing_log('.....................................   ' + os.path.basename(
+                        f) + '   .....................................')
+
+                    lx.eval('!scene.open "%s" normal' % f)
+
+                    lx.eval('select.itemType %s mode:add' % t.itemType['MESH'])
+                    lx.eval('select.itemType %s mode:add' % t.itemType['MESH_INSTANCE'])
+                    lx.eval('select.itemType %s mode:add' % t.itemType['REPLICATOR'])
+
+                    self.userSelection = self.scn.selected
+                    self.userSelectionCount = len(self.userSelection)
+
+                    dialog.print_log('.....................................   ' + str(
+                        self.userSelectionCount) + ' mesh item founded   .....................................')
+
+                    if self.at_least_one_item_selected(exit=False):
+                        lx.eval('!scene.close')
+                        continue
+
+                    input_relative_dir_root = os.path.split(f)[0].split(input_dir)[1][1:]
+                    output_subdir = os.path.join(output_dir, input_relative_dir_root)
+
+                    helper.create_folder_if_necessary(output_subdir)
+
+                    self.batch_process(output_subdir, os.path.splitext(os.path.basename(f))[0])
+
+                    self.meshItemToProceed = []
+                    self.meshInstToProceed = []
+                    self.meshFusionToProceed = []
+                    self.meshReplToProceed = []
+                    self.sortedOriginalItems = []
+                    self.proceededMesh = []
+                    self.proceededMeshIndex = 0
                     self.progress = None
                     self.progression = [0, 0]
                     self.tempScnID = None

@@ -130,6 +130,13 @@ def init_dialog(dialog_type, currPath):
         lx.eval('dialog.msg "Select the meshes you want to process."')
         lx.eval('dialog.result "%s"' % currPath)
 
+    if dialog_type == "input_path":
+        # Get the directory to Open.
+        lx.eval('dialog.setup dir')
+        lx.eval('dialog.title "Open Path"')
+        lx.eval('dialog.msg "Select path to process."')
+        lx.eval('dialog.result "%s"' % currPath)
+
     if dialog_type == "output":
         # Get the directory to export to.
         lx.eval('dialog.setup dir')

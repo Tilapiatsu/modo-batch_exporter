@@ -50,15 +50,23 @@ class CmdBatchExport(lxu.command.BasicCommand):
             tbe = batch_export.TilaBacthExport
 
             userValues[1] = True
-            userValues[2] = True
 
-            tbe.batch_folder(tbe(userSelection,
-                                 userSelectionCount,
-                                 scn,
-                                 currScn,
-                                 currPath,
-                                 scnIndex,
-                                 userValues))
+            if userValues[3]:
+                tbe.batch_folder(tbe(userSelection,
+                                     userSelectionCount,
+                                     scn,
+                                     currScn,
+                                     currPath,
+                                     scnIndex,
+                                     userValues))
+            elif userValues[2]:
+                tbe.batch_files(tbe(userSelection,
+                                    userSelectionCount,
+                                    scn,
+                                    currScn,
+                                    currPath,
+                                    scnIndex,
+                                    userValues))
         except:
             lx.out(traceback.format_exc())
 

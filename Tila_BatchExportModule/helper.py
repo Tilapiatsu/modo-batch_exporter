@@ -1,6 +1,7 @@
 import lx
 import modo
 import os
+from os.path import isfile
 import dialog
 import sys
 import Tila_BatchExportModule as t
@@ -9,11 +10,18 @@ import Tila_BatchExportModule as t
 # Path Constructor
 
 def construct_file_path(self, output_dir, layer_name, ext):
-    sceneName = os.path.splitext(self.scn.name)[0]
-    if self.scanFiles_sw:
+    sceneName = os.path.splitext(modo.Scene().name)[0]
+
+    if self.createFormatSubfolder_sw:
+        output_dir = os.path.join(output_dir, ext)
+        create_folder_if_necessary(output_dir)
+
+    if self.scanFiles_sw or self.scanFolder_sw:
+        if self.scanFolder_sw:
+            layer_name += '_batch'
         if self.exportEach_sw:
-            return [os.path.join(output_dir, sceneName + '_-_' + layer_name + '.' + ext),
-                    os.path.join(output_dir, sceneName + '_-_' + layer_name
+            return [os.path.join(output_dir, sceneName + '__' + layer_name + '.' + ext),
+                    os.path.join(output_dir, sceneName + '__' + layer_name
                                  + '_cage.' + ext)]
         else:
             return [os.path.join(output_dir, layer_name + '.' + ext),
@@ -239,7 +247,6 @@ def replace_replicator_source(self, item_arr):
                 self.scn.select(i)
 
                 source_name = concatetate_string_arr([v], ';')
-                print source_name
                 lx.eval('replicator.source %s' % source_name)
 
     self.scn.select(selection)
@@ -256,6 +263,49 @@ def concatetate_string_arr(arr, separator):
             string += separator + arr[i]
 
     return string
+
+
+def get_recursive_subdir(path, depth):
+    if depth == 0:
+        return path
+
+    else:
+        subdir = set([])
+
+        for p in path:
+            if os.path.isdir(p):
+                subdir.add(p)
+                sub = get_immediate_subdir(p)
+
+                for s in sub:
+                    subdir.add(s)
+
+                rec = get_recursive_subdir(sub, depth - 1)
+
+                for r in rec:
+                    subdir.add(r)
+
+        return list(subdir)
+
+
+def get_immediate_subdir(path):
+    return [os.path.join(path, subdir) for subdir in os.listdir(path)
+            if os.path.isdir(os.path.join(path, subdir))]
+
+
+def get_files_of_type(path, type):
+    files = [os.path.join(path, f) for f in os.listdir(path) if isfile(os.path.join(path, f))]
+    return [f for f in files if os.path.splitext(f)[1][1:] in type]
+
+
+def filter_format(format, filter):
+    format_arr = format.split(',')
+    return [f.lower() for f in format_arr if f.lower() in filter]
+
+
+def create_folder_if_necessary(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 # Cleaning
 

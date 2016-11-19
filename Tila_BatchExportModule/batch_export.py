@@ -266,6 +266,8 @@ class TilaBacthExport:
 
                     lx.eval('!scene.open "%s" normal' % f)
 
+                    self.scnIndex = lx.eval('query sceneservice scene.index ? current')
+
                     helper.select_compatible_item_type()
 
                     self.userSelection = self.scn.selected
@@ -329,6 +331,8 @@ class TilaBacthExport:
                         f) + '   .....................................')
 
                     lx.eval('!scene.open "%s" normal' % f)
+
+                    self.scnIndex = lx.eval('query sceneservice scene.index ? current')
 
                     helper.select_compatible_item_type()
 

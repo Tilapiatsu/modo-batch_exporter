@@ -225,7 +225,8 @@ class TilaBacthExport:
 
         self.currPath = file.getLatestPath(t.config_export_path)
 
-        dialog.init_dialog("output", self.currPath)
+        path = os.path.join(self.currPath, os.path.splitext(self.scn.name)[0])
+        dialog.init_dialog("filesave", path, dialog.dialogFormatType[helper.get_first_export_type(self)])
 
         try:  # output folder dialog
             lx.eval('dialog.open')
@@ -233,8 +234,14 @@ class TilaBacthExport:
             dialog.init_dialog('cancel', self.currPath)
         else:
             output_dir = lx.eval1('dialog.result ?')
+
+            filename = os.path.splitext(os.path.split(output_dir)[1])[0]
+            output_dir = os.path.split(output_dir)[0]
+
             file.updateExportPath(output_dir, '', '')
-            self.batch_process(output_dir, os.path.splitext(self.scn.name))
+
+            self.batch_process(output_dir, filename)
+
             helper.revert_initial_parameter(self)
 
         helper.open_destination_folder(self, output_dir)
@@ -420,7 +427,9 @@ class TilaBacthExport:
 
                 dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
-                self.export_all_format(output_dir, item_arr, self.proceededMesh[i].name[:-len(t.TILA_DUPLICATE_SUFFIX)])
+                layername = '%s_%s' % (filename, self.proceededMesh[i].name[:-len(t.TILA_DUPLICATE_SUFFIX)])
+
+                self.export_all_format(output_dir, item_arr, layername)
         else:
             self.export_all_format(output_dir, self.proceededMesh, filename)
             dialog.increment_progress_bar(self, self.progress[0], self.progression)

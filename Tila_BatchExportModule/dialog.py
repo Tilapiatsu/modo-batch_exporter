@@ -4,6 +4,21 @@ import sys
 import subprocess
 from Tila_BatchExportModule import helper
 
+dialogFormatType = {'LXO':[('LXO',), 'Modo scene LXO file', ('*.LXO',), 'lxo'],
+                    'LWO':[('LWO',), 'Lightwave scene LWO file', ('*.LWO',), 'lwo'],
+                    'FBX':[('FBX',), 'FBX file', ('*.FBX',), 'fbx'],
+                    'OBJ':[('OBJ',), 'Wavefront OBJ file', ('*.OBJ',), 'obj'],
+                    'STL':[('STL',), 'Stereolithography STL file', ('*.STL',), 'stl'],
+                    'ABC':[('ABC',), 'Alembic file', ('*.ABC',), 'acb'],
+                    'ABC-HDF':[('ABC',), 'Alembic(HDF) file', ('*.ABC',), 'acb'],
+                    'DAE':[('DAE',), 'Collada file', ('*.DAE',), 'dae'],
+                    'DXF':[('DXF',), 'DXF file', ('*.DXF',), 'dxf'],
+                    '3DM':[('3DM',), 'Rhino 3DM file', ('*.3DM',), '3dm'],
+                    'GEO':[('GEO',), 'VideoScape GEO file', ('*.GEO',), 'geo'],
+                    'X3D':[('X3D',), 'Web3D Standard X3D file', ('*.X3D',), 'x3d'],
+                    'SVG':[('SVG',), 'Scalable Vector Graphics file', ('*.SVG',), 'svg'],
+                    'PLT':[('PTL',), 'HPGL Plotter file', ('*.PTL',), 'ptl']}
+
 if sys.platform == 'darwin':
     def open_folder(path):
         subprocess.check_call(['open', '--', path])
@@ -121,7 +136,7 @@ def init_message(type, title, message):
 
 # Dialog initialisation
 
-def init_dialog(dialog_type, currPath):
+def init_dialog(dialog_type, currPath, format=None):
     if dialog_type == "input":
         # Get the directory to export to.
         lx.eval('dialog.setup fileOpenMulti')
@@ -144,8 +159,12 @@ def init_dialog(dialog_type, currPath):
         lx.eval('dialog.msg "Select path to export to."')
         lx.eval('dialog.result "%s"' % currPath)
 
-    if dialog_type == 'file_save':
-        init_custom_dialog('fileSave', 'SaveFile', ('FBX',), 'FBX file', ('*.FBX',), 'fbx', currPath[:-4])
+    if dialog_type == 'filesave':
+        if format is None:
+            print 'Unspecified format'
+            sys.exit()
+        else:
+            init_custom_dialog('fileSave', 'SaveFile', format[0], format[1], format[2], format[3], currPath)
 
     if dialog_type == "cancel":
         init_message('error', 'Canceled', 'Operation aborded')

@@ -311,6 +311,36 @@ def init_item_to_proceed_dict():
 
     return arr
 
+def get_first_export_type(self):
+    if self.exportFormatLxo_sw:
+        return 'LXO'
+    if self.exportFormatLwo_sw:
+        return 'LWO'
+    if self.exportFormatFbx_sw:
+        return 'FBX'
+    if self.exportFormatObj_sw:
+        return 'OBJ'
+    if self.exportFormatStl_sw:
+        return 'STL'
+    if self.exportFormatAbc_sw:
+        return 'ABC'
+    if self.exportFormatAbchdf_sw:
+        return 'ABC-HDF'
+    if self.exportFormatDae_sw:
+        return 'DAE'
+    if self.exportFormatDxf_sw:
+        return 'DXF'
+    if self.exportFormat3dm_sw:
+        return '3DM'
+    if self.exportFormatGeo_sw:
+        return 'GEO'
+    if self.exportFormatX3d_sw:
+        return 'X3D'
+    if self.exportFormatSvg_sw:
+        return 'SVG'
+    if self.exportFormatPlt_sw:
+        return 'PLT'
+
 # Cleaning
 
 

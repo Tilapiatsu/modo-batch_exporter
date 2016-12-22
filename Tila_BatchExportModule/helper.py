@@ -5,35 +5,24 @@ from os.path import isfile
 import dialog
 import sys
 import Tila_BatchExportModule as t
+import renamer
 
 
 # Path Constructor
 
-def construct_file_path(self, output_dir, layer_name, ext):
+def construct_file_path(self, output_dir, layer_name, ext, increment):
     sceneName = os.path.splitext(modo.Scene().name)[0]
 
     if self.createFormatSubfolder_sw:
         output_dir = os.path.join(output_dir, ext)
         create_folder_if_necessary(output_dir)
 
-    if self.scanFiles_sw or self.scanFolder_sw:
-        if self.scanFolder_sw:
-            layer_name += '_batch'
-        if self.exportEach_sw:
-            return [os.path.join(output_dir, sceneName + '__' + layer_name + '.' + ext),
-                    os.path.join(output_dir, sceneName + '__' + layer_name
-                                 + '_cage.' + ext)]
-        else:
-            return [os.path.join(output_dir, layer_name + '.' + ext),
-                    os.path.join(output_dir, layer_name + '_cage.' + ext)]
-    else:
-        if self.exportEach_sw:
-            return [os.path.join(output_dir, layer_name + '.' + ext),
-                    os.path.join(output_dir, layer_name + '_cage.' + ext)]
-        else:
-            return [os.path.join(output_dir, sceneName + '.' + ext),
-                    os.path.join(output_dir, sceneName + '_cage.' + ext)]
+    layer_name = renamer.construct_filename(self, layer_name, self.filenamePattern, self.filename, ext, increment)
 
+    layer_name = os.path.splitext(layer_name)[0]
+
+    return [os.path.join(output_dir, layer_name + '.' + ext),
+            os.path.join(output_dir, layer_name + '_cage.' + ext)]
 
 # Helpers, setter/getter, Selector
 

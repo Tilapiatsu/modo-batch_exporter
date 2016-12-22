@@ -76,6 +76,7 @@ userValues = [
     ['processSubfolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['subfolderDepth', lx.symbol.sTYPE_INTEGER, True, 1],
     ['formatFilter', lx.symbol.sTYPE_STRING, True, 'fbx,obj'],
+    ['filenamePattern', lx.symbol.sTYPE_STRING, True, '<file>_<item>'],
     ['exportFormatLxo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatLwo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatFbx_sw', lx.symbol.sTYPE_BOOLEAN, True, 1],

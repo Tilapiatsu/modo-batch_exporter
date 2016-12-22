@@ -167,7 +167,7 @@ def init_dialog(dialog_type, currPath, format=None):
             init_custom_dialog('fileSave', 'SaveFile', format[0], format[1], format[2], format[3], currPath)
 
     if dialog_type == "cancel":
-        init_message('error', 'Canceled', 'Operation aborded')
+        #init_message('error', 'Canceled', 'Operation aborded')
         sys.exit()
 
 

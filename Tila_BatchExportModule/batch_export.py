@@ -520,7 +520,8 @@ class TilaBacthExport:
     def export_all_format(self, output_dir, duplicate, layer_name, increment=0):
 
         self.scn.select(duplicate)
-        helper.set_name(duplicate, shrink=len(t.TILA_DUPLICATE_SUFFIX))
+        if not self.mergeMesh_sw:
+            helper.set_name(duplicate, shrink=len(t.TILA_DUPLICATE_SUFFIX))
 
         if self.exportFormatLxo_sw:
             output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[0][0], increment)

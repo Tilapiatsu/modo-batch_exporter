@@ -5,13 +5,13 @@ Modo 10 Required
 
 Tested on Windows only
 
-This kit allow you to perform complex export task with ease.
-* Exporting mesh data from DCC to DCC can create sevral issues : Bad scaling, 90° rotation or objects away from world origin.
+This kit allows you to perform complex export tasks easily.
+* Exporting mesh data from DCC to DCC can create sevral issues : Bad scaling, 90° rotation or in the case of objects away from world origin.
 * When you need to export meshes for baking, you may want to triangulate it first, split vertex normal based on uv border or export a cage.
 * When kit bashing, you may want to work with all items away from each other. When exporting you may want to put all items back to the world origin.
 * You may want to process very dense meshes or hundreds. You can batch process files or directory on your drive without having to load them one by one or waiting for them to load.
 
-This kit helps you with these tasks by **pre-processing mesh items before exporting without modifiying the source meshes**. Your scene stay untoutched : it allow you to have a better iterative workflow and spending less time in conforming objects. In addition, you can save all your settings into a preset.
+This kit helps you with these tasks by **pre-processing mesh items before exporting without modifying the source meshes**. Your scene stays untoutched : it allows you to have a better iterative workflow and you will spend less time on conforming objects. In addition, you can save all your settings into a preset.
 
 ***
 

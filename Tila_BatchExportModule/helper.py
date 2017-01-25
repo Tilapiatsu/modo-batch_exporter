@@ -336,13 +336,11 @@ def get_first_export_type(self):
 def revert_scene_preferences(self):
     self.scn.select(self.userSelection)
 
-    # Put the user's original FBX Export setting back.
-
+    # Put the user's original Export setting back.
     if self.exportFormatFbx_sw:
-        lx.eval('user.value sceneio.fbx.save.exportType %s' % self.fbxExportType)
-        lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.fbxTriangulate)
-        lx.eval('user.value sceneio.fbx.save.format %s' % self.fbxFormat)
-
+        lx.eval('user.value sceneio.fbx.save.exportType %s' % self.defaultExportSettings['FBX_EXPORT_TYPE'])
+        lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.defaultExportSettings['FBX_SURFACE_REFINING'])
+        lx.eval('user.value sceneio.fbx.save.format %s' % self.defaultExportSettings['FBX_FORMAT'])
 
 def clean_duplicates(self, closeScene=False):
     if closeScene:
@@ -366,3 +364,10 @@ def revert_initial_parameter(self):
     self.progress = None
     self.progression = [0, 0]
     self.tempScnID = None
+
+def reset_import_settings(self):
+    # Put the user's original Import setting back.
+    lx.eval('user.value sceneio.obj.import.static %s' % self.defaultImportSettings['OBJ_STATIC'])
+    lx.eval('user.value sceneio.obj.import.separate.meshes %s' % self.defaultImportSettings['OBJ_SEPARATE_MESH'])
+    lx.eval('user.value sceneio.obj.import.suppress.dialog %s' % self.defaultImportSettings['OBJ_SUPRESS_DIALOG'])
+    lx.eval('user.value sceneio.obj.import.units %s' % self.defaultImportSettings['OBJ_UNIT'])

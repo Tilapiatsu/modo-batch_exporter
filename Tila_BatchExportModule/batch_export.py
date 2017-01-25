@@ -187,7 +187,8 @@ class TilaBacthExport:
         self.exportedFileCount = 0
         self.overrideFiles = ''
 
-        t.get_default_settings(self)
+        self.defaultExportSettings = t.defaultExportSettings
+        self.defaultImportSettings = t.defaultImportSettings
 
     def export_at_least_one_format(self):
         if not (self.exportFormatFbx_sw
@@ -282,6 +283,8 @@ class TilaBacthExport:
                 self.progression[1] = file_count
                 self.progression[0] = 0
 
+                t.set_import_setting()
+
                 for f in files:
                     dialog.processing_log('.....................................   ' + os.path.basename(
                         f) + '   .....................................')
@@ -311,6 +314,8 @@ class TilaBacthExport:
                     helper.revert_initial_parameter(self)
 
                     lx.eval('!scene.close')
+
+                helper.reset_import_settings(self)
 
         dialog.init_message('info', 'Done', 'Operation completed successfully ! %s file(s) exported' % self.exportedFileCount)
 
@@ -359,6 +364,8 @@ class TilaBacthExport:
                 self.progression[1] = file_count
                 self.progression[0] = 0
 
+                t.set_import_setting()
+
                 for f in files:
                     dialog.processing_log('.....................................   ' + os.path.basename(
                         f) + '   .....................................')
@@ -393,6 +400,8 @@ class TilaBacthExport:
                     helper.revert_initial_parameter(self)
 
                     lx.eval('!scene.close')
+
+                helper.reset_import_settings(self)
 
                 #dialog.deallocate_dialog_svc(self.progress[1])
 

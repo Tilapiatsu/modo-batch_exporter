@@ -330,6 +330,23 @@ def get_first_export_type(self):
     if self.exportFormatPlt_sw:
         return 'PLT'
 
+def select_item_materials(self, items):
+    sel = []
+    for item in items:
+        for matname in get_material_list_from_item(self,item):
+            mat = modo.Item(matname + ' (Material)')
+            sel.append(mat)
+
+    self.scn.select(sel+items)
+
+def get_material_list_from_item(self, item):
+    tag = set([])
+
+    for i in xrange(len(item.geometry.polygons)):
+        tag.add(item.geometry.polygons[i].materialTag)
+
+    return list(tag)
+
 # Cleaning
 
 

@@ -150,8 +150,7 @@ def freeze_geo(self):
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
-        lx.eval('poly.freeze polyline false 2 true true true false 4.0 false Morph')
-
+        lx.eval('poly.freeze polyline false 2 true true true false 4.0 true Morph')
 
 def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
     compatibleType = [t.itemType['MESH_INSTANCE']]
@@ -202,6 +201,21 @@ def freeze_meshfusion(self, type):
             lx.eval('user.value sdf.meshOutName "%s"' % name)
             lx.eval('!!@tila.meshout')
             selection[i] = self.scn.item(name)
+            self.scn.select(selection)
+
+
+def freeze_meshop(self, type):
+    if self.freezeMeshOp_sw and type == t.itemType['MESH']:
+
+        message = "Freeze MeshOp"
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.transform_log(message)
+
+        selection = self.scn.selected
+        for i in xrange(0, len(selection)):
+            self.scn.select(selection[i])
+            lx.eval('deformer.freeze false')
             self.scn.select(selection)
 
 

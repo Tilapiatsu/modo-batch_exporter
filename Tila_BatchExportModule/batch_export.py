@@ -82,6 +82,8 @@ class TilaBacthExport:
         index += 1
         self.freezeInstance_sw = bool(userValues[index])
         index += 1
+        self.freezeMeshOp_sw = bool(userValues[index])
+        index += 1
 
         self.pos_sw = userValues[index]
         index += 1
@@ -491,6 +493,7 @@ class TilaBacthExport:
 
         item_processing.freeze_instance(self, type=type, first_index=first_index)
         item_processing.freeze_replicator(self, type=type, first_index=first_index)
+        item_processing.freeze_meshop(self, type=type)
 
         item_processing.smooth_angle(self)
         item_processing.harden_uv_border(self)

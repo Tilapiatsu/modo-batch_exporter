@@ -10,12 +10,6 @@ def enum(*args):
     return type('Enum', (), enums)
 
 
-def get_default_settings(self):
-    if self.exportFormatFbx_sw:
-        self.fbxExportType = lx.eval('user.value sceneio.fbx.save.exportType ?')
-        self.fbxTriangulate = lx.eval('user.value sceneio.fbx.save.surfaceRefining ?')
-        self.fbxFormat = lx.eval('user.value sceneio.fbx.save.format ?')
-
 TILA_BATCH_EXPORT = "tila.batchexport"
 TILA_BATCH_TRANSFORM = "tila.batchtransform"
 TILA_BATCH_FOLDER = "tila.batchfolder"
@@ -30,6 +24,11 @@ TILA_BACKUP_SUFFIX = '_tila_backup'
 
 REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 
+def set_import_setting():
+    lx.eval('user.value sceneio.obj.import.static false')
+    lx.eval('user.value sceneio.obj.import.separate.meshes false')
+    lx.eval('user.value sceneio.obj.import.suppress.dialog true')
+    lx.eval('user.value sceneio.obj.import.units centimeters')
 
 userValues = [
     [TILA_EXPORT_VISIBLE, lx.symbol.sTYPE_BOOLEAN, True, 0],
@@ -149,6 +148,15 @@ itemType = {'MESH': 'mesh',
 compatibleItemType = {'MESH': 'mesh',
                       'MESH_INSTANCE': 'meshInst',
                       'REPLICATOR': 'replicator'}
+
+defaultExportSettings = {'FBX_EXPORT_TYPE': lx.eval('user.value sceneio.fbx.save.exportType ?'),
+                         'FBX_SURFACE_REFINING': lx.eval('user.value sceneio.fbx.save.surfaceRefining ?'),
+                         'FBX_FORMAT': lx.eval('user.value sceneio.fbx.save.format ?')}
+
+defaultImportSettings = {'OBJ_STATIC': lx.eval('user.value sceneio.obj.import.static ?'),
+                         'OBJ_SEPARATE_MESH': lx.eval('user.value sceneio.obj.import.separate.meshes ?'),
+                         'OBJ_SUPRESS_DIALOG': lx.eval('user.value sceneio.obj.import.suppress.dialog ?'),
+                         'OBJ_UNIT': lx.eval('user.value sceneio.obj.import.units ?')}
 
 indexStyle = ['brak-sp', 'brak', 'sp', 'uscore', 'none']
 

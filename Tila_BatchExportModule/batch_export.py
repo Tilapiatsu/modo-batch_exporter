@@ -632,6 +632,7 @@ class TilaBacthExport:
         lx.eval('vertMap.softenNormals connected:true')
 
         # Apply Cage Morph map
+        helper.select_compatible_item_type()
         item_processing.apply_morph(self, True, self.cageMorphMapName)
 
         self.save_file(output_path, export_format)

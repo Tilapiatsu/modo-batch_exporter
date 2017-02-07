@@ -25,7 +25,12 @@ def apply_morph(self, condition, name):
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.processing_log(message)
-        lx.eval('vertMap.applyMorph %s 1.0' % name)
+
+        selection = self.scn.selected
+        for i in xrange(0, len(selection)):
+            self.scn.select(selection[i])
+            lx.eval('vertMap.applyMorph %s 1.0' % name)
+            self.scn.select(selection)
 
 
 def smooth_angle(self):

@@ -278,8 +278,8 @@ def get_files_of_type(path, type):
     return [f for f in files if os.path.splitext(f)[1][1:] in type]
 
 
-def filter_format(format, filter):
-    format_arr = format.split(',')
+def filter_string(string, filter):
+    format_arr = string.split(',')
     return [f.lower() for f in format_arr if f.lower() in filter]
 
 

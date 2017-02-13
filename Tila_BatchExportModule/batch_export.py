@@ -13,6 +13,7 @@ from Tila_BatchExportModule import file
 ############## TODO ###################
 '''
  - when exporting a file no materials are saved !!!
+ - Expose some settings ( Freeze Geometry, Export/Import settings )
  - check export for procedural geometry and fusion item
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
@@ -247,8 +248,6 @@ class TilaBacthExport:
             self.filename = os.path.splitext(os.path.split(output_dir)[1])[0]
             output_dir = os.path.split(output_dir)[0]
 
-            pattern = '<date>_<hour>_<scene>___<file>_<item>_suffix_####.<ext>'
-
             file.updateExportPath(output_dir, '', '')
 
             self.batch_process(output_dir, self.filename)
@@ -348,12 +347,12 @@ class TilaBacthExport:
                 file.updateExportPath('', '', output_dir)
 
                 if not self.processSubfolder_sw:
-                    format = helper.filter_format(self.formatFilter, t.compatibleImportFormat)
+                    format = helper.filter_string(self.formatFilter, t.compatibleImportFormat)
                     files = helper.get_files_of_type(input_dir, format)
                 else:
                     input_subdir = helper.get_recursive_subdir([input_dir], self.subfolderDepth)
                     files = []
-                    format = helper.filter_format(self.formatFilter, t.compatibleImportFormat)
+                    format = helper.filter_string(self.formatFilter, t.compatibleImportFormat)
                     for subdir in input_subdir:
                         subfiles = helper.get_files_of_type(subdir, format)
 

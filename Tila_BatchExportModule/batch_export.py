@@ -14,6 +14,7 @@ from Tila_BatchExportModule import file
 '''
  - when exporting a file no materials are saved !!!
  - Expose some settings ( Freeze Geometry, Export/Import settings )
+ - Add Mesh Cleanup
  - check export for procedural geometry and fusion item
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )

@@ -182,7 +182,7 @@ def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
                 currScale = item.scale
 
                 if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
-                    self.freeze_sca(True)
+                    freeze_sca(self, True)
 
                 frozenItem_arr.append(item)
 

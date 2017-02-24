@@ -77,7 +77,7 @@ def reset_pos(self):
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
-        lx.eval('transform.reset translation')
+        lx.eval('!!transform.reset translation')
 
 
 def reset_rot(self):
@@ -86,7 +86,7 @@ def reset_rot(self):
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
-        lx.eval('transform.reset rotation')
+        lx.eval('!!transform.reset rotation')
 
 
 def reset_sca(self):
@@ -95,7 +95,7 @@ def reset_sca(self):
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
-        lx.eval('transform.reset scale')
+        lx.eval('!!transform.reset scale')
 
 
 def reset_she(self):
@@ -104,7 +104,7 @@ def reset_she(self):
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
-        lx.eval('transform.reset shear')
+        lx.eval('!!transform.reset shear')
 
 
 def freeze_pos(self):
@@ -114,7 +114,7 @@ def freeze_pos(self):
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
 
-        lx.eval('transform.freeze translation')
+        lx.eval('!!transform.freeze translation')
         #lx.eval('vertMap.updateNormals')
 
 
@@ -125,7 +125,7 @@ def freeze_rot(self):
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
 
-        lx.eval('transform.freeze rotation')
+        lx.eval('!!transform.freeze rotation')
         #lx.eval('vertMap.updateNormals')
 
 
@@ -137,7 +137,7 @@ def freeze_sca(self, force=False):
             increment_progress_bar(self, self.progress)
             dialog.transform_log(message)
 
-        lx.eval('transform.freeze scale')
+        lx.eval('!!transform.freeze scale')
         #lx.eval('vertMap.updateNormals')
 
 
@@ -148,8 +148,8 @@ def freeze_she(self):
         increment_progress_bar(self, self.progress)
         dialog.transform_log(message)
 
-        lx.eval('transform.freeze shear')
-        lx.eval('vertMap.updateNormals')
+        lx.eval('!!transform.freeze shear')
+        #lx.eval('vertMap.updateNormals')
 
 
 def freeze_geo(self):

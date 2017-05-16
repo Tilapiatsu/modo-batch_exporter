@@ -63,6 +63,11 @@ class TilaBacthExport:
         self.askBeforeOverride_sw = bool(userValues[index])
         index += 1
 
+        self.assignMaterialPerUDIMTile_sw = bool(userValues[index])
+        index += 1
+        self.UDIMTextureName = bool(userValues[index])
+        index += 1
+
         self.resetPos_sw = bool(userValues[index])
         index += 1
         self.resetRot_sw = bool(userValues[index])
@@ -510,6 +515,8 @@ class TilaBacthExport:
 
         item_processing.freeze_geo(self)
         item_processing.triple(self)
+
+        item_processing.assign_material_per_udim(self)
 
         item_processing.apply_morph(self, self.applyMorphMap_sw, self.morphMapName)
 

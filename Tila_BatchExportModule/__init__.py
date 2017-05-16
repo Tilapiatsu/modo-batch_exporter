@@ -40,6 +40,8 @@ userValues = [
     ['triple_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['mergeMesh_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['askBeforeOverride_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['assignMaterialPerUDIMTile_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['UDIMTextureName', lx.symbol.sTYPE_STRING, True, 'Texture'],
     ['resetPos_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['resetRot_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['resetSca_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],

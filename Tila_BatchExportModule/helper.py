@@ -4,6 +4,7 @@ import os
 from os.path import isfile
 import dialog
 import sys
+import math
 import Tila_BatchExportModule as t
 import renamer
 
@@ -330,6 +331,7 @@ def get_first_export_type(self):
     if self.exportFormatPlt_sw:
         return 'PLT'
 
+
 def select_item_materials(self, items):
     sel = []
     for item in items:
@@ -339,6 +341,7 @@ def select_item_materials(self, items):
 
     self.scn.select(sel+items)
 
+
 def get_material_list_from_item(self, item):
     tag = set([])
 
@@ -346,6 +349,45 @@ def get_material_list_from_item(self, item):
         tag.add(item.geometry.polygons[i].materialTag)
 
     return list(tag)
+
+
+def get_udim_value(self, uv):
+    x = math.ceil(uv[0])
+    y = math.ceil(uv[1])
+
+    if x>10 or x<1 or y<1:
+        raise ValueError('invalid uv value')
+
+    udim_value = x + 10*(y-1)
+    return udim_value, 1000 + udim_value
+
+
+def get_udim_tile(self, item, uvmap):
+    udim = ([])
+    for i in xrange(len(item.geometry.polygons)):
+        vert = item.geometry.polygons[i].vertices
+        for v in vert:
+            uv = item.geometry.polygons[i].getUV(v, uvmap)
+            udim.add(get_udim_value(self, uv)[1])
+
+    return udim
+
+def move_udim(self, item, uvmap, udim, destination):
+    for i in xrange(len(item.geometry.polygons)):
+        vert = item.geometry.polygons[i].vertices
+        for v in vert:
+            uv = item.geometry.polygons[i].getUV(v, uvmap)
+
+            current_udim = get_udim_value(self, uv)[1]
+
+            if current_udim in udim:
+                v.select(replace=True)
+                lx.eval('udim.fit')
+                lx.eval('udim.select')
+                lx.eval('udim.move %s' % destination)
+                lx.eval('select.drop vertex')
+                udim.remove(current_udim)
+            udim.add(get_udim_value(self, uv)[1])
 
 # Cleaning
 

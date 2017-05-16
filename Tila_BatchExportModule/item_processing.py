@@ -61,6 +61,18 @@ def harden_uv_border(self):
         lx.eval('vertMap.updateNormals')
         lx.eval('select.type item')
 
+def assign_material_per_udim(self):
+    if self.assignMaterialPerUDIMTile_sw:
+        #self.UDIMTextureName
+        message = "Assign Material per UDIM Tile = " + self.UDIMTextureName
+        message = get_progression_message(self, message)
+        increment_progress_bar(self, self.progress)
+        dialog.processing_log(message)
+
+        curr_item = self.proceededMesh[self.proceededMeshIndex]
+
+        udim = helper.get_udim_tile(self, curr_item, self.UDIMTextureName)
+        helper.move_udim(self, curr_item, self.UDIMTextureName, udim, 1011)
 
 def triple(self):
     if self.triple_sw:

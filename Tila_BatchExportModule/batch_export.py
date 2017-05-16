@@ -65,7 +65,7 @@ class TilaBacthExport:
 
         self.assignMaterialPerUDIMTile_sw = bool(userValues[index])
         index += 1
-        self.UDIMTextureName = bool(userValues[index])
+        self.UDIMTextureName = userValues[index]
         index += 1
 
         self.resetPos_sw = bool(userValues[index])
@@ -93,7 +93,7 @@ class TilaBacthExport:
         self.freezeMeshOp_sw = bool(userValues[index])
         index += 1
 
-        self.pos_sw = userValues[index]
+        self.pos_sw = bool(userValues[index])
         index += 1
         self.posX = userValues[index]
         index += 1
@@ -102,7 +102,7 @@ class TilaBacthExport:
         self.posZ = userValues[index]
         index += 1
 
-        self.rot_sw = userValues[index]
+        self.rot_sw = bool(userValues[index])
         index += 1
         self.rotX = userValues[index]
         index += 1
@@ -111,7 +111,7 @@ class TilaBacthExport:
         self.rotZ = userValues[index]
         index += 1
 
-        self.sca_sw = userValues[index]
+        self.sca_sw = bool(userValues[index])
         index += 1
         self.scaX = userValues[index]
         index += 1
@@ -516,7 +516,7 @@ class TilaBacthExport:
         item_processing.freeze_geo(self)
         item_processing.triple(self)
 
-        item_processing.assign_material_per_udim(self)
+        item_processing.assign_material_per_udim(self, True)
 
         item_processing.apply_morph(self, self.applyMorphMap_sw, self.morphMapName)
 

@@ -2,6 +2,7 @@ import lx
 import modo
 import dialog
 import sys
+import random
 import time
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import helper
@@ -61,7 +62,7 @@ def harden_uv_border(self):
         lx.eval('vertMap.updateNormals')
         lx.eval('select.type item')
 
-def assign_material_per_udim(self):
+def assign_material_per_udim(self, random_color):
     if self.assignMaterialPerUDIMTile_sw:
         #self.UDIMTextureName
         message = "Assign Material per UDIM Tile = " + self.UDIMTextureName
@@ -72,7 +73,13 @@ def assign_material_per_udim(self):
         curr_item = self.proceededMesh[self.proceededMeshIndex]
 
         udim = helper.get_udim_tile(self, curr_item, self.UDIMTextureName)
-        helper.move_udim(self, curr_item, self.UDIMTextureName, udim, 1011)
+
+        if random_color:
+            color = [random.random(), random.random(), random.random()]
+        else:
+            color = [0.8, 0.8, 0.8]
+
+        helper.assign_material_and_move_udim(self, curr_item, self.UDIMTextureName, udim, 1001, color)
 
 def triple(self):
     if self.triple_sw:

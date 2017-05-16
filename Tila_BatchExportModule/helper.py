@@ -363,7 +363,7 @@ def get_udim_value(self, uv):
 
 
 def get_udim_tile(self, item, uvmap):
-    udim = ([])
+    udim = set([])
     for i in xrange(len(item.geometry.polygons)):
         vert = item.geometry.polygons[i].vertices
         for v in vert:
@@ -372,7 +372,7 @@ def get_udim_tile(self, item, uvmap):
 
     return udim
 
-def move_udim(self, item, uvmap, udim, destination):
+def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
     for i in xrange(len(item.geometry.polygons)):
         vert = item.geometry.polygons[i].vertices
         for v in vert:
@@ -384,10 +384,11 @@ def move_udim(self, item, uvmap, udim, destination):
                 v.select(replace=True)
                 lx.eval('udim.fit')
                 lx.eval('udim.select')
+                lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (current_udim, color[0], color[1], color[2]))
                 lx.eval('udim.move %s' % destination)
                 lx.eval('select.drop vertex')
                 udim.remove(current_udim)
-            udim.add(get_udim_value(self, uv)[1])
+            #udim.add(get_udim_value(self, uv)[1])
 
 # Cleaning
 

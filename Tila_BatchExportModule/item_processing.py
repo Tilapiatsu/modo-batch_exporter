@@ -64,22 +64,21 @@ def harden_uv_border(self):
 
 def assign_material_per_udim(self, random_color):
     if self.assignMaterialPerUDIMTile_sw:
-        #self.UDIMTextureName
         message = "Assign Material per UDIM Tile = " + self.UDIMTextureName
         message = get_progression_message(self, message)
         increment_progress_bar(self, self.progress)
         dialog.processing_log(message)
 
-        curr_item = self.proceededMesh[self.proceededMeshIndex]
+        selection = self.scn.selected
+        for i in xrange(len(selection)):
+            udim = helper.get_udim_tile(self, selection[i], self.UDIMTextureName)
 
-        udim = helper.get_udim_tile(self, curr_item, self.UDIMTextureName)
+            if random_color:
+                color = [random.random(), random.random(), random.random()]
+            else:
+                color = [0.8, 0.8, 0.8]
 
-        if random_color:
-            color = [random.random(), random.random(), random.random()]
-        else:
-            color = [0.8, 0.8, 0.8]
-
-        helper.assign_material_and_move_udim(self, curr_item, self.UDIMTextureName, udim, 1001, color)
+            helper.assign_material_and_move_udim(self, selection[i], self.UDIMTextureName, udim, 1001, color)
 
 def triple(self):
     if self.triple_sw:

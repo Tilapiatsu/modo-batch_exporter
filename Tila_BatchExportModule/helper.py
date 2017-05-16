@@ -359,7 +359,7 @@ def get_udim_value(self, uv):
         raise ValueError('invalid uv value')
 
     udim_value = x + 10*(y-1)
-    return udim_value, 1000 + udim_value
+    return int(udim_value), int(1000 + udim_value)
 
 
 def get_udim_tile(self, item, uvmap):
@@ -373,22 +373,47 @@ def get_udim_tile(self, item, uvmap):
     return udim
 
 def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
+    udim_dict = {}
+
+    for u in udim:
+        udim_dict[str(u)] = set([])
+
     for i in xrange(len(item.geometry.polygons)):
         vert = item.geometry.polygons[i].vertices
         for v in vert:
             uv = item.geometry.polygons[i].getUV(v, uvmap)
 
             current_udim = get_udim_value(self, uv)[1]
-
             if current_udim in udim:
-                v.select(replace=True)
-                lx.eval('udim.fit')
-                lx.eval('udim.select')
-                lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (current_udim, color[0], color[1], color[2]))
-                lx.eval('udim.move %s' % destination)
-                lx.eval('select.drop vertex')
-                udim.remove(current_udim)
+                udim_dict[str(current_udim)].add(v)
+                print udim_dict[str(current_udim)]
+            # if current_udim in udim:
+            #     print current_udim
+            #     v.select(replace=True)
+            #     lx.eval('tool.set util.udim on')
+            #     lx.eval('udim.fit')
+            #     lx.eval('udim.select')
+            #     lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (current_udim, color[0], color[1], color[2]))
+            #     lx.eval('udim.move %s' % destination)
+            #     lx.eval('tool.set util.udim off')
+            #     lx.eval('select.drop polygon')
+            #     lx.eval('select.drop item mask')
+            #     lx.eval('select.drop item advancedMaterial')
+            #     udim.remove(current_udim)
             #udim.add(get_udim_value(self, uv)[1])
+
+    for u in udim_dict:
+        for v in u:
+            lx.eval('select.element %s vertex add index:%s' % (item, v))
+        lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (u, color[0], color[1], color[2]))
+        lx.eval('select.drop vertex')
+        lx.eval('select.drop item mask')
+        lx.eval('select.drop item advancedMaterial')
+
+    # lx.eval('tool.set util.udim on')
+    # lx.eval('udim.move %s' % destination)
+    # lx.eval('tool.set util.udim off')
+
 
 # Cleaning
 

@@ -71,6 +71,7 @@ def assign_material_per_udim(self, random_color):
 
         selection = self.scn.selected
         for i in xrange(len(selection)):
+            selection[i].select(replace=True)
             udim = helper.get_udim_tile(self, selection[i], self.UDIMTextureName)
 
             if random_color:

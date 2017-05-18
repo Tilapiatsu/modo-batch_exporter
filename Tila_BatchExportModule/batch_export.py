@@ -188,6 +188,7 @@ class TilaBacthExport:
         self.sortedOriginalItems = []
         self.proceededMesh = []
         self.replicatorSource = {}
+        self.UDIMMaterials = set([])
         self.proceededMeshIndex = 0
         self.progress = None
         self.progression = [0, 0]
@@ -603,6 +604,8 @@ class TilaBacthExport:
             self.export_selection(duplicate, output_path, t.exportTypes[13][1])
 
         self.scn.select(duplicate)
+
+        helper.select_arr(self.UDIMMaterials)
 
         lx.eval('!!item.delete')
 

@@ -182,6 +182,16 @@ def safe_select(tuple):
                 modo.item.Item.select(i)
 
 
+def select_arr(arr, replace=False):
+    first = True
+    for o in arr:
+        if replace and first:
+            first = False
+            modo.item.Item.select(o, True)
+        else:
+            modo.item.Item.select(o)
+
+
 def isItemTypeCompatibile(item):
     for type in t.itemType.values():
         try:
@@ -384,29 +394,26 @@ def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
 
         for v in vert:
             uv = item.geometry.polygons[i].getUV(v, uvmap)
-            print 'vert = ' + str(v.index)
-            print uv
 
             current_udim = get_udim_value(self, uv)[1]
             if current_udim in udim:
                 udim_dict[str(current_udim)].add(v.index)
 
-    print udim_dict
-
     for u in udim_dict:
-        print u
         lx.eval('select.type vertex')
         for v in udim_dict[u]:
-            print v
             lx.eval('select.element %s vertex add index:%s' % (main_layer, v))
-
         lx.eval('select.convert polygon')
         lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (u, color[0], color[1], color[2]))
         lx.eval('select.drop vertex')
         lx.eval('select.drop polygon')
+        lx.eval('select.drop item')
         lx.eval('select.drop item mask')
         lx.eval('select.drop item advancedMaterial')
 
+        self.UDIMMaterials.add(modo.Item(u + ' (Material)'))
+
+    lx.eval('select.type item')
 
 # Cleaning
 

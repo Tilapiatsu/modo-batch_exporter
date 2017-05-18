@@ -62,6 +62,7 @@ def harden_uv_border(self):
         lx.eval('vertMap.updateNormals')
         lx.eval('select.type item')
 
+
 def assign_material_per_udim(self, random_color):
     if self.assignMaterialPerUDIMTile_sw:
         message = "Assign Material per UDIM Tile = " + self.UDIMTextureName
@@ -70,6 +71,7 @@ def assign_material_per_udim(self, random_color):
         dialog.processing_log(message)
 
         selection = self.scn.selected
+
         for i in xrange(len(selection)):
             selection[i].select(replace=True)
             udim = helper.get_udim_tile(self, selection[i], self.UDIMTextureName)
@@ -78,8 +80,10 @@ def assign_material_per_udim(self, random_color):
                 color = [random.random(), random.random(), random.random()]
             else:
                 color = [0.8, 0.8, 0.8]
-
             helper.assign_material_and_move_udim(self, selection[i], self.UDIMTextureName, udim, 1001, color)
+
+        self.scn.select(selection)
+
 
 def triple(self):
     if self.triple_sw:

@@ -404,7 +404,7 @@ def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
         for v in udim_dict[u]:
             lx.eval('select.element %s vertex add index:%s' % (main_layer, v))
         lx.eval('select.convert polygon')
-        lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (u, color[0], color[1], color[2]))
+        lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (str(u), color[0], color[1], color[2]))
         lx.eval('select.drop vertex')
         lx.eval('select.drop polygon')
         lx.eval('select.drop item')

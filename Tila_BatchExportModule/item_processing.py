@@ -77,9 +77,9 @@ def assign_material_per_udim(self, random_color):
             udim = helper.get_udim_tile(self, selection[i], self.UDIMTextureName)
 
             if random_color:
-                color = [random.random(), random.random(), random.random()]
+                color = [round(random.random(),4), round(random.random(),4), round(random.random(),4)]
             else:
-                color = [0.8, 0.8, 0.8]
+                color = [1, 1, 1]
             helper.assign_material_and_move_udim(self, selection[i], self.UDIMTextureName, udim, 1001, color)
 
         self.scn.select(selection)

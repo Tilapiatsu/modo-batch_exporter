@@ -382,12 +382,31 @@ def get_udim_tile(self, item, uvmap):
 
     return udim
 
+
+def offset_uv(self, uv):
+    lx.eval('tool.viewType uv')
+    lx.eval('tool.set xfrm.transform on')
+    lx.eval('tool.reset')
+    lx.eval('tool.setAttr xfrm.transform U %s' % uv[0])
+    lx.eval('tool.setAttr xfrm.transform V %s' % uv[1])
+    lx.eval('tool.doApply')
+    lx.eval('tool.set xfrm.transform off')
+
+
+def get_normalize_uv_offset(self, uv):
+    x = uv[0]
+    y = uv[1]
+    return [ - math.floor(x), - math.floor(y)]
+
 def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
     main_layer = lx.eval1('query layerservice layer.index ? main')
+
     udim_dict = {}
+    uv_offset_dict = {}
 
     for u in udim:
-        udim_dict[str(u)] = set([])
+        udim_dict[u] = set([])
+        uv_offset_dict[u] = []
 
     for i in xrange(len(item.geometry.polygons)):
         vert = item.geometry.polygons[i].vertices
@@ -396,22 +415,33 @@ def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
             uv = item.geometry.polygons[i].getUV(v, uvmap)
 
             current_udim = get_udim_value(self, uv)[1]
+
+            uv_offset_dict[current_udim] = get_normalize_uv_offset(self, uv)
+
             if current_udim in udim:
-                udim_dict[str(current_udim)].add(v.index)
+                udim_dict[current_udim].add(v.index)
+
+    lx.eval('vertMap.list txuv %s' % uvmap)
 
     for u in udim_dict:
         lx.eval('select.type vertex')
         for v in udim_dict[u]:
             lx.eval('select.element %s vertex add index:%s' % (main_layer, v))
+
         lx.eval('select.convert polygon')
+        offset_uv(self, uv_offset_dict[u])
+
         lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (str(u), color[0], color[1], color[2]))
+
         lx.eval('select.drop vertex')
         lx.eval('select.drop polygon')
         lx.eval('select.drop item')
         lx.eval('select.drop item mask')
         lx.eval('select.drop item advancedMaterial')
 
-        self.UDIMMaterials.add(modo.Item(u + ' (Material)'))
+        self.UDIMMaterials.add(modo.Item(str(u) + ' (Material)'))
+
+    lx.eval('vertMap.list txuv _____n_o_n_e_____')
 
     lx.eval('select.type item')
 

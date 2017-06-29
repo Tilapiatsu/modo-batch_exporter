@@ -12,6 +12,7 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
+ - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - when exporting a file no materials are saved !!!
  - Expose some settings ( Freeze Geometry, Export/Import settings )
  - Add Mesh Cleanup

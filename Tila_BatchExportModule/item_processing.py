@@ -187,14 +187,13 @@ def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
     compatibleType = [t.itemType['MESH_INSTANCE']]
     if type in compatibleType and self.scn.selected[0].type in compatibleType:
         if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
-            message = "Freeze Instance"
-            message = get_progression_message(self, message)
-            increment_progress_bar(self, self.progress)
-            dialog.transform_log(message)
+            #
+            # message = "Freeze Instance"
+            # message = get_progression_message(self, message)
+            # increment_progress_bar(self, self.progress)
+            # dialog.transform_log(message)
 
             lx.eval('item.setType.mesh')
-
-            frozenItem_arr = []
 
             selection = self.scn.selected
             for i in xrange(0, len(selection)):
@@ -205,9 +204,9 @@ def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
                 currScale = item.scale
 
                 if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
+                    #dialog.transform_log('Freeze Scaling after Instance Freeze')
                     freeze_sca(self, True)
-
-                frozenItem_arr.append(item)
+                    lx.eval('vertMap.updateNormals')
 
                 if not self.exportFile_sw:
                     self.userSelection[first_index + i] = item

@@ -32,50 +32,6 @@ from os import sep
 
 import Tila_BatchExportModule as t
 
-
-def dirdialog(path=None):
-	cmd_svc = lx.service.Command()
-
-	cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.setup dir')
-	cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.title {Export To:}')
-	if path:
-		cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.result {%s}' % path)
-	try:
-		cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.open')
-	except:
-		return
-
-	command = cmd_svc.Spawn(lx.symbol.iCTAG_NULL, 'dialog.result')
-	val_arr = cmd_svc.Query(command, 0)
-
-	if val_arr.Count() < 1:
-		return
-
-	return val_arr.GetString(0)
-
-
-def customFileDialog(fformat, uname, ext, path=None):
-	cmd_svc = lx.service.Command()
-
-	cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.setup fileSave')
-	cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.title {Save File}')
-	cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL,
-							 'dialog.fileTypeCustom {%s} {%s} "" {%s}' % (fformat, uname, ext))
-	if path:
-		cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.result {%s}' % path)
-	try:
-		cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'dialog.open')
-	except:
-		return
-
-	command = cmd_svc.Spawn(lx.symbol.iCTAG_NULL, "dialog.result")
-	val_arr = cmd_svc.Query(command, 0)
-
-	if val_arr.Count() < 1:
-		return
-
-	return val_arr.GetString(0)
-
 class CmdExportSelected(lxu.command.BasicCommand):
 
 	def __init__(self):
@@ -98,8 +54,6 @@ class CmdExportSelected(lxu.command.BasicCommand):
 	def basic_Execute(self, msg, flags):
 		self.outputFormat = self.dyna_String(0)
 		self.outputPath = self.dyna_String(1)
-
-		print self.outputPath
 
 		scn_sel = lxu.select.SceneSelection()
 		self.item_sel = lxu.select.ItemSelection()
@@ -126,16 +80,11 @@ class CmdExportSelected(lxu.command.BasicCommand):
 		# to use sceneservice to get the source and destination scene indices
 		newscene = lx.eval('query sceneservice scene.index ? current')
 		self.clearlyrs()
+		self.clearitems()
 
-		outpath = self.savelyrs(selLyrs, srcscene, newscene)
-		if outpath is None:
-			# user cancelled file dialog
-			msg.SetCode(lx.symbol.e_ABORT)
-			return
+		self.savelyrs(selLyrs, srcscene, newscene)
+
 		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, '!!scene.close')
-
-		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL,
-									  'user.value Lux_ExportLayersAs_outpath {%s%s}' % (outpath, sep))
 
 	def clearlyrs(self):
 		try:
@@ -165,21 +114,15 @@ class CmdExportSelected(lxu.command.BasicCommand):
 			for item in selected:
 				self.item_sel.select(item.Ident(), True)
 
+			self.cmd_svc.ExecuteArgString(
+				-1, lx.symbol.iCTAG_NULL,
+				'!layer.import %s {} childs:true shaders:true move:false position:0' % newscene)
 
 			self.cmd_svc.ExecuteArgString(
 				-1, lx.symbol.iCTAG_NULL,
-				'layer.import %s {} childs:true shaders:true move:false position:0' % newscene)
-
-			lx.eval('select.itemType camera')
-			lx.eval('select.itemType mesh')
-			lx.eval('!!item.delete')
-
-			self.cmd_svc.ExecuteArgString(
-				-1, lx.symbol.iCTAG_NULL,
-				'scene.saveAs {%s} %s true' % (self.outputPath, self.outputFormat))
+				'!scene.saveAs {%s} %s true' % (self.outputPath, self.outputFormat))
 
 			self.clearlyrs()
-			return dirname(self.outputPath)
 		except:
 			lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
 

@@ -29,11 +29,19 @@ def apply_morph(self, condition, name):
 
         morph_maps = name.split(',')
         selection = self.scn.selected
-        for i in xrange(0, len(selection)):
-            self.scn.select(selection[i])
-            for maps in morph_maps:
-                lx.eval('vertMap.applyMorph %s 1.0' % maps)
-            self.scn.select(selection)
+        for o in selection:
+            self.scn.select(o)
+            if o.type == t.compatibleItemType['GROUP_LOCATOR'] or o.type == t.compatibleItemType['LOCATOR']:
+                helper.select_hierarchy(self, force=True)
+                sub_selection = self.scn.selected
+                for i in xrange(0, len(sub_selection)):
+                    if i > 0:
+                        for maps in morph_maps:
+                            lx.eval('vertMap.applyMorph %s 1.0' % maps)
+            else:
+                for maps in morph_maps:
+                    lx.eval('vertMap.applyMorph %s 1.0' % maps)
+        self.scn.select(selection)
 
 
 

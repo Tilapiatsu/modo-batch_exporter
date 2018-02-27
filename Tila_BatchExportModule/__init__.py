@@ -15,6 +15,7 @@ TILA_BATCH_TRANSFORM = "tila.batchtransform"
 TILA_BATCH_FOLDER = "tila.batchfolder"
 TILA_OPEN_EXPORT_FOLDER = "tila.openexportfolder"
 TILA_EXPORT_PRESET = "tila.exportpreset"
+TILA_EXPORT_SELECTED = "tila.exportselected"
 
 TILA_PRESET_NAME = 'presetName'
 TILA_EXPORT_VISIBLE = 'exportVisible_sw'
@@ -72,6 +73,7 @@ userValues = [
     ['exportCageMorph_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['cageMorphMapName', lx.symbol.sTYPE_STRING, True, 'Cage'],
     ['applyMorphMap_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['cleanMorphMap_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['morphMapName', lx.symbol.sTYPE_STRING, True, 'Exploded'],
     ['openDestFolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 1],
     ['createFormatSubfolder_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
@@ -94,7 +96,7 @@ userValues = [
     ['exportFormatSvg_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['exportFormatPlt_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     [TILA_PRESET_NAME, lx.symbol.sTYPE_STRING, True, 'default']
-    ]
+]
 
 exportTypes = [
     ['lxo', '$LXOB'],

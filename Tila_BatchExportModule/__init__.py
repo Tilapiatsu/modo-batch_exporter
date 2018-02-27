@@ -151,7 +151,9 @@ itemType = {'MESH': 'mesh',
 
 compatibleItemType = {'MESH': 'mesh',
                       'MESH_INSTANCE': 'meshInst',
-                      'REPLICATOR': 'replicator'}
+                      'REPLICATOR': 'replicator',
+                      'GROUP_LOCATOR': 'groupLocator',
+                      'LOCATOR': 'locator'}
 
 defaultExportSettings = {'FBX_EXPORT_TYPE': lx.eval('user.value sceneio.fbx.save.exportType ?'),
                          'FBX_SURFACE_REFINING': lx.eval('user.value sceneio.fbx.save.surfaceRefining ?'),

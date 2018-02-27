@@ -14,7 +14,6 @@ from Tila_BatchExportModule import file
 '''
  - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - add a checkbox to vertMap.updateNormals at export
- - when exporting a file no materials are saved !!!
  - Expose some settings ( Freeze Geometry, Export/Import settings )
  - Add Mesh Cleanup
  - check export for procedural geometry and fusion item
@@ -198,7 +197,6 @@ class TilaBacthExport:
 		self.proceededMeshIndex = 0
 		self.progress = None
 		self.progression = [0, 0]
-		self.tempScnID = None
 		self.filename = ''
 
 		self.exportedFileCount = 0
@@ -513,6 +511,8 @@ class TilaBacthExport:
 				if type == t.compatibleItemType[ctype]:
 					first_index = helper.duplicate_rename(self, self.itemToProceed_dict[ctype], t.TILA_DUPLICATE_SUFFIX)
 
+		self.scn.select(self.proceededMesh)
+
 		item_processing.freeze_instance(self, type=type, first_index=first_index)
 		item_processing.freeze_replicator(self, type=type, first_index=first_index)
 		item_processing.freeze_meshop(self, type=type)
@@ -540,7 +540,6 @@ class TilaBacthExport:
 		item_processing.freeze_sca(self)
 		item_processing.freeze_pos(self)
 		item_processing.freeze_she(self)
-
 		dialog.deallocate_dialog_svc(self.progress[1])
 		self.progress = None
 
@@ -616,26 +615,12 @@ class TilaBacthExport:
 		lx.eval('!!item.delete')
 
 	def export_selection(self, item, output_path, export_format):
-		lx.eval("scene.new")
-		self.tempScnID = lx.eval('query sceneservice scene.index ? current')
-
-		self.scn.select('Mesh')
-		lx.eval('!!item.delete')
-
-		lx.eval('scene.set %s' % self.scnIndex)
 		self.scn.select(item)
-
-		# # lx.eval('!!layer.import %s {} shaders:true childs:true move:false position:0' % self.tempScnID)
-		#
-		# lx.eval('scene.set %s' % self.tempScnID)
 
 		self.save_file(output_path[0], export_format)
 
 		if self.exportCageMorph_sw:
 			self.export_cage(output_path[1], export_format)
-
-		lx.eval('!!scene.close')
-		lx.eval('scene.set %s' % self.scnIndex)
 
 	def export_cage(self, output_path, export_format):
 		# Smooth the mesh entirely
@@ -652,7 +637,7 @@ class TilaBacthExport:
 			if self.overrideFiles != 'yesToAll' and self.overrideFiles != 'noToAll':
 				self.overrideFiles = dialog.ask_before_override(os.path.split(output_path)[1])
 				if self.overrideFiles == 'cancel':
-					helper.clean_duplicates(self, closeScene=True)
+					helper.clean_duplicates(self)
 
 			if self.overrideFiles == 'ok' or self.overrideFiles == 'yesToAll':
 				self.save_command(output_path, export_format)
@@ -669,7 +654,7 @@ class TilaBacthExport:
 			self.exportedFileCount += 1
 
 		except RuntimeError:
-			helper.clean_duplicates(self, closeScene=True)
+			dialog.print_log('Failed to export {}'.format(output_path))
 
 	def select_visible_items(self):
 		mesh = self.scn.items(t.itemType['MESH'])

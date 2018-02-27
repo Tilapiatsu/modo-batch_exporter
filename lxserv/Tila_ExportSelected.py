@@ -170,6 +170,10 @@ class CmdExportSelected(lxu.command.BasicCommand):
 				-1, lx.symbol.iCTAG_NULL,
 				'layer.import %s {} childs:true shaders:true move:false position:0' % newscene)
 
+			lx.eval('select.itemType camera')
+			lx.eval('select.itemType mesh')
+			lx.eval('!!item.delete')
+
 			self.cmd_svc.ExecuteArgString(
 				-1, lx.symbol.iCTAG_NULL,
 				'scene.saveAs {%s} %s true' % (self.outputPath, self.outputFormat))

@@ -28,6 +28,10 @@ def construct_file_path(self, output_dir, layer_name, ext, increment):
 # Helpers, setter/getter, Selector
 
 def items_to_proceed_constructor(self):
+	# if self.exportHierarchy_sw:
+	#     lx.eval('select.itemHierarchy')
+	#     self.userSelection = self.scn.selected
+
 	for item in self.userSelection:
 		for type in list(t.compatibleItemType.viewkeys()):
 			if item.type == t.compatibleItemType[type]:
@@ -46,13 +50,18 @@ def duplicate_rename(self, arr, suffix):
 		layer_name = item.name
 		if item.type == t.itemType['MESH_FUSION']:
 			select_hierarchy(self, force=True)
-		duplicate = self.scn.duplicateItem(item)
+		if self.exportHierarchy_sw:
+			self.scn.select(item)
+			lx.eval('item.duplicate false all:true')
+			duplicate = self.scn.selected[0]
+
+		else:
+			duplicate = self.scn.duplicateItem(item)
 		duplicate.name = '%s%s' % (layer_name, suffix)
 		duplicate_arr.append(duplicate)
 		self.proceededMesh.append(duplicate)
 
 	self.scn.select(duplicate_arr)
-
 	return len(self.proceededMesh) - len(duplicate_arr)
 
 

@@ -27,7 +27,7 @@ import lx
 import lxifc
 import lxu.command
 import lxu.select
-from os.path import join, dirname
+from os.path import join, dirname, splitext, split
 from os import sep
 
 import Tila_BatchExportModule as t
@@ -38,6 +38,8 @@ class CmdExportSelected(lxu.command.BasicCommand):
 		lxu.command.BasicCommand.__init__(self)
 		# output format
 		self.dyna_Add('format', lx.symbol.sTYPE_STRING)
+		# save layers to separate files or one file
+		self.dyna_Add('separateFiles', lx.symbol.sTYPE_BOOLEAN)
 		# output path
 		self.dyna_Add('path', lx.symbol.sTYPE_STRING)
 
@@ -53,7 +55,8 @@ class CmdExportSelected(lxu.command.BasicCommand):
 
 	def basic_Execute(self, msg, flags):
 		self.outputFormat = self.dyna_String(0)
-		self.outputPath = self.dyna_String(1)
+		self.separateFile = self.dyna_Bool(1)
+		self.outputPath = self.dyna_String(2)
 
 		scn_sel = lxu.select.SceneSelection()
 		self.item_sel = lxu.select.ItemSelection()
@@ -73,18 +76,29 @@ class CmdExportSelected(lxu.command.BasicCommand):
 		# to use sceneservice to get the source and destination scene indices
 		srcscene = lx.eval('query sceneservice scene.index ? current')
 		scenefile = src_scn.Filename()
+		if self.separateFile:
+			for lyr in selLyrs:
+				# create destination scene
+				self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
+				# can't currently walk scenes from the new API so we'll need
+				# to use sceneservice to get the source and destination scene indices
+				newscene = lx.eval('query sceneservice scene.index ? current')
+				self.clearlyrs()
+				self.clearitems()
+				self.savelyr(lyr, self.outputPath, srcscene, newscene)
+				self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, '!!scene.close')
+		else:
+			# create destination scene
+			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
+			# can't currently walk scenes from the new API so we'll need
+			# to use sceneservice to get the source and destination scene indices
+			newscene = lx.eval('query sceneservice scene.index ? current')
+			self.clearlyrs()
+			self.clearitems()
 
-		# create destination scene
-		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
-		# can't currently walk scenes from the new API so we'll need
-		# to use sceneservice to get the source and destination scene indices
-		newscene = lx.eval('query sceneservice scene.index ? current')
-		self.clearlyrs()
-		self.clearitems()
+			self.savelyrs(selLyrs, srcscene, newscene)
 
-		self.savelyrs(selLyrs, srcscene, newscene)
-
-		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, '!!scene.close')
+			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, '!!scene.close')
 
 	def clearlyrs(self):
 		try:
@@ -100,6 +114,29 @@ class CmdExportSelected(lxu.command.BasicCommand):
 			lx.eval('select.itemType renderOutput mode:add')
 			lx.eval('select.itemType defaultShader mode:add')
 			lx.eval('!!item.delete')
+		except:
+			lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
+
+	def savelyr(self, lyr, outpath, srcscene, newscene):
+		'''Export a single layer to the shosen format
+
+		'''
+		try:
+			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
+			lyrID = lyr.Ident()
+			lyrName = lyr.UniqueName()
+			outfile = join(dirname(outpath), lyrName+splitext(outpath)[1])
+
+			# copy selected layer to destination scene
+			self.item_sel.select(lyrID)
+			self.cmd_svc.ExecuteArgString(
+				-1, lx.symbol.iCTAG_NULL,
+				'!layer.import %s {} childs:true shaders:true move:false position:0' % newscene)
+
+			self.cmd_svc.ExecuteArgString(
+				-1, lx.symbol.iCTAG_NULL,
+				'!scene.saveAs {%s} %s' % (outfile, self.outputFormat))
+		# self.clearlyrs()
 		except:
 			lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
 

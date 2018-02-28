@@ -646,9 +646,7 @@ class TilaBacthExport:
 
 	def save_command(self, output_path, export_format):
 		try:
-			# lx.eval('!scene.saveAs "%s" %s true' % (output_path, export_format))
-
-			lx.eval('tila.exportselected {} "{}"'.format(export_format, output_path))
+			lx.eval('!!tila.exportselected {} {} "{}"'.format(export_format, 'false', output_path))
 			message = helper.get_progression_message(self, os.path.basename(output_path))
 			dialog.export_log(message)
 			self.exportedFileCount += 1

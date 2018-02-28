@@ -7,6 +7,7 @@ import sys
 import math
 import Tila_BatchExportModule as t
 import renamer
+import lxu
 
 
 # Path Constructor
@@ -43,6 +44,40 @@ def sort_original_items(self):
 	for type in list(t.compatibleItemType.viewkeys()):
 		self.sortedOriginalItems += self.itemToProceed_dict[type]
 
+def copy_arr_to_temporary_scene(self, arr):
+	try:
+		srcscene = lx.eval('query sceneservice scene.index ? current')
+
+		name_arr = []
+		for item in arr:
+			name_arr.append(item.name)
+
+		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
+		self.tempScnID = lx.eval('query sceneservice scene.index ? current')
+
+		clearitems()
+
+		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
+
+		self.scn.select(arr)
+
+		# sys.exit()
+
+		# lx.eval('!layer.import %s {} childs:true shaders:true move:false position:0' % self.tempScnID)
+		self.cmd_svc.ExecuteArgString(
+			-1, lx.symbol.iCTAG_NULL,
+			'!layer.import %s {} childs:true shaders:true move:false position:0' % self.tempScnID)
+
+		for name in name_arr:
+			lx.eval('select.item {} mode:add'.format(name))
+
+		for o in self.scn.selected:
+			self.proceededMesh.append(o)
+
+		return len(self.proceededMesh) - len(name_arr)
+
+	except:
+		lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
 
 def duplicate_rename(self, arr, suffix):
 	duplicate_arr = []
@@ -243,7 +278,7 @@ def replace_replicator_source(self, item_arr):
 	selection = self.scn.selected
 	for i in item_arr:
 		for k, v in self.replicatorSource.iteritems():
-			if i.name[:-len(t.TILA_DUPLICATE_SUFFIX)] == k:
+			if i.name == k:
 				self.scn.select(i)
 
 				source_name = concatetate_string_arr([v], ';')
@@ -458,6 +493,7 @@ def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
 
 
 def revert_scene_preferences(self):
+	# lx.eval('scene.set {}'.format(self.currScn))
 	self.scn.select(self.userSelection)
 
 	# Put the user's original Export setting back.
@@ -470,9 +506,9 @@ def clean_duplicates(self, closeScene=False):
 	if closeScene:
 		lx.eval('scene.set %s' % self.tempScnID)
 		lx.eval('!scene.close')
-	safe_select(self.proceededMesh)
-	lx.eval('!!item.delete')
-	set_name([self.sortedOriginalItems[self.proceededMeshIndex]], shrink=len(t.TILA_BACKUP_SUFFIX))
+	# safe_select(self.proceededMesh)
+	# lx.eval('!!item.delete')
+	# set_name([self.sortedOriginalItems[self.proceededMeshIndex]], shrink=len(t.TILA_BACKUP_SUFFIX))
 	revert_scene_preferences(self)
 	sys.exit()
 
@@ -493,3 +529,15 @@ def reset_import_settings(self):
 	lx.eval('user.value sceneio.obj.import.separate.meshes %s' % self.defaultImportSettings['OBJ_SEPARATE_MESH'])
 	lx.eval('user.value sceneio.obj.import.suppress.dialog %s' % self.defaultImportSettings['OBJ_SUPRESS_DIALOG'])
 	lx.eval('user.value sceneio.obj.import.units %s' % self.defaultImportSettings['OBJ_UNIT'])
+
+
+def clearitems():
+	try:
+		lx.eval('select.itemType mesh')
+		lx.eval('select.itemType camera mode:add')
+		lx.eval('select.itemType light super:true mode:add')
+		lx.eval('select.itemType renderOutput mode:add')
+		lx.eval('select.itemType defaultShader mode:add')
+		lx.eval('!!item.delete')
+	except:
+		lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))

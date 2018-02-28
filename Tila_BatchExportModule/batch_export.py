@@ -38,10 +38,12 @@ class TilaBacthExport:
 		reload(renamer)
 
 		self.cmd_svc = lx.service.Command()
+
 		self.userSelection = userSelection
 		self.userSelectionCount = userSelectionCount
 		self.scn = scn
 		self.currScn = currScn
+		self.tempScnID = None
 		self.currPath = currPath
 		self.scnIndex = scnIndex
 
@@ -450,7 +452,7 @@ class TilaBacthExport:
 		self.progression[1] = item_count
 		self.progression[0] = 0
 
-		helper.set_name(self.sortedOriginalItems, suffix=t.TILA_BACKUP_SUFFIX)
+		# helper.set_name(self.sortedOriginalItems, suffix=t.TILA_BACKUP_SUFFIX)
 
 		if self.exportEach_sw:
 			for i in xrange(len(self.proceededMesh)):
@@ -460,15 +462,16 @@ class TilaBacthExport:
 
 				dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
-				layername = self.proceededMesh[i].name[:-len(t.TILA_DUPLICATE_SUFFIX)]
+				layername = self.proceededMesh[i].name
 
 				self.export_all_format(output_dir, item_arr, layername, i)
 		else:
 			self.export_all_format(output_dir, self.proceededMesh, filename)
 			dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
-		helper.set_name(self.sortedOriginalItems, shrink=len(t.TILA_BACKUP_SUFFIX))
-
+		# helper.set_name(self.sortedOriginalItems, shrink=len(t.TILA_BACKUP_SUFFIX))
+		lx.eval('scene.set {}'.format(self.tempScnID))
+		lx.eval('!!scene.close')
 		helper.revert_scene_preferences(self)
 
 	def transform_loop(self):
@@ -509,7 +512,8 @@ class TilaBacthExport:
 		if self.exportFile_sw:
 			for ctype in list(t.compatibleItemType.viewkeys()):
 				if type == t.compatibleItemType[ctype]:
-					first_index = helper.duplicate_rename(self, self.itemToProceed_dict[ctype], t.TILA_DUPLICATE_SUFFIX)
+					# first_index = helper.duplicate_rename(self, self.itemToProceed_dict[ctype], t.TILA_DUPLICATE_SUFFIX)
+					first_index = helper.copy_arr_to_temporary_scene(self, self.itemToProceed_dict[ctype])
 
 		self.scn.select(self.proceededMesh)
 
@@ -543,76 +547,75 @@ class TilaBacthExport:
 		dialog.deallocate_dialog_svc(self.progress[1])
 		self.progress = None
 
-	def export_all_format(self, output_dir, duplicate, layer_name, increment=0):
-
-		self.scn.select(duplicate)
-		if not self.mergeMesh_sw:
-			helper.set_name(duplicate, shrink=len(t.TILA_DUPLICATE_SUFFIX))
+	def export_all_format(self, output_dir, items, layer_name, increment=0):
+		self.scn.select(items)
+		# if not self.mergeMesh_sw:
+		# 	helper.set_name(duplicate, shrink=len(t.TILA_DUPLICATE_SUFFIX))
 
 		if self.exportFormatLxo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[0][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[0][1])
+			self.export_selection(items, output_path, t.exportTypes[0][1])
 
 		if self.exportFormatLwo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[1][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[1][1])
+			self.export_selection(items, output_path, t.exportTypes[1][1])
 
 		if self.exportFormatFbx_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[2][0], increment)
+			print output_path
 			lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')
 			lx.eval('user.value sceneio.fbx.save.surfaceRefining subDivs')
 			lx.eval('user.value sceneio.fbx.save.format FBXLATEST')
-			self.export_selection(duplicate, output_path, t.exportTypes[2][1])
+			self.export_selection(items, output_path, t.exportTypes[2][1])
 
 		if self.exportFormatObj_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[3][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[3][1])
+			self.export_selection(items, output_path, t.exportTypes[3][1])
 
 		if self.exportFormatAbc_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[4][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[4][1])
+			self.export_selection(items, output_path, t.exportTypes[4][1])
 
 		if self.exportFormatAbchdf_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[5][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[5][1])
+			self.export_selection(items, output_path, t.exportTypes[5][1])
 
 		if self.exportFormatDae_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[6][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[6][1])
+			self.export_selection(items, output_path, t.exportTypes[6][1])
 
 		if self.exportFormatDxf_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[7][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[7][1])
+			self.export_selection(items, output_path, t.exportTypes[7][1])
 
 		if self.exportFormat3dm_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[8][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[8][1])
+			self.export_selection(items, output_path, t.exportTypes[8][1])
 
 		if self.exportFormatGeo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[9][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[9][1])
+			self.export_selection(items, output_path, t.exportTypes[9][1])
 
 		if self.exportFormatStl_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[10][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[10][1])
+			self.export_selection(items, output_path, t.exportTypes[10][1])
 
 		if self.exportFormatX3d_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[11][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[11][1])
+			self.export_selection(items, output_path, t.exportTypes[11][1])
 
 		if self.exportFormatSvg_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[12][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[12][1])
+			self.export_selection(items, output_path, t.exportTypes[12][1])
 
 		if self.exportFormatPlt_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[13][0], increment)
-			self.export_selection(duplicate, output_path, t.exportTypes[13][1])
+			self.export_selection(items, output_path, t.exportTypes[13][1])
 
-		self.scn.select(duplicate)
+		self.scn.select(items)
 
 		helper.select_arr(self.UDIMMaterials)
-
-		lx.eval('!!item.delete')
+		# lx.eval('!!item.delete')
 
 	def export_selection(self, item, output_path, export_format):
 		self.scn.select(item)
@@ -621,6 +624,8 @@ class TilaBacthExport:
 
 		if self.exportCageMorph_sw:
 			self.export_cage(output_path[1], export_format)
+
+
 
 	def export_cage(self, output_path, export_format):
 		# Smooth the mesh entirely
@@ -646,7 +651,8 @@ class TilaBacthExport:
 
 	def save_command(self, output_path, export_format):
 		try:
-			lx.eval('!!tila.exportselected {} {} "{}"'.format(export_format, 'false', output_path))
+			# lx.eval('!!tila.exportselected {} {} "{}"'.format(export_format, 'false', output_path))
+			lx.eval('!scene.saveAs {%s} %s true' % (output_path, export_format))
 			message = helper.get_progression_message(self, os.path.basename(output_path))
 			dialog.export_log(message)
 			self.exportedFileCount += 1

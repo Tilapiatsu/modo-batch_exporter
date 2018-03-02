@@ -23,12 +23,6 @@ from Tila_BatchExportModule import file
 
 class TilaBacthExport:
 	def __init__(self,
-				 userSelection,
-				 userSelectionCount,
-				 scn,
-				 currScn,
-				 currPath,
-				 scnIndex,
 				 userValues):
 
 		reload(dialog)
@@ -38,17 +32,22 @@ class TilaBacthExport:
 		reload(renamer)
 
 		self.cmd_svc = lx.service.Command()
+		self.scn = modo.Scene()
+		self.scnName = modo.scene.current().name
+		self.userSelection = self.scn.selected
+		self.userSelectionCount = len(self.userSelection)
 
-		self.userSelection = userSelection
-		self.userSelectionCount = userSelectionCount
-		self.scn = scn
-		self.currScn = currScn
+		self.currPath = modo.scene.current().filename
+		if self.currPath is None:
+			self.currPath = ''
+
+		self.scnIndex = lx.eval('query sceneservice scene.index ? current')
 		self.tempScnID = None
-		self.currPath = currPath
-		self.scnIndex = scnIndex
 
 		index = 0
 		self.exportVisible_sw = bool(userValues[index])
+		if self.exportVisible_sw:
+			self.userSelection = self.select_visible_items()
 		index += 1
 		self.exportFile_sw = bool(userValues[index])
 		index += 1
@@ -190,16 +189,22 @@ class TilaBacthExport:
 		index += 1
 		self.exportFormatPlt_sw = bool(userValues[index])
 
-		self.itemToProceed_dict = helper.init_item_to_proceed_dict()
+		self.itemToProceed = helper.init_ctype_dict_arr()
 
-		self.sortedOriginalItems = []
-		self.proceededMesh = []
+		if self.exportEach_sw:
+			self.proceededMesh = []
+		else:
+			self.proceededMesh = helper.init_ctype_dict_arr()
+
+		self.sortedItemToProceed = []
+
 		self.replicatorSource = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
 		self.progress = None
 		self.progression = [0, 0]
 		self.filename = ''
+		self.firstIndex = helper.init_ctype_dict_arr()
 
 		self.exportedFileCount = 0
 		self.overrideFiles = ''
@@ -225,15 +230,22 @@ class TilaBacthExport:
 			dialog.init_message('info', 'No export format selected', 'Select at least one export fromat in the form')
 			sys.exit()
 
-	def at_least_one_item_selected(self, exit=True):
+	def at_least_one_compatible_item_selected(self, exit=True):
 		helper.items_to_proceed_constructor(self)
 
 		totalLength = 0
-		for arr in list(self.itemToProceed_dict.viewvalues()):
+		for arr in self.itemToProceed.keys():
 			totalLength += len(arr)
 		if totalLength == 0:
 			if exit:
-				dialog.init_message('info', 'No mesh item selected', 'Select at least one mesh item')
+				message = ''
+				separator = ' or '
+				for i in xrange(len(t.compatibleItemType)):
+					if i < len(t.compatibleItemType) - 1:
+						message += t.compatibleItemType.keys()[i] + separator
+					else:
+						message += t.compatibleItemType.keys()[i]
+				dialog.init_message('info', 'No compatible item selected', 'Select at least one item of this type : \n \n {} '.format(message))
 				sys.exit()
 			else:
 				return True
@@ -241,8 +253,11 @@ class TilaBacthExport:
 	# Loops methods
 
 	def batch_export(self):
+		# check if at least one item is selected
 		helper.check_selection_count(self)
-		self.at_least_one_item_selected()
+		# check if within this selection, at least one item is compatible with by this script referenced by t.compatibleItemType
+		# Construct the queue of item to proceed self.itemToProceed_dict, filtered them and exclude all incompatible types
+		self.at_least_one_compatible_item_selected()
 
 		dialog.begining_log(self)
 
@@ -316,7 +331,7 @@ class TilaBacthExport:
 					dialog.print_log('.....................................   ' + str(
 						self.userSelectionCount) + ' mesh item founded   .....................................')
 
-					if self.at_least_one_item_selected(exit=False):
+					if self.at_least_one_compatible_item_selected(exit=False):
 						lx.eval('!scene.close')
 						continue
 
@@ -397,7 +412,7 @@ class TilaBacthExport:
 					dialog.print_log('.....................................   ' + str(
 						self.userSelectionCount) + ' mesh item founded   .....................................')
 
-					if self.at_least_one_item_selected(exit=False):
+					if self.at_least_one_compatible_item_selected(exit=False):
 						lx.eval('!scene.close')
 						continue
 
@@ -428,61 +443,85 @@ class TilaBacthExport:
 
 	def batch_transform(self):
 		helper.check_selection_count(self)
-		self.at_least_one_item_selected()
+		self.at_least_one_compatible_item_selected()
+
+		self.proceededMesh = self.itemToProceed
 		dialog.begining_log(self)
 
-		if len(self.itemToProceed_dict['REPLICATOR']) > 0:
-			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed_dict['REPLICATOR'])
+		if len(self.itemToProceed['REPLICATOR']) > 0:
+			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
 
 		self.transform_loop()
-		self.scn.select(self.proceededMesh)
 		dialog.ending_log(self)
 
 	def batch_process(self, output_dir, filename):
-		helper.select_hierarchy(self)
+		# helper.select_hierarchy(self)
 
-		if len(self.itemToProceed_dict['REPLICATOR']) > 0:
-			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed_dict['REPLICATOR'])
+		if len(self.itemToProceed['REPLICATOR']) > 0:
+			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
 
-		self.transform_loop()
-
-		item_count = len(self.proceededMesh)
+		item_count = len(self.sortedItemToProceed)
 
 		self.progress = dialog.init_progress_bar(item_count, 'Exporting ...')
 		self.progression[1] = item_count
 		self.progression[0] = 0
 
-		# helper.set_name(self.sortedOriginalItems, suffix=t.TILA_BACKUP_SUFFIX)
-
 		if self.exportEach_sw:
-			for i in xrange(len(self.proceededMesh)):
-				item_arr = []
-				item_arr.append(self.proceededMesh[i])
-				self.proceededMeshIndex = i
+			for tcount in xrange(item_count):
+				currItem = [self.sortedItemToProceed[tcount]]
 
+				helper.copy_arr_to_temporary_scene(self, currItem)
+
+				currItem = [self.proceededMesh[tcount]]
+
+				for ctype, type in t.compatibleItemType.iteritems():
+					if type == currItem[0].type:
+						self.transform_arr(currItem, ctype)
+						break
+
+				self.proceededMeshIndex = tcount
 				dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
-				layername = self.proceededMesh[i].name
+				layername = currItem[0].name
 
-				self.export_all_format(output_dir, item_arr, layername, i)
-		else:
-			self.export_all_format(output_dir, self.proceededMesh, filename)
+				self.export_all_format(output_dir, currItem, layername, tcount)
+
+				lx.eval('scene.set {}'.format(self.tempScnID))
+				lx.eval('!!scene.close')
+
+				self.tempScnID = None
+
+		else: # export all in one file
+			tcount = len(t.compatibleItemType)
+			for ctype, type in t.compatibleItemType.iteritems():
+				self.firstIndex[ctype] = helper.copy_arr_to_temporary_scene(self, self.itemToProceed[ctype], ctype)
+				if tcount > 1:
+					lx.eval('scene.set {}'.format(self.scnIndex))
+				tcount -= 1
+
+			self.transform_loop()
+
+			sortedProceededMesh = helper.sort_items_dict_arr(self.proceededMesh)
+
+			self.export_all_format(output_dir, sortedProceededMesh, filename)
 			dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
+			lx.eval('scene.set {}'.format(self.tempScnID))
+			lx.eval('!!scene.close')
+			self.tempScnID = None
+
 		# helper.set_name(self.sortedOriginalItems, shrink=len(t.TILA_BACKUP_SUFFIX))
-		lx.eval('scene.set {}'.format(self.tempScnID))
-		lx.eval('!!scene.close')
+
 		helper.revert_scene_preferences(self)
 
 	def transform_loop(self):
 
 		transformed = []
 
-		for type in list(t.compatibleItemType.viewkeys()):
-			transformed += self.transform_type(self.itemToProceed_dict[type], t.compatibleItemType[type])
+		for ctype in t.compatibleItemType.keys():
+			transformed += self.transform_arr(self.proceededMesh[ctype], ctype)
 
 		if self.mergeMesh_sw:
-
 			item_processing.merge_meshes(self, transformed)
 			self.proceededMesh = [self.scn.selected[0]]
 
@@ -491,35 +530,23 @@ class TilaBacthExport:
 
 			self.proceededMesh[0].name = layer_name
 
-	def transform_type(self, type_item_arr, type):
-		item_arr = []
-		if len(type_item_arr) > 0:
-			self.scn.select(type_item_arr)
-			self.transform_selected(type=type)
-			item_arr = self.scn.selected
+	def transform_arr(self, item_arr, ctype):
+		if len(item_arr) > 0:
+			self.scn.select(item_arr)
+			self.transform_selected(ctype=ctype)
 
-		return item_arr
+		return self.scn.selected
 
-	def transform_selected(self, type):
-		helper.select_hierarchy(self)
-
+	def transform_selected(self, ctype):
+		print ctype
 		self.progression = [1, helper.get_transformation_count(self)]
-
 		self.progress = dialog.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
-		first_index = 0
+		helper.select_hierarchy(self)
 
-		if self.exportFile_sw:
-			for ctype in list(t.compatibleItemType.viewkeys()):
-				if type == t.compatibleItemType[ctype]:
-					# first_index = helper.duplicate_rename(self, self.itemToProceed_dict[ctype], t.TILA_DUPLICATE_SUFFIX)
-					first_index = helper.copy_arr_to_temporary_scene(self, self.itemToProceed_dict[ctype])
-
-		self.scn.select(self.proceededMesh)
-
-		item_processing.freeze_instance(self, type=type, first_index=first_index)
-		item_processing.freeze_replicator(self, type=type, first_index=first_index)
-		item_processing.freeze_meshop(self, type=type)
+		item_processing.freeze_instance(self, type=ctype, first_index=self.firstIndex[ctype])
+		item_processing.freeze_replicator(self, type=ctype, first_index=self.firstIndex[ctype])
+		item_processing.freeze_meshop(self, type=ctype)
 
 		item_processing.smooth_angle(self)
 		item_processing.harden_uv_border(self)
@@ -544,13 +571,11 @@ class TilaBacthExport:
 		item_processing.freeze_sca(self)
 		item_processing.freeze_pos(self)
 		item_processing.freeze_she(self)
+
 		dialog.deallocate_dialog_svc(self.progress[1])
-		self.progress = None
 
 	def export_all_format(self, output_dir, items, layer_name, increment=0):
 		self.scn.select(items)
-		# if not self.mergeMesh_sw:
-		# 	helper.set_name(duplicate, shrink=len(t.TILA_DUPLICATE_SUFFIX))
 
 		if self.exportFormatLxo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[0][0], increment)
@@ -562,7 +587,6 @@ class TilaBacthExport:
 
 		if self.exportFormatFbx_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[2][0], increment)
-			print output_path
 			lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')
 			lx.eval('user.value sceneio.fbx.save.surfaceRefining subDivs')
 			lx.eval('user.value sceneio.fbx.save.format FBXLATEST')

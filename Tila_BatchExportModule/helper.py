@@ -29,22 +29,30 @@ def construct_file_path(self, output_dir, layer_name, ext, increment):
 # Helpers, setter/getter, Selector
 
 def items_to_proceed_constructor(self):
-	# if self.exportHierarchy_sw:
-	#     lx.eval('select.itemHierarchy')
-	#     self.userSelection = self.scn.selected
-
 	for item in self.userSelection:
-		for type in list(t.compatibleItemType.viewkeys()):
+		for type in t.compatibleItemType.keys():
 			if item.type == t.compatibleItemType[type]:
-				self.itemToProceed_dict[type].append(item)
-	sort_original_items(self)
+				self.itemToProceed[type].append(item)
+
+	self.sortedItemToProceed = sort_items_dict_arr(self.itemToProceed)
 
 
-def sort_original_items(self):
-	for type in list(t.compatibleItemType.viewkeys()):
-		self.sortedOriginalItems += self.itemToProceed_dict[type]
+# sort Item per compatible types
+def sort_items_dict_arr(dict):
+	result_arr = []
 
-def copy_arr_to_temporary_scene(self, arr):
+	for type in t.compatibleItemType.keys():
+		result_arr += dict[type]
+
+	return result_arr
+
+def construct_proceededMesh(self, arr, ctype):
+	for o in arr:
+		self.proceededMesh[ctype].append(o)
+
+	return len(self.proceededMesh) - len(arr)
+
+def copy_arr_to_temporary_scene(self, arr, ctype=None):
 	try:
 		srcscene = lx.eval('query sceneservice scene.index ? current')
 
@@ -52,28 +60,32 @@ def copy_arr_to_temporary_scene(self, arr):
 		for item in arr:
 			name_arr.append(item.name)
 
-		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
-		self.tempScnID = lx.eval('query sceneservice scene.index ? current')
+		if self.tempScnID is None:
+			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
+			self.tempScnID = lx.eval('query sceneservice scene.index ? current')
 
-		clearitems()
+			clearitems()
 
-		self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
+			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
 
 		self.scn.select(arr)
-
 		# sys.exit()
 
 		# lx.eval('!layer.import %s {} childs:true shaders:true move:false position:0' % self.tempScnID)
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
-			'!layer.import %s {} childs:true shaders:true move:false position:0' % self.tempScnID)
+			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
+		for i in xrange(len(name_arr)):
+			if i == 0:
+				lx.eval('select.item {}'.format(name_arr[i]))
+			else:
+				lx.eval('select.item {} mode:add'.format(name_arr[i]))
 
-		for name in name_arr:
-			lx.eval('select.item {} mode:add'.format(name))
-
-		for o in self.scn.selected:
-			self.proceededMesh.append(o)
-
+		if self.exportEach_sw:
+			self.proceededMesh.append(self.scn.selected[0])
+		else:
+			for o in self.scn.selected:
+				self.proceededMesh[ctype].append(o)
 		return len(self.proceededMesh) - len(name_arr)
 
 	except:
@@ -89,7 +101,6 @@ def duplicate_rename(self, arr, suffix):
 			self.scn.select(item)
 			lx.eval('item.duplicate false all:true')
 			duplicate = self.scn.selected[0]
-
 		else:
 			duplicate = self.scn.duplicateItem(item)
 		duplicate.name = '%s%s' % (layer_name, suffix)
@@ -128,9 +139,9 @@ def open_destination_folder(self, output_dir):
 def check_selection_count(self):
 	if self.userSelectionCount == 0:  # No file Selected
 		if self.exportVisible_sw:
-			dialog.init_message('error', 'No item visible', 'At least one mesh item has to be visible')
+			dialog.init_message('error', 'No item visible', 'At least one item has to be visible')
 		else:
-			dialog.init_message('error', 'No item selected', 'Select at least one mesh item')
+			dialog.init_message('error', 'No item selected', 'Select at least one item')
 		sys.exit()
 
 
@@ -348,7 +359,7 @@ def select_compatible_item_type():
 		 lx.eval('select.itemType %s mode:add' % type)
 
 
-def init_item_to_proceed_dict():
+def init_ctype_dict_arr():
 	arr = {}
 	for type in list(t.compatibleItemType.viewkeys()):
 		arr[type] = []
@@ -508,14 +519,14 @@ def clean_duplicates(self, closeScene=False):
 		lx.eval('!scene.close')
 	# safe_select(self.proceededMesh)
 	# lx.eval('!!item.delete')
-	# set_name([self.sortedOriginalItems[self.proceededMeshIndex]], shrink=len(t.TILA_BACKUP_SUFFIX))
+	# set_name([self.sortedItemToProceed[self.proceededMeshIndex]], shrink=len(t.TILA_BACKUP_SUFFIX))
 	revert_scene_preferences(self)
 	sys.exit()
 
 
 def revert_initial_parameter(self):
-	self.itemToProceed_dict = init_item_to_proceed_dict()
-	self.sortedOriginalItems = []
+	self.itemToProceed = init_ctype_dict_arr()
+	self.sortedItemToProceed = []
 	self.proceededMesh = []
 	self.replicatorSource = {}
 	self.proceededMeshIndex = 0

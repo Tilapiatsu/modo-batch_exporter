@@ -11,67 +11,41 @@ from Tila_BatchExportModule import batch_export
 
 
 class CmdBatchExport(lxu.command.BasicCommand):
-    def __init__(self):
-        lxu.command.BasicCommand.__init__(self)
+	def __init__(self):
+		lxu.command.BasicCommand.__init__(self)
 
-        reload(user_value)
-        reload(t)
+		reload(user_value)
+		reload(t)
 
-        user_value.add_User_Values(self, t.userValues)
+		user_value.add_User_Values(self, t.userValues)
 
-    def cmd_Flags(self):
-        return lx.symbol.fCMD_MODEL | lx.symbol.fCMD_UNDO
+	def cmd_Flags(self):
+		return lx.symbol.fCMD_MODEL | lx.symbol.fCMD_UNDO
 
-    def basic_Enable(self, msg):
-        return True
+	def basic_Enable(self, msg):
+		return True
 
-    def cmd_Interact(self):
-        pass
+	def cmd_Interact(self):
+		pass
 
-    def basic_Execute(self, msg, flags):
-        reload(t)
-        reload(batch_export)
-        try:
-            scn = modo.Scene()
-            currScn = modo.scene.current()
+	def basic_Execute(self, msg, flags):
+		reload(t)
+		reload(batch_export)
+		try:
+			tbe = batch_export.TilaBacthExport
 
-            userSelection = scn.selected
-            userSelectionCount = len(userSelection)
+			userValues = user_value.query_User_Values(self, t.kit_prefix)
+			userValues[1] = True
 
-            currPath = currScn.filename
+			if userValues[3]:
+				tbe.batch_folder(tbe(userValues))
+			elif userValues[2]:
+				tbe.batch_files(tbe(userValues))
+		except:
+			lx.out(traceback.format_exc())
 
-            if currPath is None:
-                currPath = ""
-
-            scnIndex = lx.eval('query sceneservice scene.index ? current')
-
-            userValues = user_value.query_User_Values(self, t.kit_prefix)
-
-            tbe = batch_export.TilaBacthExport
-
-            userValues[1] = True
-
-            if userValues[3]:
-                tbe.batch_folder(tbe(userSelection,
-                                     userSelectionCount,
-                                     scn,
-                                     currScn,
-                                     currPath,
-                                     scnIndex,
-                                     userValues))
-            elif userValues[2]:
-                tbe.batch_files(tbe(userSelection,
-                                    userSelectionCount,
-                                    scn,
-                                    currScn,
-                                    currPath,
-                                    scnIndex,
-                                    userValues))
-        except:
-            lx.out(traceback.format_exc())
-
-    def cmd_Query(self, index, vaQuery):
-        lx.notimpl()
+	def cmd_Query(self, index, vaQuery):
+		lx.notimpl()
 
 
 lx.bless(CmdBatchExport, t.TILA_BATCH_FOLDER)

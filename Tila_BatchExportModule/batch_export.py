@@ -557,6 +557,7 @@ class TilaBacthExport:
 		item_processing.assign_material_per_udim(self, True)
 
 		item_processing.apply_morph(self, self.applyMorphMap_sw, self.morphMapName)
+		item_processing.clean_morph(self)
 
 		item_processing.reset_pos(self)
 		item_processing.reset_rot(self)

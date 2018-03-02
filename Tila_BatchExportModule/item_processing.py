@@ -43,6 +43,20 @@ def apply_morph(self, condition, name):
 		self.scn.select(selection)
 
 
+def clean_morph(self):
+	if self.cleanMorphMap_sw:
+		message = 'Cleaning Morph Map '
+		message = get_progression_message(self, message)
+		increment_progress_bar(self, self.progress)
+		dialog.processing_log(message)
+		for o in self.scn.selected:
+			if o.type == t.compatibleItemType['MESH']:
+				morph_maps = o.geometry.vmaps.morphMaps
+				for m in morph_maps:
+					lx.eval('select.vertexMap {} morf replace'.format(m.name))
+					lx.eval('!!vertMap.delete morf')
+
+
 
 def smooth_angle(self):
 	if self.smoothAngle_sw:

@@ -139,9 +139,9 @@ class TilaBacthExport:
 		self.cageMorphMapName = userValues[index]
 		index += 1
 
-		self.applyMorphMap_sw = bool(userValues[index])
+		self.exportMorphMap_sw = bool(userValues[index])
 		index += 1
-		self.cleanMorphMap_sw = bool(userValues[index])
+		self.applyMorphMap_sw = bool(userValues[index])
 		index += 1
 		self.morphMapName = userValues[index]
 		index += 1
@@ -538,15 +538,14 @@ class TilaBacthExport:
 		return self.scn.selected
 
 	def transform_selected(self, ctype):
-		print ctype
 		self.progression = [1, helper.get_transformation_count(self)]
 		self.progress = dialog.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
 		helper.select_hierarchy(self)
 
-		item_processing.freeze_instance(self, type=ctype, first_index=self.firstIndex[ctype])
-		item_processing.freeze_replicator(self, type=ctype, first_index=self.firstIndex[ctype])
-		item_processing.freeze_meshop(self, type=ctype)
+		item_processing.freeze_instance(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
+		item_processing.freeze_replicator(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
+		item_processing.freeze_meshop(self, ctype=t.compatibleItemType[ctype])
 
 		item_processing.smooth_angle(self)
 		item_processing.harden_uv_border(self)
@@ -557,7 +556,7 @@ class TilaBacthExport:
 		item_processing.assign_material_per_udim(self, True)
 
 		item_processing.apply_morph(self, self.applyMorphMap_sw, self.morphMapName)
-		item_processing.clean_morph(self)
+		item_processing.export_morph(self)
 
 		item_processing.reset_pos(self)
 		item_processing.reset_rot(self)

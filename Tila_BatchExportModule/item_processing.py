@@ -43,9 +43,9 @@ def apply_morph(self, condition, name):
 		self.scn.select(selection)
 
 
-def clean_morph(self):
-	if self.cleanMorphMap_sw:
-		message = 'Cleaning Morph Map '
+def export_morph(self):
+	if not self.exportMorphMap_sw:
+		message = 'Cleaning Morph Map'
 		message = get_progression_message(self, message)
 		increment_progress_bar(self, self.progress)
 		dialog.processing_log(message)
@@ -53,9 +53,9 @@ def clean_morph(self):
 			if o.type == t.compatibleItemType['MESH']:
 				morph_maps = o.geometry.vmaps.morphMaps
 				for m in morph_maps:
+					dialog.print_log('Delete {} morph map'.format(m.name))
 					lx.eval('select.vertexMap {} morf replace'.format(m.name))
 					lx.eval('!!vertMap.delete morf')
-
 
 
 def smooth_angle(self):
@@ -204,9 +204,9 @@ def freeze_geo(self):
 		dialog.transform_log(message)
 		lx.eval('poly.freeze polyline true 2 true true true false 4.0 true Morph')
 
-def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
+def freeze_instance(self, ctype=t.itemType['MESH_INSTANCE'], update_arr=True, first_index=0):
 	compatibleType = [t.itemType['MESH_INSTANCE']]
-	if type in compatibleType and self.scn.selected[0].type in compatibleType:
+	if ctype in compatibleType and self.scn.selected[0].type in compatibleType:
 		if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
 			#
 			# message = "Freeze Instance"
@@ -222,7 +222,7 @@ def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
 				item = selection[i]
 				item.select(replace=True)
 
-				currScale = item.scale
+				currScale = item.Item.scale
 
 				if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
 					#dialog.transform_log('Freeze Scaling after Instance Freeze')
@@ -235,8 +235,8 @@ def freeze_instance(self, type='meshInst', update_arr=True, first_index=0):
 					self.proceededMesh[first_index + i] = item
 
 
-def freeze_meshfusion(self, type):
-	if type == t.itemType['MESH_FUSION']:
+def freeze_meshfusion(self, ctype):
+	if ctype == t.itemType['MESH_FUSION']:
 
 		message = "Freeze MeshFusion"
 		message = get_progression_message(self, message)
@@ -255,9 +255,8 @@ def freeze_meshfusion(self, type):
 			self.scn.select(selection)
 
 
-def freeze_meshop(self, type):
-	if self.freezeMeshOp_sw and type == t.itemType['MESH']:
-
+def freeze_meshop(self, ctype):
+	if self.freezeMeshOp_sw and ctype == t.itemType['MESH']:
 		message = "Freeze MeshOp"
 		message = get_progression_message(self, message)
 		increment_progress_bar(self, self.progress)
@@ -270,7 +269,7 @@ def freeze_meshop(self, type):
 			self.scn.select(selection)
 
 
-def freeze_replicator(self, type, update_arr=True, first_index=0):
+def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 	if type == t.itemType['REPLICATOR']:
 
 		message = "Freeze Replicator"

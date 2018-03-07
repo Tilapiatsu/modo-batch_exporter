@@ -30,16 +30,22 @@ def apply_morph(self, condition, name):
 		morph_maps = name.split(',')
 		selection = self.scn.selected
 		for o in selection:
-			self.scn.select(o)
+			lx.eval('select.item {}'.format(o))
 			if o.type == t.compatibleItemType['GROUP_LOCATOR'] or o.type == t.compatibleItemType['LOCATOR']:
 				sub_selection = self.scn.selected
 				for i in xrange(0, len(sub_selection)):
 					if i > 0:
 						for maps in morph_maps:
 							lx.eval('vertMap.applyMorph %s 1.0' % maps)
-			else:
+			elif o.type == t.compatibleItemType['MESH']:
 				for maps in morph_maps:
 					lx.eval('vertMap.applyMorph %s 1.0' % maps)
+			elif o.type == t.compatibleItemType['REPLICATOR']:
+				lx.eval('select.item {}'.format(self.replicatorSource[o.name][1]))
+				for maps in morph_maps:
+					lx.eval('vertMap.applyMorph %s 1.0' % maps)
+			else:
+				continue
 		self.scn.select(selection)
 
 

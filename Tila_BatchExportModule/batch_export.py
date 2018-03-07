@@ -491,11 +491,11 @@ class TilaBacthExport:
 
 				self.tempScnID = None
 
-		else: # export all in one file
+		else:  # export all in one file
 			tcount = len(t.compatibleItemType)
 			for ctype, type in t.compatibleItemType.iteritems():
 				self.firstIndex[ctype] = helper.copy_arr_to_temporary_scene(self, self.itemToProceed[ctype], ctype)
-				if tcount > 1:
+				if tcount > 1:  # for the last type, we don't want to go back to the original scene
 					lx.eval('scene.set {}'.format(self.scnIndex))
 				tcount -= 1
 

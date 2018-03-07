@@ -26,6 +26,7 @@ def construct_file_path(self, output_dir, layer_name, ext, increment):
 	return [os.path.join(output_dir, layer_name + '.' + ext),
 			os.path.join(output_dir, layer_name + '_cage.' + ext)]
 
+
 # Helpers, setter/getter, Selector
 
 def items_to_proceed_constructor(self):
@@ -46,15 +47,20 @@ def sort_items_dict_arr(dict):
 
 	return result_arr
 
+
 def construct_proceededMesh(self, arr, ctype):
 	for o in arr:
 		self.proceededMesh[ctype].append(o)
 
 	return len(self.proceededMesh) - len(arr)
 
+
 def copy_arr_to_temporary_scene(self, arr, ctype=None):
 	try:
 		srcscene = lx.eval('query sceneservice scene.index ? current')
+
+		if self.exportEach_sw:
+			reference_item = arr[0].name
 
 		name_arr = []
 		for item in arr:
@@ -69,12 +75,16 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
 
 		self.scn.select(arr)
-		# sys.exit()
 
-		# lx.eval('!layer.import %s {} childs:true shaders:true move:false position:0' % self.tempScnID)
+		for item in arr:
+			if item.type == t.compatibleItemType['REPLICATOR']:
+				for o in self.replicatorSource[item.name]:
+					lx.eval('select.item {} mode:add'.format(o))  # add the source and the particle to the selection
+
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
+
 		for i in xrange(len(name_arr)):
 			if i == 0:
 				lx.eval('select.item {}'.format(name_arr[i]))
@@ -82,7 +92,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 				lx.eval('select.item {} mode:add'.format(name_arr[i]))
 
 		if self.exportEach_sw:
-			self.proceededMesh.append(self.scn.selected[0])
+			self.proceededMesh.append(self.scn.item(reference_item))
 		else:
 			for o in self.scn.selected:
 				self.proceededMesh[ctype].append(o)
@@ -90,6 +100,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 	except:
 		lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
+
 
 def duplicate_rename(self, arr, suffix):
 	duplicate_arr = []
@@ -133,7 +144,6 @@ def open_destination_folder(self, output_dir):
 	if self.exportFile_sw:
 		if self.openDestFolder_sw:
 			dialog.open_folder(output_dir)
-
 
 
 def check_selection_count(self):
@@ -256,6 +266,7 @@ def isItemTypeCompatibile(item):
 			break
 	return False
 
+
 def construct_dict_from_arr(arr, keySubIndex):
 	d = {}
 
@@ -275,10 +286,13 @@ def get_replicator_source(self, replicator_arr):
 	selection = self.scn.selected
 
 	for i in replicator_arr:
-		self.scn.select(i)
+		lx.eval('select.item {}'.format(i.name))
 		source_arr = lx.eval('replicator.source ?')
+		particle_arr = lx.eval('replicator.particle ?')
 
-		result_dict[i.name] = source_arr
+		lx.eval('select.item {}'.format(i.name))
+
+		result_dict[i.name] = [i.name, source_arr, particle_arr]
 
 	self.scn.select(selection)
 
@@ -552,3 +566,23 @@ def clearitems():
 		lx.eval('!!item.delete')
 	except:
 		lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
+
+
+class ModoReplicator():
+	def __init__(self, item):
+		self.replicator = item
+		self.scn = modo.Scene()
+
+	@property
+	def source(self):
+		lx.eval('select.item {}'.format(self.replicator.name))
+		source = lx.eval('replicator.source ?')
+		particle = lx.eval('replicator.particle ?')
+
+		if source.type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
+			return [[source], particle]
+		elif source.type == '':
+			lx.eval('group.scan sel item')
+			source = self.scn.selected
+			return [source, particle]
+

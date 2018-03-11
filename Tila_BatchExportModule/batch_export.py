@@ -198,7 +198,7 @@ class TilaBacthExport:
 
 		self.sortedItemToProceed = []
 
-		self.replicatorSource = {}
+		self.replicator_dict = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
 		self.progress = None
@@ -449,7 +449,7 @@ class TilaBacthExport:
 		dialog.begining_log(self)
 
 		if len(self.itemToProceed['REPLICATOR']) > 0:
-			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
 
 		self.transform_loop()
 		dialog.ending_log(self)
@@ -458,7 +458,7 @@ class TilaBacthExport:
 		# helper.select_hierarchy(self)
 
 		if len(self.itemToProceed['REPLICATOR']) > 0:
-			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
 
 		item_count = len(self.sortedItemToProceed)
 

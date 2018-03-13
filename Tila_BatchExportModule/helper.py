@@ -60,10 +60,19 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 		srcscene = lx.eval('query sceneservice scene.index ? current')
 
 		if self.exportEach_sw:
-			reference_item = arr[0].name
+			if 'Replicator' in arr[0].name:
+				reference_item = arr[0].name.lower()
+			else:
+				reference_item = arr[0].name
 
 		name_arr = []
 		for item in arr:
+			if 'Replicator' in item.name:
+				old_name = item.name
+				replicator = self.replicator_dict[old_name]
+				item.name = item.name.lower()
+				self.replicator_dict.pop(old_name, None)
+				self.replicator_dict[item.name] = replicator
 			name_arr.append(item.name)
 
 		if self.tempScnID is None:
@@ -88,8 +97,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
 		# TODO:
-		# need to change the way to import item to new scene depending on ctype
-		# replicator change name when layer.import, MeshOps change the order of operation when layer.import
+		# need to handle replicator that use multiple Item as source, and to auto rename the item back after export
 
 		for i in xrange(len(name_arr)):
 			if i == 0:
@@ -97,7 +105,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			else:
 				lx.eval('select.item {} mode:add'.format(name_arr[i]))
 
-
+		print self.scn.selected
 		if self.exportEach_sw:
 			self.proceededMesh.append(self.scn.item(reference_item))
 		else:

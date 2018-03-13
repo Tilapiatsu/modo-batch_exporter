@@ -41,20 +41,25 @@ def apply_morph(self, condition, name):
 				for maps in morph_maps:
 					lx.eval('vertMap.applyMorph %s 1.0' % maps)
 			elif o.type == t.compatibleItemType['REPLICATOR']:
-				lx.eval('select.item {}'.format(self.replicator_dict[o.name].replicator[0]))
-				for maps in morph_maps:
-					lx.eval('vertMap.applyMorph %s 1.0' % maps)
+				for s in self.replicator_dict[o.name].source:
+					if s not in self.replicatorSrcIgnoreList:
+						self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (s,)
+						lx.eval('select.item {}'.format(s))
+						for maps in morph_maps:
+							lx.eval('vertMap.applyMorph %s 1.0' % maps)
 			else:
 				continue
 		self.scn.select(selection)
 
 
-def export_morph(self):
-	if not self.exportMorphMap_sw:
-		message = 'Cleaning Morph Map'
-		message = get_progression_message(self, message)
-		increment_progress_bar(self, self.progress)
-		dialog.processing_log(message)
+def export_morph(self, force=False):
+	if not self.exportMorphMap_sw or force:
+		if not force:
+			message = 'Cleaning Morph Map'
+			message = get_progression_message(self, message)
+			increment_progress_bar(self, self.progress)
+			dialog.processing_log(message)
+
 		for o in self.scn.selected:
 			if o.type == t.compatibleItemType['MESH']:
 				morph_maps = o.geometry.vmaps.morphMaps
@@ -209,6 +214,7 @@ def freeze_geo(self):
 		increment_progress_bar(self, self.progress)
 		dialog.transform_log(message)
 		lx.eval('poly.freeze polyline true 2 true true true false 4.0 true Morph')
+
 
 def freeze_instance(self, ctype=t.itemType['MESH_INSTANCE'], update_arr=True, first_index=0):
 	compatibleType = [t.itemType['MESH_INSTANCE']]

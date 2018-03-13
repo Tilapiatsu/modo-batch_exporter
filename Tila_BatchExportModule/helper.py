@@ -78,23 +78,25 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 		for item in arr:
 			if item.type == t.compatibleItemType['REPLICATOR']:
-				i=0
-				for o in self.replicator_dict[item.name].replicator:
-					if i == 0:
-						for s in o:
-							lx.eval('select.item {} mode:add'.format(s))  # add the source and the particle to the selection
-					else:
-						lx.eval('select.item {} mode:add'.format(o))  # add the source and the particle to the selection
+				for o in self.replicator_dict[item.name].source:
+					lx.eval('select.item {} mode:add'.format(o.name))  # add the source to the selection
+
+				lx.eval('select.item {} mode:add'.format(self.replicator_dict[item.name].particle))  # add the particle to the selection
 
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
+
+		# TODO:
+		# need to change the way to import item to new scene depending on ctype
+		# replicator change name when layer.import, MeshOps change the order of operation when layer.import
 
 		for i in xrange(len(name_arr)):
 			if i == 0:
 				lx.eval('select.item {}'.format(name_arr[i]))
 			else:
 				lx.eval('select.item {} mode:add'.format(name_arr[i]))
+
 
 		if self.exportEach_sw:
 			self.proceededMesh.append(self.scn.item(reference_item))
@@ -293,8 +295,6 @@ def get_replicator_source(self, replicator_arr):
 	for i in replicator_arr:
 		replicator = ModoReplicator(i)
 		result_dict[i.name] = replicator
-		print replicator.source
-		print replicator.particle
 
 	self.scn.select(selection)
 
@@ -381,6 +381,7 @@ def init_ctype_dict_arr():
 		arr[type] = []
 
 	return arr
+
 
 def get_first_export_type(self):
 	if self.exportFormatLxo_sw:
@@ -469,6 +470,7 @@ def get_normalize_uv_offset(self, uv):
 	y = uv[1]
 	return [ - math.floor(x), - math.floor(y)]
 
+
 def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
 	main_layer = lx.eval1('query layerservice layer.index ? main')
 
@@ -529,6 +531,7 @@ def revert_scene_preferences(self):
 		lx.eval('user.value sceneio.fbx.save.surfaceRefining %s' % self.defaultExportSettings['FBX_SURFACE_REFINING'])
 		lx.eval('user.value sceneio.fbx.save.format %s' % self.defaultExportSettings['FBX_FORMAT'])
 
+
 def clean_duplicates(self, closeScene=False):
 	if closeScene:
 		lx.eval('scene.set %s' % self.tempScnID)
@@ -543,12 +546,18 @@ def clean_duplicates(self, closeScene=False):
 def revert_initial_parameter(self):
 	self.itemToProceed = init_ctype_dict_arr()
 	self.sortedItemToProceed = []
-	self.proceededMesh = []
+	if self.exportEach_sw:
+		self.proceededMesh = []
+	else:
+		self.proceededMesh = init_ctype_dict_arr()
 	self.replicator_dict = {}
 	self.proceededMeshIndex = 0
 	self.progress = None
 	self.progression = [0, 0]
 	self.tempScnID = None
+	self.replicatorSrcIgnoreList = ()
+	self.firstIndex = init_ctype_dict_arr()
+
 
 def reset_import_settings(self):
 	# Put the user's original Import setting back.
@@ -577,8 +586,9 @@ class ModoReplicator():
 		self.scn = modo.Scene()
 
 	@property
-	def replicator(self):
+	def replicator_src_arr(self):
 		selecion = self.scn.selected
+
 		if self._replicator is None:
 			lx.eval('select.item {}'.format(self._item.name))
 			source = lx.eval('replicator.source ?')
@@ -588,14 +598,12 @@ class ModoReplicator():
 				lx.eval('select.item {}'.format(source))
 				lx.eval('group.scan sel item')
 				source = self.scn.selected
-
 				replicator = [source, particle]
 				self.scn.select(selecion)
 				self._replicator = replicator
-
 				return replicator
 			elif self.scn.item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
-				replicator =[[source], particle]
+				replicator = [[self.scn.item(source)], particle]
 				self._replicator = replicator
 				self.scn.select(selecion)
 				return replicator
@@ -607,10 +615,10 @@ class ModoReplicator():
 	@property
 	def source(self):
 		arr = []
-		for o in self.replicator[0]:
+		for o in self.replicator_src_arr[0]:
 			arr.append(o)
 		return arr
 
 	@property
 	def particle(self):
-		return self.replicator[1]
+		return self.replicator_src_arr[1]

@@ -110,7 +110,7 @@ def init_custom_dialog(type, title, format, uname, ext, save_ext=None, path=None
             return None
 
 
-def init_message(type='info', title='info', message='info'):
+def init_message(type, title, message):
     return_result = type == 'okCancel' \
                     or type == 'yesNo' \
                     or type == 'yesNoCancel' \
@@ -233,7 +233,3 @@ def textInputDialog(title):
     result = uservalue.GetString()
 
     return result
-
-def print_list_item_name(arr):
-    for o in arr:
-        print_log(o.name)

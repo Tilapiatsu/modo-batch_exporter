@@ -198,8 +198,6 @@ class TilaBacthExport:
 
 		self.sortedItemToProceed = []
 
-		self.replicatorSrcIgnoreList = ()
-
 		self.replicator_dict = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
@@ -521,10 +519,7 @@ class TilaBacthExport:
 		transformed = []
 
 		for ctype in t.compatibleItemType.keys():
-			if len(self.proceededMesh[ctype]) > 0:
-				dialog.print_log('Processing item of type : ' + ctype)
-				dialog.print_list_item_name(self.proceededMesh[ctype])
-				transformed += self.transform_arr(self.proceededMesh[ctype], ctype)
+			transformed += self.transform_arr(self.proceededMesh[ctype], ctype)
 
 		if self.mergeMesh_sw:
 			item_processing.merge_meshes(self, transformed)

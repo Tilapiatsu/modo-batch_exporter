@@ -41,7 +41,7 @@ def apply_morph(self, condition, name):
 				for maps in morph_maps:
 					lx.eval('vertMap.applyMorph %s 1.0' % maps)
 			elif o.type == t.compatibleItemType['REPLICATOR']:
-				lx.eval('select.item {}'.format(self.replicator_dict[o.name].replicator[0]))
+				lx.eval('select.item {}'.format(self.replicatorSource[o.name][1]))
 				for maps in morph_maps:
 					lx.eval('vertMap.applyMorph %s 1.0' % maps)
 			else:

@@ -78,13 +78,8 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 		for item in arr:
 			if item.type == t.compatibleItemType['REPLICATOR']:
-				i=0
-				for o in self.replicator_dict[item.name].replicator:
-					if i == 0:
-						for s in o:
-							lx.eval('select.item {} mode:add'.format(s))  # add the source and the particle to the selection
-					else:
-						lx.eval('select.item {} mode:add'.format(o))  # add the source and the particle to the selection
+				for o in self.replicatorSource[item.name]:
+					lx.eval('select.item {} mode:add'.format(o))  # add the source and the particle to the selection
 
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
@@ -291,10 +286,13 @@ def get_replicator_source(self, replicator_arr):
 	selection = self.scn.selected
 
 	for i in replicator_arr:
-		replicator = ModoReplicator(i)
-		result_dict[i.name] = replicator
-		print replicator.source
-		print replicator.particle
+		lx.eval('select.item {}'.format(i.name))
+		source_arr = lx.eval('replicator.source ?')
+		particle_arr = lx.eval('replicator.particle ?')
+
+		lx.eval('select.item {}'.format(i.name))
+
+		result_dict[i.name] = [i.name, source_arr, particle_arr]
 
 	self.scn.select(selection)
 
@@ -304,7 +302,7 @@ def get_replicator_source(self, replicator_arr):
 def replace_replicator_source(self, item_arr):
 	selection = self.scn.selected
 	for i in item_arr:
-		for k, v in self.replicator_dict.iteritems():
+		for k, v in self.replicatorSource.iteritems():
 			if i.name == k:
 				self.scn.select(i)
 
@@ -544,7 +542,7 @@ def revert_initial_parameter(self):
 	self.itemToProceed = init_ctype_dict_arr()
 	self.sortedItemToProceed = []
 	self.proceededMesh = []
-	self.replicator_dict = {}
+	self.replicatorSource = {}
 	self.proceededMeshIndex = 0
 	self.progress = None
 	self.progression = [0, 0]
@@ -572,45 +570,19 @@ def clearitems():
 
 class ModoReplicator():
 	def __init__(self, item):
-		self._item = item
-		self._replicator = None
+		self.replicator = item
 		self.scn = modo.Scene()
 
 	@property
-	def replicator(self):
-		selecion = self.scn.selected
-		if self._replicator is None:
-			lx.eval('select.item {}'.format(self._item.name))
-			source = lx.eval('replicator.source ?')
-			particle = lx.eval('replicator.particle ?')
-
-			if 'group' in source:
-				lx.eval('select.item {}'.format(source))
-				lx.eval('group.scan sel item')
-				source = self.scn.selected
-
-				replicator = [source, particle]
-				self.scn.select(selecion)
-				self._replicator = replicator
-
-				return replicator
-			elif self.scn.item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
-				replicator =[[source], particle]
-				self._replicator = replicator
-				self.scn.select(selecion)
-				return replicator
-
-			self.scn.select(selecion)
-		else:
-			return self._replicator
-
-	@property
 	def source(self):
-		arr = []
-		for o in self.replicator[0]:
-			arr.append(o)
-		return arr
+		lx.eval('select.item {}'.format(self.replicator.name))
+		source = lx.eval('replicator.source ?')
+		particle = lx.eval('replicator.particle ?')
 
-	@property
-	def particle(self):
-		return self.replicator[1]
+		if source.type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
+			return [[source], particle]
+		elif source.type == '':
+			lx.eval('group.scan sel item')
+			source = self.scn.selected
+			return [source, particle]
+

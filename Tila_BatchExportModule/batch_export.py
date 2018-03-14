@@ -486,10 +486,20 @@ class TilaBacthExport:
 
 				layername = currItem[0].name
 
+				# Replicator item name rollback
+				if 'replicator' in layername:
+					currItem[0].name = layername.replace('replicator', 'Replicator')
+					layername = currItem[0].name
+
 				self.export_all_format(output_dir, currItem, layername, tcount)
 
 				lx.eval('scene.set {}'.format(self.tempScnID))
 				lx.eval('!!scene.close')
+
+				# Replicator item name rollback
+				if 'replicator' in layername:
+					old_item = self.scn.item(layername)
+					old_item.name = layername.replace('replicator', 'Replicator')
 
 				self.tempScnID = None
 
@@ -581,6 +591,7 @@ class TilaBacthExport:
 
 	def export_all_format(self, output_dir, items, layer_name, increment=0):
 		self.scn.select(items)
+
 
 		if self.exportFormatLxo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[0][0], increment)

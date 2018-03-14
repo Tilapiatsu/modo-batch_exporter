@@ -97,7 +97,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
 		# TODO:
-		# need to handle replicator that use multiple Item as source, and to auto rename the item back after export
+		# need to handle replicator that use multiple Item as source
 
 		for i in xrange(len(name_arr)):
 			if i == 0:
@@ -105,7 +105,6 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			else:
 				lx.eval('select.item {} mode:add'.format(name_arr[i]))
 
-		print self.scn.selected
 		if self.exportEach_sw:
 			self.proceededMesh.append(self.scn.item(reference_item))
 		else:
@@ -313,6 +312,8 @@ def replace_replicator_source(self, item_arr):
 	selection = self.scn.selected
 	for i in item_arr:
 		for k, v in self.replicator_dict.iteritems():
+			print v
+			print k
 			if i.name == k:
 				self.scn.select(i)
 
@@ -325,7 +326,6 @@ def replace_replicator_source(self, item_arr):
 def concatetate_string_arr(arr, separator):
 
 	string = ''
-	index = 0
 	for i in xrange(len(arr)):
 		if i == 0:
 			string += arr[i]

@@ -282,7 +282,7 @@ def freeze_meshop(self, ctype):
 
 
 def freeze_replicator(self, ctype, update_arr=True, first_index=0):
-	if type == t.itemType['REPLICATOR']:
+	if ctype == t.itemType['REPLICATOR']:
 
 		message = "Freeze Replicator"
 		message = get_progression_message(self, message)

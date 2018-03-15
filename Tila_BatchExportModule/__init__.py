@@ -16,6 +16,7 @@ TILA_BATCH_FOLDER = "tila.batchfolder"
 TILA_OPEN_EXPORT_FOLDER = "tila.openexportfolder"
 TILA_EXPORT_PRESET = "tila.exportpreset"
 TILA_EXPORT_SELECTED = "tila.exportselected"
+TILA_FREEZE_REPLICATOR = 'tila.freezereplicator'
 
 TILA_PRESET_NAME = 'presetName'
 TILA_EXPORT_VISIBLE = 'exportVisible_sw'

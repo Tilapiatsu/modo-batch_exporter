@@ -44,6 +44,7 @@ def apply_morph(self, condition, name):
 				for s in self.replicator_dict[o.name].source:
 					if s not in self.replicatorSrcIgnoreList:
 						self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (s,)
+						print self.replicatorSrcIgnoreList
 						lx.eval('select.item {}'.format(s))
 						for maps in morph_maps:
 							lx.eval('vertMap.applyMorph %s 1.0' % maps)
@@ -283,6 +284,7 @@ def freeze_meshop(self, ctype):
 
 def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 	if ctype == t.itemType['REPLICATOR']:
+		first_index=0
 
 		message = "Freeze Replicator"
 		message = get_progression_message(self, message)
@@ -292,39 +294,24 @@ def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 		frozenItem_arr = []
 
 		selection = self.scn.selected
-		for i in xrange(0, len(selection)):
-			selection[i].select(replace=True)
-			originalName = self.scn.selected[0].name
+		for i in xrange(len(selection)):
+			self.scn.select(selection[i])
 
-			lx.eval('replicator.freeze')
+			originalName = selection[i].name
 
-			item = modo.Item(originalName)
-			children = item.children()
+			lx.eval(t.TILA_FREEZE_REPLICATOR)
 
-			self.scn.select(children)
-
-			lx.eval('item.setType.mesh')
-			lx.eval('layer.mergeMeshes true')
-
-			trimed_selection = selection[i:]
-			#print trimed_selection
-			helper.replace_replicator_source(self, trimed_selection)
-
-			frozenItem = modo.Item(self.scn.selected[0].name)
-			frozenItem.setParent()
-
-			self.scn.select(item)
-
-			lx.eval('!!item.delete')
-
-			frozenItem.name = originalName
+			frozenItem = modo.Item(originalName)
 
 			frozenItem_arr.append(frozenItem)
 
 			if not self.exportFile_sw:
 				self.userSelection[first_index + i] = frozenItem
 			elif update_arr:
-				self.proceededMesh[first_index + i] = frozenItem
+				if self.exportEach_sw:
+					self.proceededMesh[first_index + i] = frozenItem
+				else:
+					self.proceededMesh['REPLICATOR'][first_index + i] = frozenItem
 
 		self.scn.select(frozenItem_arr)
 

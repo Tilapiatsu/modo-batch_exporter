@@ -97,7 +97,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
 		# TODO:
-		# need to handle replicator that use multiple Item as source
+		# need to handle replicator that use multiple Item as source, Item source is selected and it shouldn't
 
 		for i in xrange(len(name_arr)):
 			if i == 0:
@@ -310,21 +310,20 @@ def get_replicator_source(self, replicator_arr):
 
 def replace_replicator_source(self, item_arr):
 	selection = self.scn.selected
+
 	for i in item_arr:
 		for k, v in self.replicator_dict.iteritems():
-			print v
-			print k
 			if i.name == k:
 				self.scn.select(i)
-
-				source_name = concatetate_string_arr([v], ';')
-				lx.eval('replicator.source %s' % source_name)
+				name_arr = v.source_name
+				print name_arr
+				#source_name = concatetate_string_arr(name_arr, ';')
+				lx.eval('replicator.source %s' % 'toto')
 
 	self.scn.select(selection)
 
 
 def concatetate_string_arr(arr, separator):
-
 	string = ''
 	for i in xrange(len(arr)):
 		if i == 0:
@@ -625,6 +624,13 @@ class ModoReplicator():
 		arr = []
 		for o in self.replicator_src_arr[0]:
 			arr.append(o)
+		return arr
+
+	@property
+	def source_name(self):
+		arr = []
+		for o in self.replicator_src_arr[0]:
+			arr.append(o.name)
 		return arr
 
 	@property

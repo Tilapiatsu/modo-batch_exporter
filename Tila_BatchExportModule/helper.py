@@ -54,6 +54,12 @@ def construct_proceededMesh(self, arr, ctype):
 
 	return len(self.proceededMesh) - len(arr)
 
+def get_name_arr(arr):
+	name_arr = []
+	for o in arr:
+		name_arr.append(o.name)
+
+	return name_arr
 
 def copy_arr_to_temporary_scene(self, arr, ctype=None):
 	try:
@@ -98,13 +104,15 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 		# TODO:
 		# need to handle replicator that use multiple Item as source, Item source is selected and it shouldn't
-
+		print get_name_arr(self.scn.selected)
 		for i in xrange(len(name_arr)):
 			if i == 0:
 				lx.eval('select.item {}'.format(name_arr[i]))
 			else:
 				lx.eval('select.item {} mode:add'.format(name_arr[i]))
-
+		print name_arr
+		print get_name_arr(self.scn.selected)
+		dialog.init_message()
 		if self.exportEach_sw:
 			self.proceededMesh.append(self.scn.item(reference_item))
 		else:

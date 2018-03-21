@@ -54,6 +54,7 @@ def construct_proceededMesh(self, arr, ctype):
 
 	return len(self.proceededMesh) - len(arr)
 
+
 def get_name_arr(arr):
 	name_arr = []
 	for o in arr:
@@ -61,19 +62,20 @@ def get_name_arr(arr):
 
 	return name_arr
 
+
 def copy_arr_to_temporary_scene(self, arr, ctype=None):
 	try:
 		srcscene = lx.eval('query sceneservice scene.index ? current')
 
 		if self.exportEach_sw:
-			if 'Replicator' in arr[0].name:
+			if 'Replicator' in arr[0].name:  # hack to enable replicator item to be layer.import to the temporary scene
 				reference_item = arr[0].name.lower()
 			else:
 				reference_item = arr[0].name
 
 		name_arr = []
 		for item in arr:
-			if 'Replicator' in item.name:
+			if 'Replicator' in item.name:  # hack to enable replicator item to be layer.import to the temporary scene
 				old_name = item.name
 				replicator = self.replicator_dict[old_name]
 				item.name = item.name.lower()
@@ -94,25 +96,36 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 		for item in arr:
 			if item.type == t.compatibleItemType['REPLICATOR']:
 				for o in self.replicator_dict[item.name].source:
-					lx.eval('select.item {} mode:add'.format(o.name))  # add the source to the selection
+					lx.eval('select.item "{}" mode:add'.format(o.name))  # add the source to the selection
 
-				lx.eval('select.item {} mode:add'.format(self.replicator_dict[item.name].particle))  # add the particle to the selection
+				lx.eval('select.item "{}" mode:add'.format(self.replicator_dict[item.name].particle.name))  # add the particle to the selection
 
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
-		# TODO:
-		# need to handle replicator that use multiple Item as source, Item source is selected and it shouldn't
-		print get_name_arr(self.scn.selected)
-		for i in xrange(len(name_arr)):
+		for i in xrange(len(name_arr)):  # revert original replicator Name
+			if 'replicator' in name_arr[i]:
+				old_name = name_arr[i]
+				item = modo.Item(old_name)
+				name_arr[i] = old_name.replace('replicator', 'Replicator')
+				item.name = name_arr[i]
+
+				lx.eval('scene.set {}'.format(self.scnIndex))
+
+				replicator = self.replicator_dict[old_name]
+				self.replicator_dict[old_name].replicator_item.name = name_arr[i]
+				self.replicator_dict.pop(old_name, None)
+				self.replicator_dict[item.name] = replicator
+
+				lx.eval('scene.set {}'.format(self.tempScnID))
+
+		for i in xrange(len(name_arr)):  # Select items that were imported to the temporary scene
 			if i == 0:
 				lx.eval('select.item {}'.format(name_arr[i]))
 			else:
 				lx.eval('select.item {} mode:add'.format(name_arr[i]))
-		print name_arr
-		print get_name_arr(self.scn.selected)
-		dialog.init_message()
+
 		if self.exportEach_sw:
 			self.proceededMesh.append(self.scn.item(reference_item))
 		else:
@@ -600,6 +613,11 @@ class ModoReplicator():
 		self._replicator = None
 		self.scn = modo.Scene()
 
+
+	@property
+	def replicator_item(self):
+		return self._item
+
 	@property
 	def replicator_src_arr(self):
 		selecion = self.scn.selected
@@ -613,12 +631,12 @@ class ModoReplicator():
 				lx.eval('select.item {}'.format(source))
 				lx.eval('group.scan sel item')
 				source = self.scn.selected
-				replicator = [source, particle]
+				replicator = [source, self.scn.item(particle)]
 				self.scn.select(selecion)
 				self._replicator = replicator
 				return replicator
 			elif self.scn.item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
-				replicator = [[self.scn.item(source)], particle]
+				replicator = [[self.scn.item(source)], self.scn.item(particle)]
 				self._replicator = replicator
 				self.scn.select(selecion)
 				return replicator
@@ -644,3 +662,10 @@ class ModoReplicator():
 	@property
 	def particle(self):
 		return self.replicator_src_arr[1]
+
+	def select_src_arr(self):
+		self.scn.deselect()
+		for o in self.replicator_src_arr[0]:
+			self.scn.select(o, add=True)
+
+		self.scn.select(self.replicator_src_arr[1], add=True)

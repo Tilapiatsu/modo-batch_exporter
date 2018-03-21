@@ -30,7 +30,7 @@ def apply_morph(self, condition, name):
 		morph_maps = name.split(',')
 		selection = self.scn.selected
 		for o in selection:
-			lx.eval('select.item {}'.format(o))
+			lx.eval('select.item {}'.format(o.name))
 			if o.type == t.compatibleItemType['GROUP_LOCATOR'] or o.type == t.compatibleItemType['LOCATOR']:
 				sub_selection = self.scn.selected
 				for i in xrange(0, len(sub_selection)):
@@ -292,16 +292,20 @@ def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 		dialog.transform_log(message)
 
 		frozenItem_arr = []
+		source_dict = {}
 
 		selection = self.scn.selected
-		for i in xrange(len(selection)):
-			self.scn.select(selection[i])
+		i = 0
+		for o in selection:
+			originalName = o.name
+			self.scn.select(originalName)
 
-			originalName = selection[i].name
+			source_dict[originalName] = self.replicator_dict[originalName].replicator_src_arr
 
 			lx.eval(t.TILA_FREEZE_REPLICATOR)
 
 			frozenItem = modo.Item(originalName)
+			selection[i] = frozenItem
 
 			frozenItem_arr.append(frozenItem)
 
@@ -312,6 +316,22 @@ def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 					self.proceededMesh[first_index + i] = frozenItem
 				else:
 					self.proceededMesh['REPLICATOR'][first_index + i] = frozenItem
+
+			i += 1
+		print source_dict
+		for o in selection:  # remove replicator source and particle
+			print o.name
+			if self.exportFile_sw:
+				if o.name in source_dict.keys():
+					self.scn.deselect()
+					for item in source_dict[o.name][0]:
+						self.scn.select(item.name, add=True)
+					print source_dict[o.name][1].name
+					self.scn.select(source_dict[o.name][1].name, add=True)
+					lx.eval('!!item.delete')
+					dialog.print_log('Delete replicator source : {}'.format(o.name))
+					self.replicator_dict.pop(o.name, None)
+
 
 		self.scn.select(frozenItem_arr)
 

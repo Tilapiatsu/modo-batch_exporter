@@ -12,6 +12,10 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
+ - Need to fix the name change when layer.import source and particle item from replicator objects
+ - Need To finish the freeze replicator command to clean all the source and particle items
+ - need to handle replicator that use multiple Item as source
+ - Add a tila.freezeReplicator_sw user param
  - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - add a checkbox to vertMap.updateNormals at export
  - Expose some settings ( Freeze Geometry, Export/Import settings )
@@ -506,10 +510,13 @@ class TilaBacthExport:
 		else:  # export all in one file
 			tcount = len(t.compatibleItemType)
 			for ctype, type in t.compatibleItemType.iteritems():
-
-				self.firstIndex[ctype] = helper.copy_arr_to_temporary_scene(self, self.itemToProceed[ctype], ctype)
+				items = self.itemToProceed[ctype]
+				if len(items) > 0:
+					self.firstIndex[ctype] = helper.copy_arr_to_temporary_scene(self, items, ctype)
 				if tcount > 1:  # for the last type, we don't want to go back to the original scene
 					lx.eval('scene.set {}'.format(self.scnIndex))
+				else:
+					lx.eval('scene.set {}'.format(self.tempScnID))
 				tcount -= 1
 
 			self.transform_loop()

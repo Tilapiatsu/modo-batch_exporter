@@ -63,25 +63,46 @@ def get_name_arr(arr):
 	return name_arr
 
 
+def get_generic_name_dict(arr):
+	dict = {}
+	for o in arr:
+		for k in t.genericNameDict.keys():
+			if k in o.name:
+				dict[o.name] = [k, t.genericNameDict[k], o.name.lower()]
+
+	return dict
+
+
+def get_key_from_value(dict, value):
+	for key in dict.keys():
+		if dict[key] == value:
+			return key
+		else:
+			return None
+
+
 def copy_arr_to_temporary_scene(self, arr, ctype=None):
 	try:
 		srcscene = lx.eval('query sceneservice scene.index ? current')
 
 		if self.exportEach_sw:
+
 			if 'Replicator' in arr[0].name:  # hack to enable replicator item to be layer.import to the temporary scene
 				reference_item = arr[0].name.lower()
 			else:
 				reference_item = arr[0].name
 
 		name_arr = []
+
 		for item in arr:
-			if 'Replicator' in item.name:  # hack to enable replicator item to be layer.import to the temporary scene
-				old_name = item.name
-				replicator = self.replicator_dict[old_name]
-				item.name = item.name.lower()
-				self.replicator_dict.pop(old_name, None)
-				self.replicator_dict[item.name] = replicator
-			name_arr.append(item.name)
+			for gen in t.genericName:
+				if gen in item.name:  # hack to enable replicator item to be layer.import to the temporary scene
+					old_name = item.name
+					replicator = self.replicator_dict[old_name]
+					item.name = item.name.lower()
+					self.replicator_dict.pop(old_name, None)
+					self.replicator_dict[item.name] = replicator
+				name_arr.append(item.name)
 
 		if self.tempScnID is None:
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
@@ -105,20 +126,25 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
 		for i in xrange(len(name_arr)):  # revert original replicator Name
-			if 'replicator' in name_arr[i]:
-				old_name = name_arr[i]
-				item = modo.Item(old_name)
-				name_arr[i] = old_name.replace('replicator', 'Replicator')
-				item.name = name_arr[i]
+			for val in t.genericNameDict.values():
+				if val in name_arr[i]:
+					old_name = name_arr[i]
+					item = modo.Item(old_name)
+					original_name = get_key_from_value(t.genericNameDict, val)
+					if original_name is None:
+						continue
+					print original_name
+					name_arr[i] = old_name.replace(val, original_name)
+					item.name = name_arr[i]
 
-				lx.eval('scene.set {}'.format(self.scnIndex))
+					lx.eval('scene.set {}'.format(self.scnIndex))
 
-				replicator = self.replicator_dict[old_name]
-				self.replicator_dict[old_name].replicator_item.name = name_arr[i]
-				self.replicator_dict.pop(old_name, None)
-				self.replicator_dict[item.name] = replicator
+					replicator = self.replicator_dict[old_name]
+					self.replicator_dict[old_name].replicator_item.name = name_arr[i]
+					self.replicator_dict.pop(old_name, None)
+					self.replicator_dict[item.name] = replicator
 
-				lx.eval('scene.set {}'.format(self.tempScnID))
+					lx.eval('scene.set {}'.format(self.tempScnID))
 
 		for i in xrange(len(name_arr)):  # Select items that were imported to the temporary scene
 			if i == 0:

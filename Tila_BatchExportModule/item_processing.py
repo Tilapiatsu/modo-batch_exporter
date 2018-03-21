@@ -299,7 +299,7 @@ def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 		for o in selection:
 			originalName = o.name
 			self.scn.select(originalName)
-
+			print self.replicator_dict
 			source_dict[originalName] = self.replicator_dict[originalName].replicator_src_arr
 
 			lx.eval(t.TILA_FREEZE_REPLICATOR)

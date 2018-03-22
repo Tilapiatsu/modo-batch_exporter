@@ -299,11 +299,10 @@ def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 		for o in selection:
 			originalName = o.name
 			self.scn.select(originalName)
-			print self.replicator_dict
 			source_dict[originalName] = self.replicator_dict[originalName].replicator_src_arr
-
+			dialog.init_message()
 			lx.eval(t.TILA_FREEZE_REPLICATOR)
-
+			dialog.init_message()
 			frozenItem = modo.Item(originalName)
 			selection[i] = frozenItem
 
@@ -318,19 +317,23 @@ def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 					self.proceededMesh['REPLICATOR'][first_index + i] = frozenItem
 
 			i += 1
-		print source_dict
+
 		for o in selection:  # remove replicator source and particle
-			print o.name
 			if self.exportFile_sw:
 				if o.name in source_dict.keys():
-					self.scn.deselect()
-					for item in source_dict[o.name][0]:
-						self.scn.select(item.name, add=True)
-					print source_dict[o.name][1].name
-					self.scn.select(source_dict[o.name][1].name, add=True)
-					lx.eval('!!item.delete')
-					dialog.print_log('Delete replicator source : {}'.format(o.name))
-					self.replicator_dict.pop(o.name, None)
+					dialog.init_message()
+					try:
+						self.scn.deselect()
+						for item in source_dict[o.name][0]:
+							self.scn.select(item.name, add=True)
+						print source_dict[o.name][1].name
+						dialog.init_message()
+						self.scn.select(source_dict[o.name][1].name, add=True)
+						lx.eval('!!item.delete')
+						dialog.print_log('Delete replicator source : {}'.format(o.name))
+						self.replicator_dict.pop(o.name, None)
+					except:
+						pass
 
 
 		self.scn.select(frozenItem_arr)

@@ -77,8 +77,8 @@ def get_key_from_value(dict, value):
 	for key in dict.keys():
 		if dict[key] == value:
 			return key
-		else:
-			return None
+	else:
+		return None
 
 
 def copy_arr_to_temporary_scene(self, arr, ctype=None):
@@ -92,19 +92,14 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			else:
 				reference_item = arr[0].name
 
-		name_arr = []
+		original_selection_name_arr = []
+		modified_selection_name_arr = []
+		genericName_arr = []
 
-		for item in arr:
-			for gen in t.genericName:
-				if gen in item.name:  # hack to enable replicator item to be layer.import to the temporary scene
-					old_name = item.name
-					replicator = self.replicator_dict[old_name]
-					item.name = item.name.lower()
-					self.replicator_dict.pop(old_name, None)
-					self.replicator_dict[item.name] = replicator
-				name_arr.append(item.name)
+		for item in arr:  # Gather selection Original Names
+			original_selection_name_arr.append(item.name)
 
-		if self.tempScnID is None:
+		if self.tempScnID is None:  # Create a new Scene and Store tmpScnID
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
 			self.tempScnID = lx.eval('query sceneservice scene.index ? current')
 
@@ -114,50 +109,75 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 		self.scn.select(arr)
 
-		for item in arr:
-			if item.type == t.compatibleItemType['REPLICATOR']:
+		for item in arr:  # Select All item related to the user selection
+			if item.type == t.compatibleItemType['REPLICATOR']:  # Select Replicator Soucres and Particles
 				for o in self.replicator_dict[item.name].source:
 					lx.eval('select.item "{}" mode:add'.format(o.name))  # add the source to the selection
 
 				lx.eval('select.item "{}" mode:add'.format(self.replicator_dict[item.name].particle.name))  # add the particle to the selection
 
+		for item in self.scn.selected:  # Dealing with generic Names
+			itemType = item.type
+			original_name = item.name
+			for gen in t.genericName:
+				if gen in item.name:
+					if itemType == t.compatibleItemType['REPLICATOR']:
+						replicator = self.replicator_dict[original_name]
+
+						genericName_arr.append([item.name])
+						item.name = item.name.lower()
+						genericName_arr[-1].append(item.name)
+
+						self.replicator_dict.pop(original_name, None)
+						self.replicator_dict[item.name] = replicator
+					else:
+						genericName_arr.append([item.name])
+						item.name = item.name.lower()
+						genericName_arr[-1].append(item.name)
+			modified_selection_name_arr.append(item.name)
+
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
-		for i in xrange(len(name_arr)):  # revert original replicator Name
+		for i in xrange(len(modified_selection_name_arr)):  # revert original replicator Name
 			for val in t.genericNameDict.values():
-				if val in name_arr[i]:
-					old_name = name_arr[i]
+				if val in modified_selection_name_arr[i]:
+					old_name = modified_selection_name_arr[i]
 					item = modo.Item(old_name)
-					original_name = get_key_from_value(t.genericNameDict, val)
-					if original_name is None:
+					itemType = item.type
+					initial_name = get_key_from_value(t.genericNameDict, val)
+					if initial_name is None:
 						continue
-					print original_name
-					name_arr[i] = old_name.replace(val, original_name)
-					item.name = name_arr[i]
+					modified_selection_name_arr[i] = old_name.replace(val, initial_name)
+					item.name = modified_selection_name_arr[i]
 
 					lx.eval('scene.set {}'.format(self.scnIndex))
 
-					replicator = self.replicator_dict[old_name]
-					self.replicator_dict[old_name].replicator_item.name = name_arr[i]
-					self.replicator_dict.pop(old_name, None)
-					self.replicator_dict[item.name] = replicator
+					if itemType == t.compatibleItemType['REPLICATOR']:
+						replicator = self.replicator_dict[old_name]
+						self.replicator_dict[old_name].replicator_item.name = modified_selection_name_arr[i]
+						self.replicator_dict.pop(old_name, None)
+						self.replicator_dict[item.name] = replicator
+					else:
+						self.scn.select(item.name.lower())
+						lx.eval('item.name {} {}'.format(item.name, itemType))
+
 
 					lx.eval('scene.set {}'.format(self.tempScnID))
 
-		for i in xrange(len(name_arr)):  # Select items that were imported to the temporary scene
+		for i in xrange(len(original_selection_name_arr)):  # Select items that were imported to the temporary scene
 			if i == 0:
-				lx.eval('select.item {}'.format(name_arr[i]))
+				lx.eval('select.item {}'.format(original_selection_name_arr[i]))
 			else:
-				lx.eval('select.item {} mode:add'.format(name_arr[i]))
+				lx.eval('select.item {} mode:add'.format(original_selection_name_arr[i]))
 
 		if self.exportEach_sw:
 			self.proceededMesh.append(self.scn.item(reference_item))
 		else:
 			for o in self.scn.selected:
 				self.proceededMesh[ctype].append(o)
-		return len(self.proceededMesh) - len(name_arr)
+		return len(self.proceededMesh) - len(original_selection_name_arr)
 
 	except:
 		lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))

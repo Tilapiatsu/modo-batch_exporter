@@ -86,16 +86,17 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 		srcscene = lx.eval('query sceneservice scene.index ? current')
 
 		if self.exportEach_sw:
-
-			if 'Replicator' in arr[0].name:  # hack to enable replicator item to be layer.import to the temporary scene
-				reference_item = arr[0].name.lower()
+			reference_item = ''
+			for name in t.genericName:
+				if name in arr[0].name:  # hack to enable replicator item to be layer.import to the temporary scene
+					reference_item = arr[0].name.lower()
 			else:
 				reference_item = arr[0].name
 
 		original_selection_name_arr = []
 		modified_selection_name_arr = []
 		genericName_arr = []
-
+		# dialog.init_message(message='Gather Selection Original Names')
 		for item in arr:  # Gather selection Original Names
 			original_selection_name_arr.append(item.name)
 
@@ -112,14 +113,14 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
 
 		self.scn.select(arr)
-
-		for item in arr:  # Select All item related to the user selection
+		# dialog.init_message(message='Select all item related to the user selection')
+		for item in arr:  # Select all item related to the user selection
 			if item.type == t.compatibleItemType['REPLICATOR']:  # Select Replicator Soucres and Particles
 				for o in self.replicator_dict[item.name].source:
 					lx.eval('select.item "{}" mode:add'.format(o.name))  # add the source to the selection
 
 				lx.eval('select.item "{}" mode:add'.format(self.replicator_dict[item.name].particle.name))  # add the particle to the selection
-
+		# dialog.init_message(message='Dealing with generic Names')
 		for item in self.scn.selected:  # Dealing with generic Names
 			itemType = item.type
 			original_name = item.name
@@ -140,10 +141,13 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 						genericName_arr[-1].append(item.name)
 			modified_selection_name_arr.append(item.name)
 
+		# dialog.init_message(message='Move all selected items to temporary scene')
+		# Move all selected items to temporary scene
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
+		# dialog.init_message(message='Revert original replicator Name')
 		for i in xrange(len(modified_selection_name_arr)):  # revert original replicator Name
 			for val in t.genericNameDict.values():
 				if val in modified_selection_name_arr[i]:
@@ -170,6 +174,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 					lx.eval('scene.set {}'.format(self.tempScnID))
 
+		# dialog.init_message(message='Assign Replicator source item to their proper group if needed')
 		for o in arr:  # Assign Replicator source item to their proper group if needed
 			if o.type == t.compatibleItemType['REPLICATOR']:
 				if o.name in self.replicator_group_source.keys():
@@ -181,6 +186,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 					self.scn.select(o.name)
 					lx.eval('replicator.source {}'.format(self.replicator_group_source[o.name][0]))
 
+		# dialog.init_message(message='Select items that were imported to the temporary scene')
 		for i in xrange(len(original_selection_name_arr)):  # Select items that were imported to the temporary scene
 			if i == 0:
 				lx.eval('select.item {}'.format(original_selection_name_arr[i]))

@@ -99,7 +99,7 @@ userValues = [
     [TILA_PRESET_NAME, lx.symbol.sTYPE_STRING, True, 'default']
 ]
 
-genericName = ["Magnet Effector",
+genericName = [	"Magnet Effector",
                 "Camera",
                 "Locator",
                 "Mesh",
@@ -156,6 +156,10 @@ genericName = ["Magnet Effector",
                 "SubDFusion",
                 "Sphere",
                 "Cube",
+                "Cone",
+                "Cylinder",
+                "Toroid",
+                "Plane",
                 "RPC Mesh",
                 "RPC Texture (Texture)",
                 "Rock",

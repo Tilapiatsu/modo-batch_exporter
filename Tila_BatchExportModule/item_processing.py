@@ -321,25 +321,31 @@ def freeze_replicator(self, ctype, update_arr=True, first_index=0):
 
 		for o in selection:  # remove replicator source and particle
 			if self.exportFile_sw:
-				if o.name in source_dict.keys():
-					try:
+				for k, source in source_dict.iteritems():
+					if o.name == k:
+						# Construct source arr
+						source_arr = []
+						for i in source[0]:
+							source_arr.append(i)
+						source_arr.append(source[1])
 
-						if self.exportEach_sw:
-							item_in_user_selection = o.name in helper.get_name_arr(self.proceededMesh)
-						else:
-							item_in_user_selection = o.name in helper.get_name_arr(self.proceededMesh[helper.get_key_from_value(t.compatibleItemType, ctype)])
+						for item in source_arr:
+							try:
+								if self.exportEach_sw:
+									item_in_user_selection = item.name in helper.get_name_arr(self.proceededMesh)
+								else:
+									item_in_user_selection = item.name in helper.get_name_arr(self.proceededMesh[helper.get_key_from_value(t.compatibleItemType, ctype)])
 
-						if o.name not in self.replicatorSrcIgnoreList or not item_in_user_selection:
-							self.scn.deselect()
-							for item in source_dict[o.name][0]:
-								self.scn.select(item.name, add=True)
-							self.scn.select(source_dict[o.name][1].name, add=True)
-							lx.eval('!!item.delete')
-							dialog.print_log('Delete replicator source : {}'.format(o.name))
-							self.replicator_dict.pop(o.name, None)
-							self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (o.name,)
-					except:
-						helper.return_exception()
+								if item.name not in self.replicatorSrcIgnoreList and not item_in_user_selection:
+									self.scn.select(item)
+									lx.eval('!!item.delete')
+									dialog.print_log('Delete replicator source : {}'.format(item.name))
+									self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (item.name,)
+							except:
+								helper.return_exception()
+
+			# remove replicator to replicator_dict
+			self.replicator_dict.pop(o.name, None)
 
 
 		self.scn.select(frozenItem_arr)

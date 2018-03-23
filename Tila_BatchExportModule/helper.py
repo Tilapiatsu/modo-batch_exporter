@@ -104,6 +104,10 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			self.tempScnID = lx.eval('query sceneservice scene.index ? current')
 
 			clearitems()
+			for o in arr:
+				if o.type == t.compatibleItemType['REPLICATOR']:
+					if o.name in self.replicator_group_source.keys():
+						lx.eval('!group.create "{}" mode:empty'.format(self.replicator_group_source[o.name][0]))
 
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
 
@@ -156,15 +160,26 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 					if itemType == t.compatibleItemType['REPLICATOR']:
 						replicator = self.replicator_dict[old_name]
-						self.replicator_dict[old_name].replicator_item.name = modified_selection_name_arr[i]
+						replicator.item_name = old_name
+						replicator.replicator_item.name = modified_selection_name_arr[i]
 						self.replicator_dict.pop(old_name, None)
 						self.replicator_dict[item.name] = replicator
 					else:
 						self.scn.select(item.name.lower())
-						lx.eval('item.name {} {}'.format(item.name, itemType))
-
+						lx.eval('!item.name "{}" "{}"'.format(item.name, itemType))
 
 					lx.eval('scene.set {}'.format(self.tempScnID))
+
+		for o in arr:  # Assign Replicator source item to their proper group if needed
+			if o.type == t.compatibleItemType['REPLICATOR']:
+				if o.name in self.replicator_group_source.keys():
+					self.scn.deselect()
+					lx.eval('select.item "{}" set'.format(self.replicator_group_source[o.name][0]))
+					for i in self.replicator_group_source[o.name][1]:
+						self.scn.select(i.name, add=True)
+					lx.eval('group.edit add item')
+					self.scn.select(o.name)
+					lx.eval('replicator.source {}'.format(self.replicator_group_source[o.name][0]))
 
 		for i in xrange(len(original_selection_name_arr)):  # Select items that were imported to the temporary scene
 			if i == 0:
@@ -180,8 +195,11 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 		return len(self.proceededMesh) - len(original_selection_name_arr)
 
 	except:
-		lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
+		return_exception()
 
+
+def return_exception():
+	lx.out('Exception "{}" on line {} in file {}'.format(sys.exc_value, sys.exc_traceback.tb_lineno,os.path.basename(__file__)))
 
 def duplicate_rename(self, arr, suffix):
 	duplicate_arr = []
@@ -650,46 +668,46 @@ def clearitems():
 		lx.eval('select.itemType defaultShader mode:add')
 		lx.eval('!!item.delete')
 	except:
-		lx.out('Exception "%s" on line: %d' % (sys.exc_value, sys.exc_traceback.tb_lineno))
+		return_exception()
 
 
 class ModoReplicator():
 	def __init__(self, item):
 		self._item = item
+		self.item_name = item.name
 		self._replicator = None
 		self.scn = modo.Scene()
 
 
 	@property
 	def replicator_item(self):
+		self._item = modo.Item(self.item_name)
 		return self._item
 
 	@property
 	def replicator_src_arr(self):
-		selecion = self.scn.selected
+		self.scn = modo.Scene()
+		selection = self.scn.selected
 
-		if self._replicator is None:
-			lx.eval('select.item {}'.format(self._item.name))
-			source = lx.eval('replicator.source ?')
-			particle = lx.eval('replicator.particle ?')
+		lx.eval('select.item {}'.format(self._item.name))
+		source = lx.eval('replicator.source ?')
+		particle = lx.eval('replicator.particle ?')
 
-			if 'group' in source:
-				lx.eval('select.item {}'.format(source))
-				lx.eval('group.scan sel item')
-				source = self.scn.selected
-				replicator = [source, self.scn.item(particle)]
-				self.scn.select(selecion)
-				self._replicator = replicator
-				return replicator
-			elif self.scn.item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
-				replicator = [[self.scn.item(source)], self.scn.item(particle)]
-				self._replicator = replicator
-				self.scn.select(selecion)
-				return replicator
+		if 'group' in source:
+			lx.eval('select.item {}'.format(source))
+			lx.eval('group.scan sel item')
+			source = self.scn.selected
+			replicator = [source, self.scn.item(particle)]
+			self.scn.select(selection)
+			self._replicator = replicator
+			return replicator
+		elif self.scn.item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
+			replicator = [[self.scn.item(source)], self.scn.item(particle)]
+			self._replicator = replicator
+			self.scn.select(selection)
+			return replicator
 
-			self.scn.select(selecion)
-		else:
-			return self._replicator
+		self.scn.select(selection)
 
 	@property
 	def source(self):
@@ -710,8 +728,41 @@ class ModoReplicator():
 		return self.replicator_src_arr[1]
 
 	def select_src_arr(self):
+		self.scn = modo.Scene()
 		self.scn.deselect()
 		for o in self.replicator_src_arr[0]:
 			self.scn.select(o, add=True)
 
 		self.scn.select(self.replicator_src_arr[1], add=True)
+
+	@property
+	def source_is_group(self):
+		self.scn = modo.Scene()
+		selection = self.scn.selected
+
+		lx.eval('select.item {}'.format(self._item.name))
+		source = lx.eval('replicator.source ?')
+
+		result = 'group' in source
+
+		self.scn.select(selection)
+
+		return result
+
+	@property
+	def group_name(self):
+		if self.source_is_group:
+			self.scn = modo.Scene()
+			selection = self.scn.selected
+
+			lx.eval('select.item {}'.format(self._item.name))
+			source = lx.eval('replicator.source ?')
+
+			group = modo.Item(source)
+
+			self.scn.select(selection)
+
+			return group.name
+
+		else:
+			return None

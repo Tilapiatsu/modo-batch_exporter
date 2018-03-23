@@ -203,8 +203,8 @@ class TilaBacthExport:
 		self.sortedItemToProceed = []
 
 		self.replicatorSrcIgnoreList = ()
-
 		self.replicator_dict = {}
+		self.replicator_group_source = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
 		self.progress = None
@@ -456,6 +456,9 @@ class TilaBacthExport:
 
 		if len(self.itemToProceed['REPLICATOR']) > 0:
 			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+			for o in self.replicator_dict.keys():
+				if self.replicator_dict[o].source_is_group:
+					self.replicator_group_source[o] = [self.replicator_dict[o].group_name, self.replicator_dict[o].source]
 
 		self.transform_loop()
 		dialog.ending_log(self)
@@ -465,6 +468,9 @@ class TilaBacthExport:
 
 		if len(self.itemToProceed['REPLICATOR']) > 0:
 			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+			for o in self.replicator_dict.keys():
+				if self.replicator_dict[o].source_is_group:
+					self.replicator_group_source[o] = [self.replicator_dict[o].group_name, self.replicator_dict[o].source]
 
 		item_count = len(self.sortedItemToProceed)
 
@@ -541,7 +547,7 @@ class TilaBacthExport:
 		for ctype in t.compatibleItemType.keys():
 			if len(self.proceededMesh[ctype]) > 0:
 				dialog.print_log('Processing item of type : ' + ctype)
-				dialog.print_list_item_name(self.proceededMesh[ctype])
+				# dialog.print_list_item_name(self.proceededMesh[ctype])
 				transformed += self.transform_arr(self.proceededMesh[ctype], ctype)
 
 		if self.mergeMesh_sw:

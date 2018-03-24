@@ -227,11 +227,6 @@ def duplicate_rename(self, arr, suffix):
 	return len(self.proceededMesh) - len(duplicate_arr)
 
 
-def get_group_list(self):
-	for g in self.scn.groups:
-		print g.name
-
-
 def get_name(self, layer):
 	if self.exportEach_sw:
 		return layer.name
@@ -622,6 +617,16 @@ def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
 
 	lx.eval('select.type item')
 
+
+def construct_replicator_dict(self):
+	if len(self.itemToProceed['REPLICATOR']) > 0:
+		self.replicator_dict = get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+		for o in self.replicator_dict.keys():  # Generate self.replicator_group_source
+			if self.replicator_dict[o].source_is_group:
+				self.replicator_group_source[o] = [self.replicator_dict[o].source_group_name, self.replicator_dict[o].source]
+			else:
+				self.replicator_non_group_source[o] = self.replicator_dict[o].source
+
 # Cleaning
 
 
@@ -688,6 +693,7 @@ class ModoReplicator():
 		self._item = item
 		self.item_name = item.name
 		self._replicator = None
+		self._source_group_name = self.source_group_name
 		self.scn = modo.Scene()
 
 
@@ -713,6 +719,14 @@ class ModoReplicator():
 			self.scn.select(selection)
 			self._replicator = replicator
 			return replicator
+		elif isinstance(source, tuple):
+			source_arr = []
+			for o in source:
+				source_arr.append([self.scn.item(o)])
+			replicator = [source_arr, self.scn.item(particle)]
+			self._replicator = replicator
+			self.scn.select(selection)
+			return replicator
 		elif self.scn.item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
 			replicator = [[self.scn.item(source)], self.scn.item(particle)]
 			self._replicator = replicator
@@ -723,17 +737,11 @@ class ModoReplicator():
 
 	@property
 	def source(self):
-		arr = []
-		for o in self.replicator_src_arr[0]:
-			arr.append(o)
-		return arr
+		return self.replicator_src_arr[0]
 
 	@property
 	def source_name(self):
-		arr = []
-		for o in self.replicator_src_arr[0]:
-			arr.append(o.name)
-		return arr
+		return get_name_arr(self.replicator_src_arr[0])
 
 	@property
 	def particle(self):
@@ -791,3 +799,17 @@ class ModoReplicator():
 					return grp
 		else:
 			return None
+
+	def set_source(self, source_arr):
+		if self.replicator_item is not None:
+			selection = self.scn.selected
+
+			self.scn.select(self.replicator_item)
+
+			if self.source_is_group:
+				lx.eval('replicator.source "{}"'.format(self._source_group_name))
+			else:
+				for o in source_arr:
+					lx.eval('replicator.source "{}"'.format(o.name))
+
+			self.scn.select(selection)

@@ -12,8 +12,6 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
- - Replicator is not exported correctly when export each is off and freeze replicator is off
- - Clean Morph maps doesn't work when repliccator source is group
  - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - add a checkbox to vertMap.updateNormals at export
  - Expose some settings ( Freeze Geometry, Export/Import settings )
@@ -204,6 +202,7 @@ class TilaBacthExport:
 		self.replicatorSrcIgnoreList = ()
 		self.replicator_dict = {}
 		self.replicator_group_source = {}
+		self.replicator_non_group_source = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
 		self.progress = None
@@ -453,11 +452,7 @@ class TilaBacthExport:
 		self.proceededMesh = self.itemToProceed
 		dialog.begining_log(self)
 
-		if len(self.itemToProceed['REPLICATOR']) > 0:
-			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
-			for o in self.replicator_dict.keys():  # Generate self.replicator_group_source
-				if self.replicator_dict[o].source_is_group:
-					self.replicator_group_source[o] = [self.replicator_dict[o].source_group_name, self.replicator_dict[o].source]
+		helper.construct_replicator_dict(self)
 
 		self.transform_loop()
 		dialog.ending_log(self)
@@ -465,11 +460,7 @@ class TilaBacthExport:
 	def batch_process(self, output_dir, filename):
 		# helper.select_hierarchy(self)
 
-		if len(self.itemToProceed['REPLICATOR']) > 0:
-			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
-			for o in self.replicator_dict.keys():
-				if self.replicator_dict[o].source_is_group:
-					self.replicator_group_source[o] = [self.replicator_dict[o].source_group_name, self.replicator_dict[o].source]
+		helper.construct_replicator_dict(self)
 
 		item_count = len(self.sortedItemToProceed)
 
@@ -570,7 +561,6 @@ class TilaBacthExport:
 		item_processing.triple(self)
 
 		item_processing.assign_material_per_udim(self, True)
-
 		item_processing.apply_morph(self, self.applyMorphMap_sw, self.morphMapName)
 		item_processing.export_morph(self)
 

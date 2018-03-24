@@ -29,7 +29,9 @@ def apply_morph(self, condition, name):
 
 		morph_maps = name.split(',')
 		selection = self.scn.selected
+		ignore_source_list = ()
 		for o in selection:
+			self.scn.deselect()
 			lx.eval('select.item {}'.format(o.name))
 			if o.type == t.compatibleItemType['GROUP_LOCATOR'] or o.type == t.compatibleItemType['LOCATOR']:
 				sub_selection = self.scn.selected
@@ -41,7 +43,6 @@ def apply_morph(self, condition, name):
 				for maps in morph_maps:
 					lx.eval('vertMap.applyMorph %s 1.0' % maps)
 			elif o.type == t.compatibleItemType['REPLICATOR']:
-				ignore_source_list = ()
 				for s in self.replicator_dict[o.name].source:
 					if s not in ignore_source_list:
 						ignore_source_list = ignore_source_list + (s,)
@@ -298,11 +299,6 @@ def freeze_replicator(self, ctype, update_arr=True, force=False):
 
 			selection = self.scn.selected
 
-			group_source = []
-			for replicator in self.replicator_dict.values():  # Construct group_source
-				if replicator.source_is_group:
-					group_source.append(replicator.source_group)
-
 			i = 0
 			for o in selection:
 				originalName = o.name
@@ -310,13 +306,10 @@ def freeze_replicator(self, ctype, update_arr=True, force=False):
 				self.scn.select(originalName)
 
 				source_dict[originalName] = self.replicator_dict[originalName].replicator_src_arr
-				dialog.init_message()
+
 				lx.eval(t.TILA_FREEZE_REPLICATOR)
 
 				frozenItem = modo.Item(originalName)
-
-				for g in group_source:  # Clean frozenItems in source_group
-					g.removeItems(frozenItem)
 
 				selection[i] = frozenItem
 
@@ -331,7 +324,7 @@ def freeze_replicator(self, ctype, update_arr=True, force=False):
 						self.proceededMesh['REPLICATOR'][first_index + i] = frozenItem
 
 				i += 1
-			sys.exit()
+
 			for o in selection:  # remove replicator source and particle
 				if self.exportFile_sw:
 					for k, source in source_dict.iteritems():
@@ -358,9 +351,6 @@ def freeze_replicator(self, ctype, update_arr=True, force=False):
 								except:
 									helper.return_exception()
 
-				# remove replicator to replicator_dict
-				# self.replicator_dict.pop(o.name, None)
-
 			if self.exportEach_sw:
 				self.replicatorSrcIgnoreList = ()
 
@@ -373,12 +363,19 @@ def force_freeze_replicator(self):
 	helper.select_compatible_item_type()
 	selection = self.scn.selected
 	self.scn.deselect()
+
+	for key in self.replicator_non_group_source.keys():
+		for o in self.replicator_non_group_source[key]:
+			self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (o.name,)
+
 	for o in selection:  # Select Replicator Objects
 		if o.name in self.replicator_group_source.keys() and o.type == t.compatibleItemType['REPLICATOR']:  # object use a group source replicator
 			lx.eval('select.item {} mode:true'.format(o.name))
 
 	if len(self.scn.selected):
 		freeze_replicator(self, t.compatibleItemType['REPLICATOR'], force=True)
+
+	self.replicatorSrcIgnoreList = ()
 
 
 def position_offset(self):

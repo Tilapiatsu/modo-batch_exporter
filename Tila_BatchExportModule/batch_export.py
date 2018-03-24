@@ -22,8 +22,7 @@ from Tila_BatchExportModule import file
 '''
 
 class TilaBacthExport:
-	def __init__(self,
-				 userValues):
+	def __init__(self,userValues):
 
 		reload(dialog)
 		reload(item_processing)
@@ -95,6 +94,8 @@ class TilaBacthExport:
 		self.freezeInstance_sw = bool(userValues[index])
 		index += 1
 		self.freezeMeshOp_sw = bool(userValues[index])
+		index += 1
+		self.freezeReplicator_sw = bool(userValues[index])
 		index += 1
 
 		self.pos_sw = bool(userValues[index])
@@ -198,7 +199,14 @@ class TilaBacthExport:
 
 		self.sortedItemToProceed = []
 
+<<<<<<< HEAD
 		self.replicatorSource = {}
+=======
+		self.replicatorSrcIgnoreList = ()
+		self.replicator_dict = {}
+		self.replicator_group_source = {}
+		self.replicator_non_group_source = {}
+>>>>>>> Dirty
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
 		self.progress = None
@@ -448,8 +456,12 @@ class TilaBacthExport:
 		self.proceededMesh = self.itemToProceed
 		dialog.begining_log(self)
 
+<<<<<<< HEAD
 		if len(self.itemToProceed['REPLICATOR']) > 0:
 			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+=======
+		helper.construct_replicator_dict(self)
+>>>>>>> Dirty
 
 		self.transform_loop()
 		dialog.ending_log(self)
@@ -457,8 +469,12 @@ class TilaBacthExport:
 	def batch_process(self, output_dir, filename):
 		# helper.select_hierarchy(self)
 
+<<<<<<< HEAD
 		if len(self.itemToProceed['REPLICATOR']) > 0:
 			self.replicatorSource = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+=======
+		helper.construct_replicator_dict(self)
+>>>>>>> Dirty
 
 		item_count = len(self.sortedItemToProceed)
 
@@ -484,7 +500,7 @@ class TilaBacthExport:
 
 				layername = currItem[0].name
 
-				self.export_all_format(output_dir, currItem, layername, tcount)
+				self.export_all_format(output_dir, layername, tcount)
 
 				lx.eval('scene.set {}'.format(self.tempScnID))
 				lx.eval('!!scene.close')
@@ -494,16 +510,18 @@ class TilaBacthExport:
 		else:  # export all in one file
 			tcount = len(t.compatibleItemType)
 			for ctype, type in t.compatibleItemType.iteritems():
-				self.firstIndex[ctype] = helper.copy_arr_to_temporary_scene(self, self.itemToProceed[ctype], ctype)
+				items = self.itemToProceed[ctype]
+				if len(items) > 0:
+					self.firstIndex[ctype] = helper.copy_arr_to_temporary_scene(self, items, ctype)
 				if tcount > 1:  # for the last type, we don't want to go back to the original scene
 					lx.eval('scene.set {}'.format(self.scnIndex))
+				else:
+					lx.eval('scene.set {}'.format(self.tempScnID))
 				tcount -= 1
 
 			self.transform_loop()
 
-			sortedProceededMesh = helper.sort_items_dict_arr(self.proceededMesh)
-
-			self.export_all_format(output_dir, sortedProceededMesh, filename)
+			self.export_all_format(output_dir, filename)
 			dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
 			lx.eval('scene.set {}'.format(self.tempScnID))
@@ -519,7 +537,14 @@ class TilaBacthExport:
 		transformed = []
 
 		for ctype in t.compatibleItemType.keys():
+<<<<<<< HEAD
 			transformed += self.transform_arr(self.proceededMesh[ctype], ctype)
+=======
+			if len(self.proceededMesh[ctype]) > 0:
+				dialog.print_log('Processing item of type : ' + ctype)
+				# dialog.print_list_item_name(self.proceededMesh[ctype])
+				transformed += self.transform_arr(self.proceededMesh[ctype], ctype)
+>>>>>>> Dirty
 
 		if self.mergeMesh_sw:
 			item_processing.merge_meshes(self, transformed)
@@ -544,7 +569,7 @@ class TilaBacthExport:
 		helper.select_hierarchy(self)
 
 		item_processing.freeze_instance(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
-		item_processing.freeze_replicator(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
+		item_processing.freeze_replicator(self, ctype=t.compatibleItemType[ctype])
 		item_processing.freeze_meshop(self, ctype=t.compatibleItemType[ctype])
 
 		item_processing.smooth_angle(self)
@@ -554,7 +579,6 @@ class TilaBacthExport:
 		item_processing.triple(self)
 
 		item_processing.assign_material_per_udim(self, True)
-
 		item_processing.apply_morph(self, self.applyMorphMap_sw, self.morphMapName)
 		item_processing.export_morph(self)
 
@@ -574,75 +598,73 @@ class TilaBacthExport:
 
 		dialog.deallocate_dialog_svc(self.progress[1])
 
-	def export_all_format(self, output_dir, items, layer_name, increment=0):
-		self.scn.select(items)
+	def export_all_format(self, output_dir, layer_name, increment=0):
 
 		if self.exportFormatLxo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[0][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[0][1])
+			self.export_selection(output_path, t.exportTypes[0][1])
 
 		if self.exportFormatLwo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[1][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[1][1])
+			self.export_selection(output_path, t.exportTypes[1][1])
 
 		if self.exportFormatFbx_sw:
+			item_processing.force_freeze_replicator(self)
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[2][0], increment)
 			lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')
 			lx.eval('user.value sceneio.fbx.save.surfaceRefining subDivs')
 			lx.eval('user.value sceneio.fbx.save.format FBXLATEST')
-			self.export_selection(items, output_path, t.exportTypes[2][1])
+			self.export_selection(output_path, t.exportTypes[2][1])
 
 		if self.exportFormatObj_sw:
+			item_processing.force_freeze_replicator(self)
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[3][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[3][1])
+			self.export_selection(output_path, t.exportTypes[3][1])
 
 		if self.exportFormatAbc_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[4][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[4][1])
+			self.export_selection(output_path, t.exportTypes[4][1])
 
 		if self.exportFormatAbchdf_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[5][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[5][1])
+			self.export_selection(output_path, t.exportTypes[5][1])
 
 		if self.exportFormatDae_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[6][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[6][1])
+			self.export_selection(output_path, t.exportTypes[6][1])
 
 		if self.exportFormatDxf_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[7][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[7][1])
+			self.export_selection(output_path, t.exportTypes[7][1])
 
 		if self.exportFormat3dm_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[8][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[8][1])
+			self.export_selection(output_path, t.exportTypes[8][1])
 
 		if self.exportFormatGeo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[9][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[9][1])
+			self.export_selection(output_path, t.exportTypes[9][1])
 
 		if self.exportFormatStl_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[10][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[10][1])
+			self.export_selection(output_path, t.exportTypes[10][1])
 
 		if self.exportFormatX3d_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[11][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[11][1])
+			self.export_selection(output_path, t.exportTypes[11][1])
 
 		if self.exportFormatSvg_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[12][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[12][1])
+			self.export_selection(output_path, t.exportTypes[12][1])
 
 		if self.exportFormatPlt_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[13][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[13][1])
-
-		self.scn.select(items)
+			self.export_selection(output_path, t.exportTypes[13][1])
 
 		helper.select_arr(self.UDIMMaterials)
 		# lx.eval('!!item.delete')
 
-	def export_selection(self, item, output_path, export_format):
-		self.scn.select(item)
+	def export_selection(self, output_path, export_format):
 
 		self.save_file(output_path[0], export_format)
 

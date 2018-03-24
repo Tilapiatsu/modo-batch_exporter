@@ -207,6 +207,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 def return_exception():
 	lx.out('Exception "{}" on line {} in file {}'.format(sys.exc_value, sys.exc_traceback.tb_lineno,os.path.basename(__file__)))
 
+
 def duplicate_rename(self, arr, suffix):
 	duplicate_arr = []
 	for item in arr:
@@ -397,21 +398,6 @@ def get_replicator_source(self, replicator_arr):
 	self.scn.select(selection)
 
 	return result_dict
-
-
-def replace_replicator_source(self, item_arr):
-	selection = self.scn.selected
-
-	for i in item_arr:
-		for k, v in self.replicator_dict.iteritems():
-			if i.name == k:
-				self.scn.select(i)
-				name_arr = v.source_name
-				print name_arr
-				#source_name = concatetate_string_arr(name_arr, ';')
-				lx.eval('replicator.source %s' % 'toto')
-
-	self.scn.select(selection)
 
 
 def concatetate_string_arr(arr, separator):
@@ -722,6 +708,14 @@ class ModoReplicator():
 		elif isinstance(source, tuple):
 			source_arr = []
 			for o in source:
+				source_arr.append(modo.Item(o))
+			replicator = [source_arr, self.scn.item(particle)]
+			self._replicator = replicator
+			self.scn.select(selection)
+			return replicator
+		elif isinstance(source, list):
+			source_arr = []
+			for o in source:
 				source_arr.append([self.scn.item(o)])
 			replicator = [source_arr, self.scn.item(particle)]
 			self._replicator = replicator
@@ -810,6 +804,8 @@ class ModoReplicator():
 				lx.eval('replicator.source "{}"'.format(self._source_group_name))
 			else:
 				for o in source_arr:
+					# Need to link with multiple item
+					# lx.eval('item.link particle.proto {} {} replace:false'.format(o, self.replicator_item.name))
 					lx.eval('replicator.source "{}"'.format(o.name))
 
 			self.scn.select(selection)

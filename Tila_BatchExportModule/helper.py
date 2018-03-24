@@ -185,7 +185,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 					lx.eval('group.edit add item')
 					self.scn.select(o.name)
 					lx.eval('replicator.source {}'.format(self.replicator_group_source[o.name][0]))
-
+		self.scn.deselect()
 		# dialog.init_message(message='Select items that were imported to the temporary scene')
 		for i in xrange(len(original_selection_name_arr)):  # Select items that were imported to the temporary scene
 			if i == 0:
@@ -479,6 +479,7 @@ def init_ctype_dict_arr():
 		arr[type] = []
 
 	return arr
+
 
 
 def get_first_export_type(self):

@@ -55,6 +55,7 @@ userValues = [
     ['freezeGeo_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['freezeInstance_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['freezeMeshOp_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
+    ['freezeReplicator_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['pos_sw', lx.symbol.sTYPE_BOOLEAN, True, 0],
     ['posX', lx.symbol.sTYPE_FLOAT, True, 0],
     ['posY', lx.symbol.sTYPE_FLOAT, True, 0],

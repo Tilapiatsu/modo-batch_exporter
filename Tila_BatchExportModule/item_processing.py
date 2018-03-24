@@ -41,11 +41,12 @@ def apply_morph(self, condition, name):
 				for maps in morph_maps:
 					lx.eval('vertMap.applyMorph %s 1.0' % maps)
 			elif o.type == t.compatibleItemType['REPLICATOR']:
+				ignore_source_list = ()
 				for s in self.replicator_dict[o.name].source:
-					if s not in self.replicatorSrcIgnoreList:
-						self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (s,)
-						print self.replicatorSrcIgnoreList
-						lx.eval('select.item {}'.format(s))
+					if s not in ignore_source_list:
+						ignore_source_list = ignore_source_list + (s,)
+						self.scn.deselect()
+						lx.eval('select.item "{}"'.format(s.name))
 						for maps in morph_maps:
 							lx.eval('vertMap.applyMorph %s 1.0' % maps)
 			else:
@@ -282,73 +283,90 @@ def freeze_meshop(self, ctype):
 			self.scn.select(selection)
 
 
-def freeze_replicator(self, ctype, update_arr=True, first_index=0):
-	if ctype == t.itemType['REPLICATOR']:
-		first_index=0
+def freeze_replicator(self, ctype, update_arr=True, force=False):
+	if self.freezeReplicator_sw or force:
+		if ctype == t.itemType['REPLICATOR']:
+			first_index=0
 
-		message = "Freeze Replicator"
-		message = get_progression_message(self, message)
-		increment_progress_bar(self, self.progress)
-		dialog.transform_log(message)
+			message = "Freeze Replicator"
+			message = get_progression_message(self, message)
+			increment_progress_bar(self, self.progress)
+			dialog.transform_log(message)
 
-		frozenItem_arr = []
-		source_dict = {}
+			frozenItem_arr = []
+			source_dict = {}
 
-		selection = self.scn.selected
-		i = 0
-		for o in selection:
-			originalName = o.name
-			self.scn.select(originalName)
+			selection = self.scn.selected
+			i = 0
+			for o in selection:
+				originalName = o.name
+				self.scn.select(originalName)
 
-			source_dict[originalName] = self.replicator_dict[originalName].replicator_src_arr
+				source_dict[originalName] = self.replicator_dict[originalName].replicator_src_arr
 
-			lx.eval(t.TILA_FREEZE_REPLICATOR)
+				lx.eval(t.TILA_FREEZE_REPLICATOR)
 
-			frozenItem = modo.Item(originalName)
-			selection[i] = frozenItem
+				frozenItem = modo.Item(originalName)
+				selection[i] = frozenItem
 
-			frozenItem_arr.append(frozenItem)
+				frozenItem_arr.append(frozenItem)
 
-			if not self.exportFile_sw:
-				self.userSelection[first_index + i] = frozenItem
-			elif update_arr:
-				if self.exportEach_sw:
-					self.proceededMesh[first_index + i] = frozenItem
-				else:
-					self.proceededMesh['REPLICATOR'][first_index + i] = frozenItem
+				if not self.exportFile_sw:
+					self.userSelection[first_index + i] = frozenItem
+				elif update_arr:
+					if self.exportEach_sw:
+						self.proceededMesh[first_index + i] = frozenItem
+					else:
+						self.proceededMesh['REPLICATOR'][first_index + i] = frozenItem
 
-			i += 1
+				i += 1
 
-		for o in selection:  # remove replicator source and particle
-			if self.exportFile_sw:
-				for k, source in source_dict.iteritems():
-					if o.name == k:
-						# Construct source arr
-						source_arr = []
-						for i in source[0]:
-							source_arr.append(i)
-						source_arr.append(source[1])
+			for o in selection:  # remove replicator source and particle
+				if self.exportFile_sw:
+					for k, source in source_dict.iteritems():
+						if o.name == k:
+							# Construct source arr
+							source_arr = []
+							for i in source[0]:
+								source_arr.append(i)
+							source_arr.append(source[1])
 
-						for item in source_arr:
-							try:
-								if self.exportEach_sw:
-									item_in_user_selection = item.name in helper.get_name_arr(self.proceededMesh)
-								else:
-									item_in_user_selection = item.name in helper.get_name_arr(self.proceededMesh[helper.get_key_from_value(t.compatibleItemType, ctype)])
+							for item in source_arr:
+								item_name = item.name
+								try:
+									if self.exportEach_sw:
+										item_in_user_selection = item_name in helper.get_name_arr(self.proceededMesh)
+									else:
+										item_in_user_selection = item_name in helper.get_name_arr(self.proceededMesh[helper.get_key_from_value(t.compatibleItemType, ctype)])
 
-								if item.name not in self.replicatorSrcIgnoreList and not item_in_user_selection:
-									self.scn.select(item)
-									lx.eval('!!item.delete')
-									dialog.print_log('Delete replicator source : {}'.format(item.name))
-									self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (item.name,)
-							except:
-								helper.return_exception()
+									if item_name not in self.replicatorSrcIgnoreList and not item_in_user_selection:
+										self.scn.select(item)
+										lx.eval('!!item.delete')
+										dialog.print_log('Delete replicator source : {}'.format(item_name))
+										self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (item_name,)
+								except:
+									helper.return_exception()
 
-			# remove replicator to replicator_dict
-			self.replicator_dict.pop(o.name, None)
+				# remove replicator to replicator_dict
+				# self.replicator_dict.pop(o.name, None)
+
+			if self.exportEach_sw:
+				self.replicatorSrcIgnoreList = ()
+
+			self.scn.select(frozenItem_arr)
 
 
-		self.scn.select(frozenItem_arr)
+def force_freeze_replicator(self):
+	# Force Freeze replicator if the item use a group source replicator
+	self.scn.deselect()
+	helper.select_compatible_item_type()
+	selection = self.scn.selected
+	self.scn.deselect()
+	for o in selection:  # Select Replicator Objects
+		if o.name in self.replicator_group_source.keys() and o.type == t.compatibleItemType['REPLICATOR']:  # object use a group source replicator
+			lx.eval('select.item {} mode:true'.format(o.name))
+
+	freeze_replicator(self, t.compatibleItemType['REPLICATOR'], force=True)
 
 
 def position_offset(self):

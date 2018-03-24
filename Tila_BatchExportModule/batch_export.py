@@ -12,10 +12,6 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
- - Need to fix the name change when layer.import source and particle item from replicator objects
- - Need To finish the freeze replicator command to clean all the source and particle items
- - need to handle replicator that use multiple Item as source
- - Add a tila.freezeReplicator_sw user param
  - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - add a checkbox to vertMap.updateNormals at export
  - Expose some settings ( Freeze Geometry, Export/Import settings )
@@ -26,8 +22,7 @@ from Tila_BatchExportModule import file
 '''
 
 class TilaBacthExport:
-	def __init__(self,
-				 userValues):
+	def __init__(self,userValues):
 
 		reload(dialog)
 		reload(item_processing)
@@ -99,6 +94,8 @@ class TilaBacthExport:
 		self.freezeInstance_sw = bool(userValues[index])
 		index += 1
 		self.freezeMeshOp_sw = bool(userValues[index])
+		index += 1
+		self.freezeReplicator_sw = bool(userValues[index])
 		index += 1
 
 		self.pos_sw = bool(userValues[index])
@@ -456,7 +453,7 @@ class TilaBacthExport:
 
 		if len(self.itemToProceed['REPLICATOR']) > 0:
 			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
-			for o in self.replicator_dict.keys():
+			for o in self.replicator_dict.keys():  # Generate self.replicator_group_source
 				if self.replicator_dict[o].source_is_group:
 					self.replicator_group_source[o] = [self.replicator_dict[o].group_name, self.replicator_dict[o].source]
 
@@ -496,20 +493,10 @@ class TilaBacthExport:
 
 				layername = currItem[0].name
 
-				# Replicator item name rollback
-				if 'replicator' in layername:
-					currItem[0].name = layername.replace('replicator', 'Replicator')
-					layername = currItem[0].name
-
-				self.export_all_format(output_dir, currItem, layername, tcount)
+				self.export_all_format(output_dir, layername, tcount)
 
 				lx.eval('scene.set {}'.format(self.tempScnID))
 				lx.eval('!!scene.close')
-
-				# Replicator item name rollback
-				if 'replicator' in layername:
-					old_item = self.scn.item(layername)
-					old_item.name = layername.replace('replicator', 'Replicator')
 
 				self.tempScnID = None
 
@@ -527,9 +514,7 @@ class TilaBacthExport:
 
 			self.transform_loop()
 
-			sortedProceededMesh = helper.sort_items_dict_arr(self.proceededMesh)
-
-			self.export_all_format(output_dir, sortedProceededMesh, filename)
+			self.export_all_format(output_dir, filename)
 			dialog.increment_progress_bar(self, self.progress[0], self.progression)
 
 			lx.eval('scene.set {}'.format(self.tempScnID))
@@ -573,7 +558,7 @@ class TilaBacthExport:
 		helper.select_hierarchy(self)
 
 		item_processing.freeze_instance(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
-		item_processing.freeze_replicator(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
+		item_processing.freeze_replicator(self, ctype=t.compatibleItemType[ctype])
 		item_processing.freeze_meshop(self, ctype=t.compatibleItemType[ctype])
 
 		item_processing.smooth_angle(self)
@@ -603,76 +588,73 @@ class TilaBacthExport:
 
 		dialog.deallocate_dialog_svc(self.progress[1])
 
-	def export_all_format(self, output_dir, items, layer_name, increment=0):
-		self.scn.select(items)
-
+	def export_all_format(self, output_dir, layer_name, increment=0):
 
 		if self.exportFormatLxo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[0][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[0][1])
+			self.export_selection(output_path, t.exportTypes[0][1])
 
 		if self.exportFormatLwo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[1][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[1][1])
+			self.export_selection(output_path, t.exportTypes[1][1])
 
 		if self.exportFormatFbx_sw:
+			item_processing.force_freeze_replicator(self)
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[2][0], increment)
 			lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')
 			lx.eval('user.value sceneio.fbx.save.surfaceRefining subDivs')
 			lx.eval('user.value sceneio.fbx.save.format FBXLATEST')
-			self.export_selection(items, output_path, t.exportTypes[2][1])
+			self.export_selection(output_path, t.exportTypes[2][1])
 
 		if self.exportFormatObj_sw:
+			item_processing.force_freeze_replicator(self)
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[3][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[3][1])
+			self.export_selection(output_path, t.exportTypes[3][1])
 
 		if self.exportFormatAbc_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[4][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[4][1])
+			self.export_selection(output_path, t.exportTypes[4][1])
 
 		if self.exportFormatAbchdf_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[5][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[5][1])
+			self.export_selection(output_path, t.exportTypes[5][1])
 
 		if self.exportFormatDae_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[6][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[6][1])
+			self.export_selection(output_path, t.exportTypes[6][1])
 
 		if self.exportFormatDxf_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[7][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[7][1])
+			self.export_selection(output_path, t.exportTypes[7][1])
 
 		if self.exportFormat3dm_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[8][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[8][1])
+			self.export_selection(output_path, t.exportTypes[8][1])
 
 		if self.exportFormatGeo_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[9][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[9][1])
+			self.export_selection(output_path, t.exportTypes[9][1])
 
 		if self.exportFormatStl_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[10][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[10][1])
+			self.export_selection(output_path, t.exportTypes[10][1])
 
 		if self.exportFormatX3d_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[11][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[11][1])
+			self.export_selection(output_path, t.exportTypes[11][1])
 
 		if self.exportFormatSvg_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[12][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[12][1])
+			self.export_selection(output_path, t.exportTypes[12][1])
 
 		if self.exportFormatPlt_sw:
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[13][0], increment)
-			self.export_selection(items, output_path, t.exportTypes[13][1])
-
-		self.scn.select(items)
+			self.export_selection(output_path, t.exportTypes[13][1])
 
 		helper.select_arr(self.UDIMMaterials)
 		# lx.eval('!!item.delete')
 
-	def export_selection(self, item, output_path, export_format):
-		self.scn.select(item)
+	def export_selection(self, output_path, export_format):
 
 		self.save_file(output_path[0], export_format)
 

@@ -297,16 +297,27 @@ def freeze_replicator(self, ctype, update_arr=True, force=False):
 			source_dict = {}
 
 			selection = self.scn.selected
+
+			group_source = []
+			for replicator in self.replicator_dict.values():  # Construct group_source
+				if replicator.source_is_group:
+					group_source.append(replicator.source_group)
+
 			i = 0
 			for o in selection:
 				originalName = o.name
+				self.scn.deselect()
 				self.scn.select(originalName)
 
 				source_dict[originalName] = self.replicator_dict[originalName].replicator_src_arr
-
+				dialog.init_message()
 				lx.eval(t.TILA_FREEZE_REPLICATOR)
 
 				frozenItem = modo.Item(originalName)
+
+				for g in group_source:  # Clean frozenItems in source_group
+					g.removeItems(frozenItem)
+
 				selection[i] = frozenItem
 
 				frozenItem_arr.append(frozenItem)
@@ -320,7 +331,7 @@ def freeze_replicator(self, ctype, update_arr=True, force=False):
 						self.proceededMesh['REPLICATOR'][first_index + i] = frozenItem
 
 				i += 1
-
+			sys.exit()
 			for o in selection:  # remove replicator source and particle
 				if self.exportFile_sw:
 					for k, source in source_dict.iteritems():
@@ -366,7 +377,8 @@ def force_freeze_replicator(self):
 		if o.name in self.replicator_group_source.keys() and o.type == t.compatibleItemType['REPLICATOR']:  # object use a group source replicator
 			lx.eval('select.item {} mode:true'.format(o.name))
 
-	freeze_replicator(self, t.compatibleItemType['REPLICATOR'], force=True)
+	if len(self.scn.selected):
+		freeze_replicator(self, t.compatibleItemType['REPLICATOR'], force=True)
 
 
 def position_offset(self):

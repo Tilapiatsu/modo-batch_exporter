@@ -12,6 +12,8 @@ from Tila_BatchExportModule import file
 
 ############## TODO ###################
 '''
+ - Replicator is not exported correctly when export each is off and freeze replicator is off
+ - Clean Morph maps doesn't work when repliccator source is group
  - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - add a checkbox to vertMap.updateNormals at export
  - Expose some settings ( Freeze Geometry, Export/Import settings )
@@ -455,7 +457,7 @@ class TilaBacthExport:
 			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
 			for o in self.replicator_dict.keys():  # Generate self.replicator_group_source
 				if self.replicator_dict[o].source_is_group:
-					self.replicator_group_source[o] = [self.replicator_dict[o].group_name, self.replicator_dict[o].source]
+					self.replicator_group_source[o] = [self.replicator_dict[o].source_group_name, self.replicator_dict[o].source]
 
 		self.transform_loop()
 		dialog.ending_log(self)
@@ -467,7 +469,7 @@ class TilaBacthExport:
 			self.replicator_dict = helper.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
 			for o in self.replicator_dict.keys():
 				if self.replicator_dict[o].source_is_group:
-					self.replicator_group_source[o] = [self.replicator_dict[o].group_name, self.replicator_dict[o].source]
+					self.replicator_group_source[o] = [self.replicator_dict[o].source_group_name, self.replicator_dict[o].source]
 
 		item_count = len(self.sortedItemToProceed)
 

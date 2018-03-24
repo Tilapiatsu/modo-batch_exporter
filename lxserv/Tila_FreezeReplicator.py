@@ -2,6 +2,7 @@ import lx, modo
 import lxifc
 import lxu.command
 import Tila_BatchExportModule as t
+from Tila_BatchExportModule import dialog
 
 
 class CmdMyCustomCommand(lxu.command.BasicCommand):
@@ -21,7 +22,9 @@ class CmdMyCustomCommand(lxu.command.BasicCommand):
 
 	def basic_Execute(self, msg, flags):
 
-		for o in self.scn.selected:
+		selection = self.scn.selected
+
+		for o in selection:
 			originalName = o.name
 			lx.eval('replicator.freeze')
 			lx.eval('select.item {}'.format(originalName))

@@ -227,6 +227,11 @@ def duplicate_rename(self, arr, suffix):
 	return len(self.proceededMesh) - len(duplicate_arr)
 
 
+def get_group_list(self):
+	for g in self.scn.groups:
+		print g.name
+
+
 def get_name(self, layer):
 	if self.exportEach_sw:
 		return layer.name
@@ -744,20 +749,23 @@ class ModoReplicator():
 
 	@property
 	def source_is_group(self):
-		self.scn = modo.Scene()
-		selection = self.scn.selected
+		if self._item.type == t.compatibleItemType['REPLICATOR']:
+			self.scn = modo.Scene()
+			selection = self.scn.selected
 
-		lx.eval('select.item {}'.format(self._item.name))
-		source = lx.eval('replicator.source ?')
+			lx.eval('select.item {}'.format(self._item.name))
+			source = lx.eval('replicator.source ?')
 
-		result = 'group' in source
+			result = 'group' in source
 
-		self.scn.select(selection)
+			self.scn.select(selection)
 
-		return result
+			return result
+		else:
+			return False
 
 	@property
-	def group_name(self):
+	def source_group_name(self):
 		if self.source_is_group:
 			self.scn = modo.Scene()
 			selection = self.scn.selected
@@ -771,5 +779,15 @@ class ModoReplicator():
 
 			return group.name
 
+		else:
+			return None
+
+	@property
+	def source_group(self):
+		name = self.source_group_name
+		if name is not None:
+			for grp in self.scn.groups:
+				if grp.name == name:
+					return grp
 		else:
 			return None

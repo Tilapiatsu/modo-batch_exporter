@@ -202,6 +202,7 @@ class TilaBacthExport:
 		self.replicatorSrcIgnoreList = ()
 		self.replicator_dict = {}
 		self.replicator_group_source = {}
+		self.replicator_multiple_source = {}
 		self.replicator_non_group_source = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0

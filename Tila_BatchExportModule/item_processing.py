@@ -369,7 +369,7 @@ def force_freeze_replicator(self):
 			self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (o.name,)
 
 	for o in selection:  # Select Replicator Objects
-		if o.name in self.replicator_group_source.keys() and o.type == t.compatibleItemType['REPLICATOR']:  # object use a group source replicator
+		if (o.name in self.replicator_group_source.keys() or o.name in self.replicator_multiple_source) and o.type == t.compatibleItemType['REPLICATOR']:  # object use a group source replicator
 			lx.eval('select.item {} mode:true'.format(o.name))
 
 	if len(self.scn.selected):

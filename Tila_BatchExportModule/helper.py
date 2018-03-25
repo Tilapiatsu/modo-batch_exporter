@@ -96,7 +96,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 		original_selection_name_arr = []
 		modified_selection_name_arr = []
 		genericName_arr = []
-		# dialog.init_message(message='Gather Selection Original Names')
+
 		for item in arr:  # Gather selection Original Names
 			original_selection_name_arr.append(item.name)
 
@@ -105,22 +105,26 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			self.tempScnID = lx.eval('query sceneservice scene.index ? current')
 
 			clearitems()
+
 			for o in arr:
 				if o.type == t.compatibleItemType['REPLICATOR']:
 					if o.name in self.replicator_group_source.keys():
-						lx.eval('!group.create "{}" mode:empty'.format(self.replicator_group_source[o.name][0]))
+						if len(modo.Scene().groups) == 0:
+							lx.eval('!group.create "{}" mode:empty'.format(self.replicator_group_source[o.name][0]))
+						elif self.replicator_group_source[o.name][0] not in [grp.name for grp in modo.Scene().groups]:
+							lx.eval('!group.create "{}" mode:empty'.format(self.replicator_group_source[o.name][0]))
+
 
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
 
 		self.scn.select(arr)
-		# dialog.init_message(message='Select all item related to the user selection')
+
 		for item in arr:  # Select all item related to the user selection
 			if item.type == t.compatibleItemType['REPLICATOR']:  # Select Replicator Soucres and Particles
 				for o in self.replicator_dict[item.name].source:
 					lx.eval('select.item "{}" mode:add'.format(o.name))  # add the source to the selection
 
 				lx.eval('select.item "{}" mode:add'.format(self.replicator_dict[item.name].particle.name))  # add the particle to the selection
-		# dialog.init_message(message='Dealing with generic Names')
 		for item in self.scn.selected:  # Dealing with generic Names
 			itemType = item.type
 			original_name = item.name
@@ -141,13 +145,11 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 						genericName_arr[-1].append(item.name)
 			modified_selection_name_arr.append(item.name)
 
-		# dialog.init_message(message='Move all selected items to temporary scene')
 		# Move all selected items to temporary scene
 		self.cmd_svc.ExecuteArgString(
 			-1, lx.symbol.iCTAG_NULL,
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
-		# dialog.init_message(message='Revert original replicator Name')
 		for i in xrange(len(modified_selection_name_arr)):  # revert original replicator Name
 			for val in t.genericNameDict.values():
 				if val in modified_selection_name_arr[i]:
@@ -174,19 +176,28 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 					lx.eval('scene.set {}'.format(self.tempScnID))
 
-		# dialog.init_message(message='Assign Replicator source item to their proper group if needed')
+		replicator_group_source_ignore = {}
 		for o in arr:  # Assign Replicator source item to their proper group if needed
 			if o.type == t.compatibleItemType['REPLICATOR']:
 				if o.name in self.replicator_group_source.keys():
+					group_name = self.replicator_group_source[o.name][0]
 					self.scn.deselect()
 					lx.eval('select.item "{}" set'.format(self.replicator_group_source[o.name][0]))
 					for i in self.replicator_group_source[o.name][1]:
-						self.scn.select(i.name, add=True)
-					lx.eval('group.edit add item')
+						if group_name not in replicator_group_source_ignore.keys():
+							self.scn.select(i.name, add=True)
+							replicator_group_source_ignore[group_name] = [i]
+						else:
+							if i not in replicator_group_source_ignore[group_name]:
+								self.scn.select(i.name, add=True)
+								replicator_group_source_ignore[group_name].append(i)
+
+					if len(self.scn.selected):
+						lx.eval('group.edit add item')
 					self.scn.select(o.name)
 					lx.eval('replicator.source {}'.format(self.replicator_group_source[o.name][0]))
 		self.scn.deselect()
-		# dialog.init_message(message='Select items that were imported to the temporary scene')
+
 		for i in xrange(len(original_selection_name_arr)):  # Select items that were imported to the temporary scene
 			if i == 0:
 				lx.eval('select.item {}'.format(original_selection_name_arr[i]))
@@ -610,6 +621,8 @@ def construct_replicator_dict(self):
 		for o in self.replicator_dict.keys():  # Generate self.replicator_group_source
 			if self.replicator_dict[o].source_is_group:
 				self.replicator_group_source[o] = [self.replicator_dict[o].source_group_name, self.replicator_dict[o].source]
+			elif len(self.replicator_dict[o].source) > 1:
+				self.replicator_multiple_source[o] = self.replicator_dict[o].source
 			else:
 				self.replicator_non_group_source[o] = self.replicator_dict[o].source
 
@@ -631,9 +644,6 @@ def clean_duplicates(self, closeScene=False):
 	if closeScene:
 		lx.eval('scene.set %s' % self.tempScnID)
 		lx.eval('!scene.close')
-	# safe_select(self.proceededMesh)
-	# lx.eval('!!item.delete')
-	# set_name([self.sortedItemToProceed[self.proceededMeshIndex]], shrink=len(t.TILA_BACKUP_SUFFIX))
 	revert_scene_preferences(self)
 	sys.exit()
 
@@ -705,7 +715,7 @@ class ModoReplicator():
 			self.scn.select(selection)
 			self._replicator = replicator
 			return replicator
-		elif isinstance(source, tuple):
+		elif isinstance(source, tuple) or isinstance(source, list):
 			source_arr = []
 			for o in source:
 				source_arr.append(modo.Item(o))
@@ -713,15 +723,7 @@ class ModoReplicator():
 			self._replicator = replicator
 			self.scn.select(selection)
 			return replicator
-		elif isinstance(source, list):
-			source_arr = []
-			for o in source:
-				source_arr.append([self.scn.item(o)])
-			replicator = [source_arr, self.scn.item(particle)]
-			self._replicator = replicator
-			self.scn.select(selection)
-			return replicator
-		elif self.scn.item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
+		elif modo.Item(source).type in [t.itemType['MESH'], t.itemType['MESH_INSTANCE'], t.itemType['GROUP_LOCATOR'], t.itemType['LOCATOR']]:
 			replicator = [[self.scn.item(source)], self.scn.item(particle)]
 			self._replicator = replicator
 			self.scn.select(selection)
@@ -805,7 +807,7 @@ class ModoReplicator():
 			else:
 				for o in source_arr:
 					# Need to link with multiple item
-					# lx.eval('item.link particle.proto {} {} replace:false'.format(o, self.replicator_item.name))
-					lx.eval('replicator.source "{}"'.format(o.name))
+					lx.eval('item.link particle.proto {} {} replace:false'.format(o, self.replicator_item.name))
+					# lx.eval('replicator.source "{}"'.format(o.name))
 
 			self.scn.select(selection)

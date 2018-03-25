@@ -25,6 +25,7 @@ TILA_BACKUP_SUFFIX = '_tila_backup'
 
 REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 
+
 def set_import_setting():
     lx.eval('user.value sceneio.obj.import.static false')
     lx.eval('user.value sceneio.obj.import.separate.meshes false')

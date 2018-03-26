@@ -287,7 +287,7 @@ def freeze_meshop(self, ctype):
 def freeze_replicator(self, ctype, update_arr=True, force=False):
 	if self.freezeReplicator_sw or force:
 		if ctype == t.itemType['REPLICATOR']:
-			first_index=0
+			first_index = 0
 
 			message = "Freeze Replicator"
 			message = get_progression_message(self, message)
@@ -364,16 +364,18 @@ def force_freeze_replicator(self):
 	selection = self.scn.selected
 	self.scn.deselect()
 
+	# Feed self.replicatorSrcIgnoreList
 	for key in self.replicator_non_group_source.keys():
 		for o in self.replicator_non_group_source[key]:
 			self.replicatorSrcIgnoreList = self.replicatorSrcIgnoreList + (o.name,)
 
-	for o in selection:  # Select Replicator Objects
-		if (o.name in self.replicator_group_source.keys() or o.name in self.replicator_multiple_source) and o.type == t.compatibleItemType['REPLICATOR']:  # object use a group source replicator
-			lx.eval('select.item {} mode:true'.format(o.name))
+	for o in selection:  # Select Replicator Objects to force freeze
+		if o.type == t.compatibleItemType['REPLICATOR']:
+			if o.name in self.replicator_group_source.keys() or o.name in self.replicator_multiple_source.keys():
+				self.scn.select(o.name, add=True)
 
 	if len(self.scn.selected):
-		freeze_replicator(self, t.compatibleItemType['REPLICATOR'], force=True)
+		freeze_replicator(self, t.itemType['REPLICATOR'], force=True)
 
 	self.replicatorSrcIgnoreList = ()
 

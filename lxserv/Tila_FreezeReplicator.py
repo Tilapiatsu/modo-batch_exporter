@@ -5,7 +5,7 @@ import Tila_BatchExportModule as t
 from Tila_BatchExportModule import dialog, helper
 
 
-class CmdMyCustomCommand(lxu.command.BasicCommand):
+class CmdTilaFreezeReplicator(lxu.command.BasicCommand):
 	def __init__(self):
 		lxu.command.BasicCommand.__init__(self)
 
@@ -22,11 +22,11 @@ class CmdMyCustomCommand(lxu.command.BasicCommand):
 		pass
 
 	def basic_Execute(self, msg, flags):
-
+		reload(helper)
 		selection = self.scn.selected
 
 		self.scn.deselect()
-		lx.eval('select.itemType {} mode:add'.format(t.compatibleItemType['REPLICATOR']))
+		lx.eval('select.itemType {}'.format(t.compatibleItemType['REPLICATOR']))
 		arr = self.scn.selected
 
 		self.replicator_dict = helper.get_replicator_source(self, arr)
@@ -38,7 +38,6 @@ class CmdMyCustomCommand(lxu.command.BasicCommand):
 				group_source.append(replicator.source_group)
 
 		source_arr = {}
-
 		for key in self.replicator_dict.keys():
 			source_arr[key] = self.replicator_dict[key].source
 
@@ -61,12 +60,12 @@ class CmdMyCustomCommand(lxu.command.BasicCommand):
 			for g in group_source:  # Clean frozenItems in source_group
 				g.removeItems(frozenItem)
 
-			for key, rep in self.replicator_dict.iteritems():  # reassign source for all other replicator in the scene
+			for key, rep in self.replicator_dict.iteritems():  # reassign source for all other replicator items in the scene
 				rep.set_source(source_arr[key])
 
 	def cmd_Query(self, index, vaQuery):
 		lx.notimpl()
 
 
-lx.bless(CmdMyCustomCommand, t.TILA_FREEZE_REPLICATOR)
+lx.bless(CmdTilaFreezeReplicator, t.TILA_FREEZE_REPLICATOR)
 

@@ -176,24 +176,25 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 					lx.eval('scene.set {}'.format(self.tempScnID))
 
-		replicator_group_source_ignore = {}
+		replicator_group_source_ignored = {}
 		for o in arr:  # Assign Replicator source item to their proper group if needed
 			if o.type == t.compatibleItemType['REPLICATOR']:
 				if o.name in self.replicator_group_source.keys():
 					group_name = self.replicator_group_source[o.name][0]
 					self.scn.deselect()
 					lx.eval('select.item "{}" set'.format(self.replicator_group_source[o.name][0]))
-					for i in self.replicator_group_source[o.name][1]:
-						if group_name not in replicator_group_source_ignore.keys():
-							self.scn.select(i.name, add=True)
-							replicator_group_source_ignore[group_name] = [i]
+					for source in self.replicator_group_source[o.name][1]:
+						if group_name not in replicator_group_source_ignored.keys():
+							self.scn.select(source.name, add=True)
+							replicator_group_source_ignored[group_name] = [source]
 						else:
-							if i not in replicator_group_source_ignore[group_name]:
-								self.scn.select(i.name, add=True)
-								replicator_group_source_ignore[group_name].append(i)
+							if source not in replicator_group_source_ignored[group_name]:
+								self.scn.select(source.name, add=True)
+								replicator_group_source_ignored[group_name].append(source)
 
-					if len(self.scn.selected):
-						lx.eval('group.edit add item')
+					if len(self.scn.selected) > 1:
+						lx.eval('!group.edit add item')
+
 					self.scn.select(o.name)
 					lx.eval('replicator.source {}'.format(self.replicator_group_source[o.name][0]))
 		self.scn.deselect()
@@ -804,6 +805,12 @@ class ModoReplicator():
 
 			if self.source_is_group:
 				lx.eval('replicator.source "{}"'.format(self._source_group_name))
+				group = modo.item.Group(self._source_group_name)
+				for o in source_arr:
+					if not group.hasItem(o):
+						group.addItems(o)
+			elif len(source_arr) == 1:
+				lx.eval('replicator.source "{}"'.format(source_arr[0].name))
 			else:
 				for o in source_arr:
 					# Need to link with multiple item

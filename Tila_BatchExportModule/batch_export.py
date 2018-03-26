@@ -382,6 +382,7 @@ class TilaBacthExport:
 				if not self.processSubfolder_sw:
 					format = helper.filter_string(self.formatFilter, t.compatibleImportFormat)
 					files = helper.get_files_of_type(input_dir, format)
+					dialog.print_log('{} files found'.format(len(files)))
 				else:
 					input_subdir = helper.get_recursive_subdir([input_dir], self.subfolderDepth)
 					files = []
@@ -391,6 +392,7 @@ class TilaBacthExport:
 
 						for f in subfiles:
 							files.append(f)
+					dialog.print_log('{} files found'.format(len(files)))
 
 				file_count = len(files)
 

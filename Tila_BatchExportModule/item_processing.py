@@ -449,4 +449,16 @@ def merge_meshes(self, item):
 	increment_progress_bar(self, self.progress)
 	dialog.processing_log(message)
 	self.scn.select(item)
+
+	name_arr = helper.get_name_arr(item)
+
+	for o in self.scn.selected:
+		if o.type in [t.compatibleItemType['GROUP_LOCATOR'], t.compatibleItemType['LOCATOR']]:
+			self.scn.select(o)
+			lx.eval('item.setType.mesh')
+
+	for o in name_arr:
+		self.scn.select(o, add=True)
+
+	helper.select_hierarchy(self, force=True)
 	lx.eval('layer.mergeMeshes true')

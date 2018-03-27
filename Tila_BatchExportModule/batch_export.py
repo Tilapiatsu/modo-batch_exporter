@@ -535,9 +535,11 @@ class TilaBacthExport:
 			item_processing.merge_meshes(self, transformed)
 			self.proceededMesh = [self.scn.selected[0]]
 
+			print self.filename
+			print self.filenamePattern
+
 			layer_name = renamer.construct_filename(self, '', self.filenamePattern, self.filename, '', 0)
 			layer_name = os.path.splitext(layer_name)[0]
-
 			self.proceededMesh[0].name = layer_name
 
 	def transform_arr(self, item_arr, ctype):

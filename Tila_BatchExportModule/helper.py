@@ -134,14 +134,14 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 						replicator = self.replicator_dict[original_name]
 
 						genericName_arr.append([item.name])
-						item.name = item.name.lower()
+						item.name = item.name.replace(gen, t.genericNameDict[gen])
 						genericName_arr[-1].append(item.name)
 
 						self.replicator_dict.pop(original_name, None)
 						self.replicator_dict[item.name] = replicator
 					else:
 						genericName_arr.append([item.name])
-						item.name = item.name.lower()
+						item.name = item.name.replace(gen, t.genericNameDict[gen])
 						genericName_arr[-1].append(item.name)
 			modified_selection_name_arr.append(item.name)
 
@@ -150,7 +150,9 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 			-1, lx.symbol.iCTAG_NULL,
 			'!layer.import {}'.format(self.tempScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(self.exportHierarchy_sw))
 
-		for i in xrange(len(modified_selection_name_arr)):  # revert original replicator Name
+		self.scn = modo.Scene()
+
+		for i in xrange(len(modified_selection_name_arr)):  # revert Generic Name
 			for val in t.genericNameDict.values():
 				if val in modified_selection_name_arr[i]:
 					old_name = modified_selection_name_arr[i]
@@ -162,7 +164,8 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 					modified_selection_name_arr[i] = old_name.replace(val, initial_name)
 					item.name = modified_selection_name_arr[i]
 
-					lx.eval('scene.set {}'.format(self.scnIndex))
+					lx.eval('scene.set {}'.format(self.scnIndex))  # switch to original Scene to revert name
+					self.scn = modo.Scene()
 
 					if itemType == t.compatibleItemType['REPLICATOR']:
 						replicator = self.replicator_dict[old_name]
@@ -171,10 +174,11 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 						self.replicator_dict.pop(old_name, None)
 						self.replicator_dict[item.name] = replicator
 					else:
-						self.scn.select(item.name.lower())
+						self.scn.select(item.name.replace(get_key_from_value(t.genericNameDict, val), val))
 						lx.eval('!item.name "{}" "{}"'.format(item.name, itemType))
 
 					lx.eval('scene.set {}'.format(self.tempScnID))
+					self.scn = modo.Scene()
 
 		replicator_group_source_ignored = {}
 		for o in arr:  # Assign Replicator source item to their proper group if needed

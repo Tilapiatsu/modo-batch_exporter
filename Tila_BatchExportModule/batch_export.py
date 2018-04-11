@@ -204,6 +204,7 @@ class TilaBacthExport:
 		self.replicator_group_source = {}
 		self.replicator_multiple_source = {}
 		self.replicator_non_group_source = {}
+		self.deformer_item_dict = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
 		self.progress = None

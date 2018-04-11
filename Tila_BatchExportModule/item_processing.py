@@ -64,7 +64,7 @@ def export_morph(self, force=False):
 			dialog.processing_log(message)
 
 		for o in self.scn.selected:
-			if o.type == t.compatibleItemType['MESH']:
+			if o.type == t.compatibleItemType['MESH'] and not helper.item_have_deformers(o):
 				morph_maps = o.geometry.vmaps.morphMaps
 				for m in morph_maps:
 					dialog.print_log('Delete {} morph map'.format(m.name))

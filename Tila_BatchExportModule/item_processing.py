@@ -270,19 +270,34 @@ def freeze_meshfusion(self, ctype):
 			self.scn.select(selection)
 
 
-def freeze_meshop(self, ctype):
-	if self.freezeMeshOp_sw and ctype == t.itemType['MESH']:
-		message = "Freeze MeshOp"
-		message = get_progression_message(self, message)
-		increment_progress_bar(self, self.progress)
-		dialog.transform_log(message)
+def freeze_deformers(self, ctype, force=False):
+	if (self.freezeMeshOp_sw or force) and ctype == t.itemType['MESH'] :
+		if not force:
+			message = "Freeze Deformers"
+			message = get_progression_message(self, message)
+			increment_progress_bar(self, self.progress)
+			dialog.transform_log(message)
+
 
 		selection = self.scn.selected
 		for i in xrange(0, len(selection)):
-			self.scn.select(selection[i])
-			lx.eval('deformer.freeze false')
-			self.scn.select(selection)
+			curr_item = selection[i]
+			if helper.item_have_deformers(curr_item):
+				self.scn.select(selection[i])
+				lx.eval('deformer.freeze false')
+				self.scn.select(selection)
 
+
+def force_freeze_deformers(self):
+	selection = self.scn.selected
+	self.scn.deselect()
+
+	for o in selection:
+		if o.name in self.deformer_item_dict.keys():
+			self.scn.select(o.name, add=True)
+
+	if len(self.scn.selected):
+		freeze_deformers(self, t.itemType['MESH'], force=True)
 
 def freeze_replicator(self, ctype, update_arr=True, force=False):
 	if self.freezeReplicator_sw or force:

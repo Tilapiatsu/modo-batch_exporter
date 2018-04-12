@@ -14,6 +14,8 @@ from Tila_BatchExportModule import file
 '''
  - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - add a checkbox to vertMap.updateNormals at export
+ - freezeing meshop isn't correct if more than one item is selected
+ - check with witch export format force_freeze_meshop and force_freeze_replicator need to be enabled
  - Expose some settings ( Freeze Geometry, Export/Import settings )
  - Add Mesh Cleanup
  - check export for procedural geometry and fusion item
@@ -558,7 +560,7 @@ class TilaBacthExport:
 
 		item_processing.freeze_instance(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
 		item_processing.freeze_replicator(self, ctype=t.compatibleItemType[ctype])
-		item_processing.freeze_meshop(self, ctype=t.compatibleItemType[ctype])
+		item_processing.freeze_deformers(self, ctype=t.compatibleItemType[ctype])
 
 		item_processing.smooth_angle(self)
 		item_processing.harden_uv_border(self)
@@ -597,6 +599,7 @@ class TilaBacthExport:
 			self.export_selection(output_path, t.exportTypes[1][1])
 
 		if self.exportFormatFbx_sw:
+			item_processing.force_freeze_deformers(self)
 			item_processing.force_freeze_replicator(self)
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[2][0], increment)
 			lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')

@@ -278,12 +278,11 @@ def freeze_deformers(self, ctype, force=False):
 			increment_progress_bar(self, self.progress)
 			dialog.transform_log(message)
 
-
 		selection = self.scn.selected
 		for i in xrange(0, len(selection)):
 			curr_item = selection[i]
 			if helper.item_have_deformers(curr_item):
-				self.scn.select(selection[i])
+				self.scn.select(curr_item)
 				lx.eval('deformer.freeze false')
 				self.scn.select(selection)
 
@@ -298,6 +297,7 @@ def force_freeze_deformers(self):
 
 	if len(self.scn.selected):
 		freeze_deformers(self, t.itemType['MESH'], force=True)
+
 
 def freeze_replicator(self, ctype, update_arr=True, force=False):
 	if self.freezeReplicator_sw or force:

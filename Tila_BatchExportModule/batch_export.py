@@ -23,6 +23,15 @@ from Tila_BatchExportModule import file
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
 '''
 
+'''
+Help doc:
+- popup : http://sdk.luxology.com/wiki/Pop-up_List_Choice
+- treeview exemple : http://sdk.luxology.com/wiki/Python_Treeview_Example
+- Remote Debugging : http://sdk.luxology.com/wiki/Remote_Debugging
+	https://www.jetbrains.com/help/pycharm/remote-debugging-with-product.html#remote-interpreter
+	
+'''
+
 class TilaBacthExport:
 	def __init__(self,userValues):
 
@@ -498,6 +507,7 @@ class TilaBacthExport:
 				lx.eval('!!scene.close')
 
 				self.tempScnID = None
+				self.deformer_item_dict = {}
 
 		else:  # export all in one file
 			tcount = len(t.compatibleItemType)

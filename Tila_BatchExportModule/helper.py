@@ -122,7 +122,6 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 				self.deformer_item_dict[item.name] = [ModoDeformerItem(item)]
 				self.deformer_item_dict[item.name].append(self.deformer_item_dict[item.name][0].deformer_names)
-				# self.deformer_item_dict[item.name].group_deformers()
 
 		if self.tempScnID is None:  # Create a new Scene and Store tmpScnID
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
@@ -138,7 +137,6 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 						elif self.replicator_group_source[o.name][0] not in [grp.name for grp in modo.Scene().groups]:
 							lx.eval('!group.create "{}" mode:empty'.format(self.replicator_group_source[o.name][0]))
 
-
 			self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % srcscene)
 
 		self.scn.select(arr)
@@ -149,6 +147,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 					lx.eval('select.item "{}" mode:add'.format(o.name))  # add the source to the selection
 
 				lx.eval('select.item "{}" mode:add'.format(self.replicator_dict[item.name].particle.name))  # add the particle to the selection
+
 		for item in self.scn.selected:  # Dealing with generic Names
 			itemType = item.type
 			original_name = item.name
@@ -198,22 +197,20 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 		for i in xrange(len(modified_selection_name_arr)):
 			curr_item = modified_selection_name_arr[i]
 			if item_have_deformers(modo.Item(curr_item)): # revert Generic Deformer Name
-				for val in t.genericNameDict.values():
-					generic_deformer_name_arr = genericDeformerName_dict[curr_item]
-					for deformer_name in generic_deformer_name_arr[1]:
+				generic_deformer_name_arr = genericDeformerName_dict[curr_item]
+				for deformer_name in generic_deformer_name_arr[1]:
+					for val in t.genericNameDict.values():
 						if val in deformer_name:
 							old_name = generic_deformer_name_arr[0][generic_deformer_name_arr[1].index(deformer_name)]
 							deformer_obj = self.deformer_item_dict[curr_item][0]
-							deformer = deformer_obj.get_deformer_by_name(deformer_name)
 
-							deformer.name = old_name
+							deformer_obj.rename_deformer_by_name(deformer_name, old_name)
 
 							lx.eval('scene.set {}'.format(self.scnIndex))  # switch to original Scene to revert name
 
 							deformer_obj = self.deformer_item_dict[curr_item][0]
-							deformer = deformer_obj.get_deformer_by_name(deformer_name)
 
-							deformer.name = old_name
+							deformer_obj.rename_deformer_by_name(deformer_name, old_name)
 
 							lx.eval('scene.set {}'.format(self.tempScnID))
 
@@ -295,8 +292,8 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 
 def return_exception():
-	lx.out('Exception "{}" on line {} in file {}'.format(sys.exc_value, sys.exc_traceback.tb_lineno,os.path.basename(__file__)))
-	# sys.exit()
+	lx.out('Exception "{}" on line {} in file {} in scene {}'.format(sys.exc_value, sys.exc_traceback.tb_lineno,os.path.basename(__file__), modo.Scene().name))
+	sys.exit()
 
 
 def duplicate_rename(self, arr, suffix):
@@ -919,6 +916,11 @@ class ModoDeformerItem():
 		self._deformer_item = modo.Item(self.item_name)
 		return self._deformer_item
 
+	@deformer_item.setter
+	def deformer_item(self, item):
+		self._deformer_item = item
+		self.item_name = item.name
+
 	@property
 	def is_deformer_item(self):
 		if len(self.deformer_item.deformers):
@@ -943,6 +945,17 @@ class ModoDeformerItem():
 			else:
 				if name in d.name:
 					return d
+		else:
+			return None
+
+	def rename_deformer_by_name(self, old_name, new_name):
+		deformer = self.get_deformer_by_name(old_name)
+
+		if deformer:
+			deformer.name = new_name
+			return True
+		else:
+			return False
 
 	@property
 	def deformer_names(self):

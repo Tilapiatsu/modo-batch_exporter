@@ -68,7 +68,7 @@ def export_morph(self, force=False):
 				morph_maps = o.geometry.vmaps.morphMaps
 				for m in morph_maps:
 					dialog.print_log('Delete {} morph map'.format(m.name))
-					lx.eval('select.vertexMap {} morf replace'.format(m.name))
+					lx.eval('!select.vertexMap {} morf replace'.format(m.name))
 					lx.eval('!!vertMap.delete morf')
 
 
@@ -126,7 +126,10 @@ def triple(self):
 		message = get_progression_message(self, message)
 		increment_progress_bar(self, self.progress)
 		dialog.processing_log(message)
-		lx.eval('poly.triple')
+		try:
+			lx.eval('!!poly.triple')
+		except:
+			pass
 
 
 def reset_pos(self):

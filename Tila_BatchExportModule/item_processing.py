@@ -64,7 +64,7 @@ def export_morph(self, force=False):
 			dialog.processing_log(message)
 
 		for o in self.scn.selected:
-			if o.type == t.compatibleItemType['MESH']:
+			if o.type == t.compatibleItemType['MESH'] and not helper.item_have_deformers(o):
 				morph_maps = o.geometry.vmaps.morphMaps
 				for m in morph_maps:
 					dialog.print_log('Delete {} morph map'.format(m.name))
@@ -273,18 +273,33 @@ def freeze_meshfusion(self, ctype):
 			self.scn.select(selection)
 
 
-def freeze_meshop(self, ctype):
-	if self.freezeMeshOp_sw and ctype == t.itemType['MESH']:
-		message = "Freeze MeshOp"
-		message = get_progression_message(self, message)
-		increment_progress_bar(self, self.progress)
-		dialog.transform_log(message)
+def freeze_deformers(self, ctype, force=False):
+	if (self.freezeMeshOp_sw or force) and ctype == t.itemType['MESH'] :
+		if not force:
+			message = "Freeze Deformers"
+			message = get_progression_message(self, message)
+			increment_progress_bar(self, self.progress)
+			dialog.transform_log(message)
 
 		selection = self.scn.selected
 		for i in xrange(0, len(selection)):
-			self.scn.select(selection[i])
-			lx.eval('deformer.freeze false')
-			self.scn.select(selection)
+			curr_item = selection[i]
+			if helper.item_have_deformers(curr_item):
+				self.scn.select(curr_item)
+				lx.eval('deformer.freeze false')
+				self.scn.select(selection)
+
+
+def force_freeze_deformers(self):
+	selection = self.scn.selected
+	self.scn.deselect()
+
+	for o in selection:
+		if o.name in self.deformer_item_dict.keys():
+			self.scn.select(o.name, add=True)
+
+	if len(self.scn.selected):
+		freeze_deformers(self, t.itemType['MESH'], force=True)
 
 
 def freeze_replicator(self, ctype, update_arr=True, force=False):
@@ -452,4 +467,16 @@ def merge_meshes(self, item):
 	increment_progress_bar(self, self.progress)
 	dialog.processing_log(message)
 	self.scn.select(item)
+
+	name_arr = helper.get_name_arr(item)
+
+	for o in self.scn.selected:
+		if o.type in [t.compatibleItemType['GROUP_LOCATOR'], t.compatibleItemType['LOCATOR']]:
+			self.scn.select(o)
+			lx.eval('item.setType.mesh')
+
+	for o in name_arr:
+		self.scn.select(o, add=True)
+
+	helper.select_hierarchy(self, force=True)
 	lx.eval('layer.mergeMeshes true')

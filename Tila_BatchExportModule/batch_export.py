@@ -14,11 +14,22 @@ from Tila_BatchExportModule import file
 '''
  - Sometime the XML Tila_Config\tila_batchexport.cfg is corrupded and the file wont export
  - add a checkbox to vertMap.updateNormals at export
+ - freezeing meshop isn't correct if more than one item is selected
+ - check with witch export format force_freeze_meshop and force_freeze_replicator need to be enabled
  - Expose some settings ( Freeze Geometry, Export/Import settings )
  - Add Mesh Cleanup
  - check export for procedural geometry and fusion item
  - polycount limit to avoid crash : select the first 1 M polys and transform them then select the next 1 M Poly etc ...
  - Implement a log windows to see exactly what's happening behind ( That file is exporting to this location 9 / 26 )
+'''
+
+'''
+Help doc:
+- popup : http://sdk.luxology.com/wiki/Pop-up_List_Choice
+- treeview exemple : http://sdk.luxology.com/wiki/Python_Treeview_Example
+- Remote Debugging : http://sdk.luxology.com/wiki/Remote_Debugging
+	https://www.jetbrains.com/help/pycharm/remote-debugging-with-product.html#remote-interpreter
+	
 '''
 
 class TilaBacthExport:
@@ -204,6 +215,7 @@ class TilaBacthExport:
 		self.replicator_group_source = {}
 		self.replicator_multiple_source = {}
 		self.replicator_non_group_source = {}
+		self.deformer_item_dict = {}
 		self.UDIMMaterials = set([])
 		self.proceededMeshIndex = 0
 		self.progress = None
@@ -495,6 +507,7 @@ class TilaBacthExport:
 				lx.eval('!!scene.close')
 
 				self.tempScnID = None
+				self.deformer_item_dict = {}
 
 		else:  # export all in one file
 			tcount = len(t.compatibleItemType)
@@ -535,9 +548,11 @@ class TilaBacthExport:
 			item_processing.merge_meshes(self, transformed)
 			self.proceededMesh = [self.scn.selected[0]]
 
+			print self.filename
+			print self.filenamePattern
+
 			layer_name = renamer.construct_filename(self, '', self.filenamePattern, self.filename, '', 0)
 			layer_name = os.path.splitext(layer_name)[0]
-
 			self.proceededMesh[0].name = layer_name
 
 	def transform_arr(self, item_arr, ctype):
@@ -555,7 +570,7 @@ class TilaBacthExport:
 
 		item_processing.freeze_instance(self, ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
 		item_processing.freeze_replicator(self, ctype=t.compatibleItemType[ctype])
-		item_processing.freeze_meshop(self, ctype=t.compatibleItemType[ctype])
+		item_processing.freeze_deformers(self, ctype=t.compatibleItemType[ctype])
 
 		item_processing.smooth_angle(self)
 		item_processing.harden_uv_border(self)
@@ -594,6 +609,7 @@ class TilaBacthExport:
 			self.export_selection(output_path, t.exportTypes[1][1])
 
 		if self.exportFormatFbx_sw:
+			item_processing.force_freeze_deformers(self)
 			item_processing.force_freeze_replicator(self)
 			output_path = helper.construct_file_path(self, output_dir, layer_name, t.exportTypes[2][0], increment)
 			lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')

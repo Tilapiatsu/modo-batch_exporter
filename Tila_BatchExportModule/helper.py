@@ -196,6 +196,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
 		for i in xrange(len(modified_selection_name_arr)):
 			curr_item = modified_selection_name_arr[i]
+			# Investigate Why the name modo.Item(curr_item) is sometime not found on the new scene ?
 			if item_have_deformers(modo.Item(curr_item)): # revert Generic Deformer Name
 				generic_deformer_name_arr = genericDeformerName_dict[curr_item]
 				for deformer_name in generic_deformer_name_arr[1]:

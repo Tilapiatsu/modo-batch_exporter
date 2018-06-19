@@ -29,6 +29,9 @@ Help doc:
 - treeview exemple : http://sdk.luxology.com/wiki/Python_Treeview_Example
 - Remote Debugging : http://sdk.luxology.com/wiki/Remote_Debugging
 	https://www.jetbrains.com/help/pycharm/remote-debugging-with-product.html#remote-interpreter
+
+	https://code.visualstudio.com/docs/python/debugging#_remote-debugging 
+faut voir si tu peux installer pip install ptvsd==3.0.0 dans le python de MODO
 	
 '''
 

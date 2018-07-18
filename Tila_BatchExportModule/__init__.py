@@ -24,6 +24,8 @@ TILA_EXPORT_VISIBLE = 'exportVisible_sw'
 TILA_DUPLICATE_SUFFIX = '_tila_duplicate'
 TILA_BACKUP_SUFFIX = '_tila_backup'
 
+TILA_MESSAGEPREFIX = 'TILA_BATCHEXPORT'
+
 REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
 
 
@@ -32,6 +34,7 @@ def set_import_setting():
 	lx.eval('user.value sceneio.obj.import.separate.meshes false')
 	lx.eval('user.value sceneio.obj.import.suppress.dialog true')
 	lx.eval('user.value sceneio.obj.import.units centimeters')
+
 
 userValues = [
 	[TILA_EXPORT_VISIBLE, lx.symbol.sTYPE_BOOLEAN, True, 0],
@@ -101,6 +104,7 @@ userValues = [
 	[TILA_PRESET_NAME, lx.symbol.sTYPE_STRING, True, 'default']
 ]
 
+
 def create_one_item_of_each_type():
 	service = lx.service
 
@@ -125,6 +129,7 @@ def print_all_item_name():
 
 	for item in scn.items():
 		print item.name
+
 
 genericName = [	"Group" ,
 				"Bezier Effector" ,
@@ -842,6 +847,7 @@ def get_generic_name_dict(arr):
 
 genericNameDict = get_generic_name_dict(genericName)
 
+
 exportTypes = [
 	['lxo', '$LXOB'],
 	['lwo', '$NLWO2'],
@@ -859,7 +865,9 @@ exportTypes = [
 	['plt', 'HPGL_PLT']
 ]
 
+
 compatibleImportFormat = [exportTypes[i][0] for i in xrange(len(exportTypes))]
+
 
 itemType = {'MESH': 'mesh',
 			'MESH_INSTANCE': 'meshInst',

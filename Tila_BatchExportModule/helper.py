@@ -9,10 +9,221 @@ import Tila_BatchExportModule as t
 import renamer
 
 
+class ModoHelper():
+    mm = t.dialog.MessageManagement()
+    itemProcessing = None
+    renamer = None
+    file = None
+    userValue = None
+
+    scn = None
+    cmd_svc = None
+
+    exportedFileCount = 0
+
+    def __init__(self, userValues):
+        self.scn = modo.Scene()
+
+        self.cmd_svc = lx.service.Command()
+        self.scnName = modo.scene.current().name
+
+        self.userSelection = self.scn.selected
+        self.userSelectionCount = len(self.userSelection)
+
+        self.currPath = modo.scene.current().filename
+        if self.currPath is None:
+            self.currPath = ''
+
+        self.scnIndex = lx.eval('query sceneservice scene.index ? current')
+        self.tempScnID = None
+
+        index = 0
+        self.exportVisible_sw = bool(userValues[index])
+        if self.exportVisible_sw:
+            self.userSelection = self.select_visible_items()
+        index += 1
+        self.exportFile_sw = bool(userValues[index])
+        index += 1
+        self.scanFiles_sw = bool(userValues[index])
+        index += 1
+        self.scanFolder_sw = bool(userValues[index])
+        index += 1
+        self.exportEach_sw = bool(userValues[index])
+        index += 1
+        self.exportHierarchy_sw = bool(userValues[index])
+        index += 1
+
+        self.triple_sw = bool(userValues[index])
+        index += 1
+        self.mergeMesh_sw = bool(userValues[index])
+        index += 1
+        self.askBeforeOverride_sw = bool(userValues[index])
+        index += 1
+
+        self.assignMaterialPerUDIMTile_sw = bool(userValues[index])
+        index += 1
+        self.UDIMTextureName = userValues[index]
+        index += 1
+
+        self.resetPos_sw = bool(userValues[index])
+        index += 1
+        self.resetRot_sw = bool(userValues[index])
+        index += 1
+        self.resetSca_sw = bool(userValues[index])
+        index += 1
+        self.resetShe_sw = bool(userValues[index])
+        index += 1
+
+        self.freezePos_sw = bool(userValues[index])
+        index += 1
+        self.freezeRot_sw = bool(userValues[index])
+        index += 1
+        self.freezeSca_sw = bool(userValues[index])
+        index += 1
+        self.freezeShe_sw = bool(userValues[index])
+        index += 1
+
+        self.freezeGeo_sw = bool(userValues[index])
+        index += 1
+        self.freezeInstance_sw = bool(userValues[index])
+        index += 1
+        self.freezeMeshOp_sw = bool(userValues[index])
+        index += 1
+        self.freezeReplicator_sw = bool(userValues[index])
+        index += 1
+
+        self.pos_sw = bool(userValues[index])
+        index += 1
+        self.posX = userValues[index]
+        index += 1
+        self.posY = userValues[index]
+        index += 1
+        self.posZ = userValues[index]
+        index += 1
+
+        self.rot_sw = bool(userValues[index])
+        index += 1
+        self.rotX = userValues[index]
+        index += 1
+        self.rotY = userValues[index]
+        index += 1
+        self.rotZ = userValues[index]
+        index += 1
+
+        self.sca_sw = bool(userValues[index])
+        index += 1
+        self.scaX = userValues[index]
+        index += 1
+        self.scaY = userValues[index]
+        index += 1
+        self.scaZ = userValues[index]
+        index += 1
+
+        self.smoothAngle_sw = bool(userValues[index])
+        index += 1
+        self.smoothAngle = userValues[index]
+        index += 1
+
+        self.hardenUvBorder_sw = bool(userValues[index])
+        index += 1
+        self.uvMapName = userValues[index]
+        index += 1
+
+        self.exportCageMorph_sw = bool(userValues[index])
+        index += 1
+        self.cageMorphMapName = userValues[index]
+        index += 1
+
+        self.exportMorphMap_sw = bool(userValues[index])
+        index += 1
+        self.applyMorphMap_sw = bool(userValues[index])
+        index += 1
+        self.morphMapName = userValues[index]
+        index += 1
+
+        self.openDestFolder_sw = bool(userValues[index])
+        index += 1
+
+        self.createFormatSubfolder_sw = bool(userValues[index])
+        index += 1
+        self.processSubfolder_sw = bool(userValues[index])
+        index += 1
+        self.subfolderDepth = userValues[index]
+        index += 1
+        self.formatFilter = userValues[index]
+        index += 1
+
+        self.filenamePattern = userValues[index]
+        index += 1
+
+        self.exportFormatLxo_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatLwo_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatFbx_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatObj_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatAbc_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatAbchdf_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatDae_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatDxf_sw = bool(userValues[index])
+        index += 1
+        self.exportFormat3dm_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatGeo_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatStl_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatX3d_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatSvg_sw = bool(userValues[index])
+        index += 1
+        self.exportFormatPlt_sw = bool(userValues[index])
+
+        if self.exportEach_sw:
+            self.proceededMesh = []
+        else:
+            self.proceededMesh = self.init_ctype_dict_arr()
+
+        self.itemToProceed = self.init_ctype_dict_arr()
+
+        self.replicatorSrcIgnoreList = ()
+        self.replicator_dict = {}
+        self.replicator_group_source = {}
+        self.replicator_multiple_source = {}
+        self.replicator_non_group_source = {}
+        self.deformer_item_dict = {}
+        self.UDIMMaterials = set([])
+        self.proceededMeshIndex = 0
+        self.progress = None
+        self.progression = [0, 0]
+        self.filename = None
+        self.firstIndex = self.init_ctype_dict_arr()
+
+        self.overrideFiles = ''
+
+        self.sortedItemToProceed = []
+
+        self.defaultExportSettings = t.defaultExportSettings
+        self.defaultImportSettings = t.defaultImportSettings
+
+    @staticmethod
+    def init_ctype_dict_arr():
+        arr = {}
+        for type in list(t.compatibleItemType.viewkeys()):
+            arr[type] = []
+
+        return arr
+
 # Path Constructor
 
+
 def construct_file_path(self, output_dir, layer_name, ext, increment):
-    #sceneName = os.path.splitext(modo.Scene().name)[0]
+    # sceneName = os.path.splitext(modo.Scene().name)[0]
 
     if self.createFormatSubfolder_sw:
         output_dir = os.path.join(output_dir, ext)
@@ -138,10 +349,10 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
                     if o.name in self.replicator_group_source.keys():
                         if len(modo.Scene().groups) == 0:
                             lx.eval('!group.create "{}" mode:empty'.format(
-                                self.replicator_group_source[o.name][0]))
+                                    self.replicator_group_source[o.name][0]))
                         elif self.replicator_group_source[o.name][0] not in [grp.name for grp in modo.Scene().groups]:
                             lx.eval('!group.create "{}" mode:empty'.format(
-                                self.replicator_group_source[o.name][0]))
+                                    self.replicator_group_source[o.name][0]))
 
             self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL,
                                           'scene.set %s' % srcscene)
@@ -156,7 +367,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
                     lx.eval('select.item "{}" mode:add'.format(o.name))
 
                 lx.eval('select.item "{}" mode:add'.format(
-                    self.replicator_dict[item.name].particle.name))  # add the particle to the selection
+                        self.replicator_dict[item.name].particle.name))  # add the particle to the selection
 
         for item in self.scn.selected:  # Dealing with generic Names
             itemType = item.type
@@ -268,7 +479,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
                         self.scn.select(item.name.replace(
                             get_key_from_value(t.genericNameDict, val), val))
                         lx.eval('!item.name "{}" "{}"'.format(
-                            item.name, itemType))
+                                item.name, itemType))
 
                     lx.eval('scene.set {}'.format(self.tempScnID))
                     self.scn = modo.Scene()
@@ -280,7 +491,7 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
                     group_name = self.replicator_group_source[o.name][0]
                     self.scn.deselect()
                     lx.eval('select.item "{}" set'.format(
-                        self.replicator_group_source[o.name][0]))
+                            self.replicator_group_source[o.name][0]))
                     for source in self.replicator_group_source[o.name][1]:
                         if group_name not in replicator_group_source_ignored.keys():
                             self.scn.select(source.name, add=True)
@@ -297,17 +508,17 @@ def copy_arr_to_temporary_scene(self, arr, ctype=None):
 
                     self.scn.select(o.name)
                     lx.eval('replicator.source {}'.format(
-                        self.replicator_group_source[o.name][0]))
+                            self.replicator_group_source[o.name][0]))
         self.scn.deselect()
 
         # Select items that were imported to the temporary scene
         for i in xrange(len(original_selection_name_arr)):
             if i == 0:
                 lx.eval('select.item {}'.format(
-                    original_selection_name_arr[i]))
+                        original_selection_name_arr[i]))
             else:
                 lx.eval('select.item {} mode:add'.format(
-                    original_selection_name_arr[i]))
+                        original_selection_name_arr[i]))
 
         if self.exportEach_sw:
             self.proceededMesh.append(self.scn.item(reference_item))
@@ -463,17 +674,6 @@ def get_progression_message(self, message):
     return 'Item %s / %s || %s' % (self.progression[0], self.progression[1], message)
 
 
-def safe_select(tuple):
-    first = False
-    for i in tuple:
-        if isItemTypeCompatibile(i):
-            if not first:
-                first = True
-                modo.item.Item.select(i, True)
-            else:
-                modo.item.Item.select(i)
-
-
 def select_arr(arr, replace=False):
     first = True
     for o in arr:
@@ -482,16 +682,6 @@ def select_arr(arr, replace=False):
             modo.item.Item.select(o, True)
         else:
             modo.item.Item.select(o)
-
-
-def isItemTypeCompatibile(item):
-    for type in t.itemType.values():
-        try:
-            if str(item.type) == type:
-                return True
-        except AttributeError:
-            break
-    return False
 
 
 def construct_dict_from_arr(arr, keySubIndex):
@@ -579,14 +769,6 @@ def create_folder_if_necessary(path):
 def select_compatible_item_type():
     for type in list(t.compatibleItemType.viewvalues()):
         lx.eval('select.itemType %s mode:add' % type)
-
-
-def init_ctype_dict_arr():
-    arr = {}
-    for type in list(t.compatibleItemType.viewkeys()):
-        arr[type] = []
-
-    return arr
 
 
 def item_have_deformers(item):
@@ -718,7 +900,7 @@ def assign_material_and_move_udim(self, item, uvmap, udim, destination, color):
         offset_uv(self, uv_offset_dict[u])
 
         lx.eval('poly.setMaterial %s {%s %s %s} 0.8 0.04 true false' % (
-            str(u), color[0], color[1], color[2]))
+                str(u), color[0], color[1], color[2]))
 
         lx.eval('select.drop vertex')
         lx.eval('select.drop polygon')
@@ -930,7 +1112,7 @@ class ModoReplicator():
 
             if self.source_is_group:
                 lx.eval('replicator.source "{}"'.format(
-                    self._source_group_name))
+                        self._source_group_name))
                 group = modo.item.Group(self._source_group_name)
                 for o in source_arr:
                     if not group.hasItem(o):
@@ -941,7 +1123,7 @@ class ModoReplicator():
                 for o in source_arr:
                     # Need to link with multiple item
                     lx.eval('item.link particle.proto {} {} replace:false'.format(
-                        o, self.replicator_item.name))
+                            o, self.replicator_item.name))
                     # lx.eval('replicator.source "{}"'.format(o.name))
 
             self.scn.select(selection)
@@ -1029,14 +1211,14 @@ class ModoDeformerItem():
         i = 0
         for d in self.deformers:
             lx.eval('deformer.setGroup "{}" "{}" {}'.format(
-                d.name, self.deformer_group.name, i))
+                    d.name, self.deformer_group.name, i))
 
     def ungroup_deformers(self):  # It break The OoO ! Don't use tt as it is
         deformers_count = len(self.deformers)
 
         for d in self.deformers:
             lx.eval('deformer.setGroup "{}" seq:{}'.format(
-                d.name, str(deformers_count-1)))
+                    d.name, str(deformers_count-1)))
 
         self.scn.removeItems(self.deformer_group, False)
 
@@ -1045,4 +1227,4 @@ class ModoDeformerItem():
             if d in self.deformer_names:
                 index = self.deformer_names.index(d)
                 lx.eval('deformer.setGroup "{}" seq:0'.format(
-                    self.deformers[index].name))
+                        self.deformers[index].name))

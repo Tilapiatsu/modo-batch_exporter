@@ -742,6 +742,13 @@ class ModoHelper():
             lx.eval('select.itemType %s mode:add' % type)
 
     @staticmethod
+    def get_compatible_item_type():
+        compatible = []
+        for type in list(t.compatibleItemType.viewvalues()):
+            compatible += self.scn.items(type)
+        return compatible
+
+    @staticmethod
     def item_have_deformers(item):
         if len(item.deformers):
             return True
@@ -889,7 +896,24 @@ class ModoHelper():
                 else:
                     self.replicator_non_group_source[o] = self.replicator_dict[o].source
 
+    @staticmethod
+    def file_conflict(path):
+        return os.path.isfile(path)
+
+    def select_visible_items(self):
+        compatible = self.get_compatible_item_type()
+
+        visible = []
+
+        for item in compatible:
+            visible_channel = item.channel('visible').get()
+            if visible_channel == 'default' or visible_channel == 'on':
+                visible.append(item)
+
+        self.scn.select(visible)
+        return visible
     # Cleaning
+
     def revert_scene_preferences(self):
         # lx.eval('scene.set {}'.format(self.currScn))
         self.scn.select(self.userSelection)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import lx, modo
+import lx
+import modo
 import os
 from Tila_BatchExportModule import dialog
 

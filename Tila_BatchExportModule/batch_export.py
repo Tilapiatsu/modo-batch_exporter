@@ -277,6 +277,7 @@ class TilaBacthExport(t.helper.ModoHelper):
 
         self.mm.ending_log(self.exportFile_sw)
 
+        # Loop Processes
     def batch_process(self, output_dir, filename):
         # helper.select_hierarchy(self)
 
@@ -360,6 +361,7 @@ class TilaBacthExport(t.helper.ModoHelper):
             layer_name = os.path.splitext(layer_name)[0]
             self.proceededMesh[0].name = layer_name
 
+        # Transform Processes
     def transform_arr(self, item_arr, ctype):
         if len(item_arr) > 0:
             self.scn.select(item_arr)
@@ -403,6 +405,7 @@ class TilaBacthExport(t.helper.ModoHelper):
 
         self.mm.deallocate_dialog_svc(self.progress[1])
 
+        # Export Processes
     def export_all_format(self, output_dir, layer_name, increment=0):
 
         if self.exportFormatLxo_sw:
@@ -487,6 +490,7 @@ class TilaBacthExport(t.helper.ModoHelper):
 
         self.save_file(output_path, export_format)
 
+    # Saving Methods
     def save_file(self, output_path, export_format):
         if self.file_conflict(output_path) and self.askBeforeOverride_sw:
             if self.overrideFiles != 'yesToAll' and self.overrideFiles != 'noToAll':
@@ -509,25 +513,3 @@ class TilaBacthExport(t.helper.ModoHelper):
 
         except RuntimeError:
             self.mm.error('Failed to export {}'.format(output_path))
-
-    def select_visible_items(self):
-        mesh = self.scn.items(t.itemType['MESH'])
-        meshInstance = self.scn.items(t.itemType['MESH_INSTANCE'])
-        meshFusion = self.scn.items(t.itemType['MESH_FUSION'])
-        meshReplicator = self.scn.items(t.itemType['REPLICATOR'])
-
-        compatible = mesh + meshInstance + meshFusion + meshReplicator
-
-        visible = []
-
-        for item in compatible:
-            visible_channel = item.channel('visible').get()
-            if visible_channel == 'default' or visible_channel == 'on':
-                visible.append(item)
-
-        self.scn.select(visible)
-        return visible
-
-    @staticmethod
-    def file_conflict(path):
-        return os.path.isfile(path)

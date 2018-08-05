@@ -13,6 +13,7 @@ class ItemProcessing(t.helper.ModoHelper):
     def __init__(self):
         t.helper.ModoHelper.__init__()
 
+    # Progress bar
     def get_progression_message(self, message):
         return '%s / %s || %s' % (self.progression[0], self.progression[1], message)
 
@@ -21,6 +22,7 @@ class ItemProcessing(t.helper.ModoHelper):
             if not self.mm.increment_progress_bar(self, progress[0], self.progression, transform=True):
                 sys.exit()
 
+    # Item Processing
     def apply_morph(self, condition, name):
         if condition:
             message = 'Applying Morph Map : ' + name
@@ -610,6 +612,7 @@ class ModoReplicatorItem(ModoItem):
 
 
 class ModoDeformerItem(ModoItem):
+    # is Used by MOP Item
     def __init__(self, item):
         ModoItem.__init__(self, item)
         self.deformer_group = None

@@ -5,12 +5,16 @@ from os.path import isfile
 import sys
 import math
 import Tila_BatchExportModule as t
+from Tila_BatchExportModule import renamer
+from Tila_BatchExportModule import configFile
 
 
-class ModoHelper():
+class ModoHelper(object):
+    reload(renamer)
+    reload(configFile)
     mm = t.dialog.MessageManagement('ModoHelper')
-    renamer = t.renamer.Renamer()
-    file = t.configFile.ConfigFile()
+    renamer = renamer.Renamer()
+    file = configFile.ConfigFile()
 
     scn = None
     cmd_svc = None
@@ -18,6 +22,8 @@ class ModoHelper():
     exportedFileCount = 0
 
     def __init__(self, userValues=None):
+        reload(renamer)
+        reload(configFile)
         self.scn = modo.Scene()
 
         self.cmd_svc = lx.service.Command()
@@ -33,34 +39,36 @@ class ModoHelper():
         self.scnIndex = lx.eval('query sceneservice scene.index ? current')
         self.tempScnID = None
 
-        self.registerUserValues(userValues)
+        registered = self.registerUserValues(userValues)
 
-        if self.exportEach_sw:
-            self.proceededMesh = []
-        else:
-            self.proceededMesh = self.init_ctype_dict_arr()
+        if registered:
 
-        self.itemToProceed = self.init_ctype_dict_arr()
+            if self.exportEach_sw:
+                self.proceededMesh = []
+            else:
+                self.proceededMesh = self.init_ctype_dict_arr()
 
-        self.replicatorSrcIgnoreList = ()
-        self.replicator_dict = {}
-        self.replicator_group_source = {}
-        self.replicator_multiple_source = {}
-        self.replicator_non_group_source = {}
-        self.deformer_item_dict = {}
-        self.UDIMMaterials = set([])
-        self.proceededMeshIndex = 0
-        self.progress = None
-        self.progression = [0, 0]
-        self.filename = None
-        self.firstIndex = self.init_ctype_dict_arr()
+            self.itemToProceed = self.init_ctype_dict_arr()
 
-        self.overrideFiles = ''
+            self.replicatorSrcIgnoreList = ()
+            self.replicator_dict = {}
+            self.replicator_group_source = {}
+            self.replicator_multiple_source = {}
+            self.replicator_non_group_source = {}
+            self.deformer_item_dict = {}
+            self.UDIMMaterials = set([])
+            self.proceededMeshIndex = 0
+            self.progress = None
+            self.progression = [0, 0]
+            self.filename = None
+            self.firstIndex = self.init_ctype_dict_arr()
 
-        self.sortedItemToProceed = []
+            self.overrideFiles = ''
 
-        self.defaultExportSettings = t.defaultExportSettings
-        self.defaultImportSettings = t.defaultImportSettings
+            self.sortedItemToProceed = []
+
+            self.defaultExportSettings = t.defaultExportSettings
+            self.defaultImportSettings = t.defaultImportSettings
 
     def registerUserValues(self, userValues=None):
         if userValues is not None:
@@ -211,6 +219,10 @@ class ModoHelper():
             index += 1
             self.exportFormatPlt_sw = bool(userValues[index])
 
+            return True
+        else:
+            return False
+
     @staticmethod
     def init_ctype_dict_arr():
         arr = {}
@@ -228,7 +240,7 @@ class ModoHelper():
             output_dir = os.path.join(output_dir, ext)
             self.create_folder_if_necessary(output_dir)
 
-        layer_name = self.renamer.construct_filename(self, layer_name, self.filenamePattern, self.filename, ext, increment)
+        layer_name = self.renamer.construct_filename(layer_name, self.filenamePattern, self.filename, ext, increment)
 
         layer_name = os.path.splitext(layer_name)[0]
 

@@ -10,8 +10,6 @@ import modo
 from collections import OrderedDict
 
 import Tila_BatchExportModule as t
-from Tila_BatchExportModule import helper
-from Tila_BatchExportModule import dialog
 
 
 def tilaBExpUserValues():
@@ -26,6 +24,7 @@ def tilaBExpUserValues():
             tilaBExpUserValues.append(u)
 
     return tilaBExpUserValues
+
 
 def readUserValue(uvname='exportType'):
     '''Utility method to return a uservalue's value'''
@@ -47,7 +46,6 @@ def readUserValue(uvname='exportType'):
 def prefixTilaBExpUserValueName(baseName):
     '''Small method that prepends the common prefix 'sceneio.fbx.save.' to a string'''
     return t.kit_prefix+baseName
-
 
 
 def findAndFormatMsg(tableName, keyName=None, index=None, *args):
@@ -73,11 +71,11 @@ def findAndFormatMsg(tableName, keyName=None, index=None, *args):
     return msg
 
 
-def getMsgText (tableName, keyName=None, index=None, *args):
+def getMsgText(tableName, keyName=None, index=None, *args):
     '''Get message text from a table and optionally substitutes words'''
     service = lx.service.Message()
-    msg = findAndFormatMsg (tableName, keyName, index, *args)
-    return service.MessageText (msg)
+    msg = findAndFormatMsg(tableName, keyName, index, *args)
+    return service.MessageText(msg)
 
 
 class Listeners(lxifc.SelectionListener, lxifc.UserValueListener, lxifc.SessionListener):
@@ -422,6 +420,7 @@ class ExportPresets(PersistenceWrapper):
 
         return False
 
+
 exportPresets = ExportPresets(name="ExportPresets", hashtype="ExportPresetValues", fields=ExportPresets.exportUserValueFields())
 
 
@@ -457,7 +456,7 @@ class CmdExportPresets(lxu.command.BasicCommand):
         presetName = self.dyna_String(0, None)
 
         if presetName == 'new':
-            newname = dialog.textInputDialog('Preset Name')
+            newname = t.mm.textInputDialog('Preset Name')
             if newname:
                 exportPresets.addPreset(newname)
 
@@ -514,11 +513,10 @@ class CmdExportPresets(lxu.command.BasicCommand):
             # Removing the 'none' entry to insert it at the beginning again below,
             # just to make it always appear first in the popup list.
 
-            notInList = lambda a: a not in ('default', 'Default', 'default*', 'Default*')
+            def notInList(a): return a not in ('default', 'Default', 'default*', 'Default*')
 
             keys = filter(notInList, keys)
             values = filter(notInList, values)
-
 
             # Generate list of two tuples where the first one contains lower case keys and the
             # second one contains the "nicer" user names.
@@ -554,10 +552,10 @@ class PopUp(lxifc.UIValueHints):
     def uiv_PopCount(self):
         return len(self._items[0])
 
-    def uiv_PopUserName(self,index):
+    def uiv_PopUserName(self, index):
         return self._items[1][index]
 
-    def uiv_PopInternalName(self,index):
+    def uiv_PopInternalName(self, index):
         return self._items[0][index]
 
 

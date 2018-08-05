@@ -1,71 +1,71 @@
-import lx, modo
+import lx
+import modo
 import lxifc
 import lxu.command
 import Tila_BatchExportModule as t
-from Tila_BatchExportModule import dialog, helper
 
 
 class CmdTilaFreezeReplicator(lxu.command.BasicCommand):
-	def __init__(self):
-		lxu.command.BasicCommand.__init__(self)
+    def __init__(self):
+        lxu.command.BasicCommand.__init__(self)
 
-		self.scn = modo.Scene()
-		self.replicator_dict = {}
+        self.helper = t.helper.ModoHelper()
 
-	def cmd_Flags(self):
-		return lx.symbol.fCMD_MODEL | lx.symbol.fCMD_UNDO
+        self.scn = modo.Scene()
+        self.replicator_dict = {}
 
-	def basic_Enable(self, msg):
-		return True
+    def cmd_Flags(self):
+        return lx.symbol.fCMD_MODEL | lx.symbol.fCMD_UNDO
 
-	def cmd_Interact(self):
-		pass
+    def basic_Enable(self, msg):
+        return True
 
-	def basic_Execute(self, msg, flags):
-		reload(helper)
-		selection = self.scn.selected
+    def cmd_Interact(self):
+        pass
 
-		self.scn.deselect()
-		lx.eval('select.itemType {}'.format(t.compatibleItemType['REPLICATOR']))
-		arr = self.scn.selected
+    def basic_Execute(self, msg, flags):
+        selection = self.scn.selected
 
-		self.replicator_dict = helper.get_replicator_source(self, arr)
-		self.scn.select(selection)
+        self.scn.deselect()
+        lx.eval('select.itemType {}'.format(t.compatibleItemType['REPLICATOR']))
+        arr = self.scn.selected
 
-		group_source = []
-		for replicator in self.replicator_dict.values():  # Construct group_source
-			if replicator.source_is_group:
-				group_source.append(replicator.source_group)
+        self.replicator_dict = self.helper.get_replicator_source(self, arr)
+        self.scn.select(selection)
 
-		source_arr = {}
-		for key in self.replicator_dict.keys():
-			source_arr[key] = self.replicator_dict[key].source
+        group_source = []
+        for replicator in self.replicator_dict.values():  # Construct group_source
+            if replicator.source_is_group:
+                group_source.append(replicator.source_group)
 
-		for o in selection:
-			originalName = o.name
-			self.scn.deselect()
+        source_arr = {}
+        for key in self.replicator_dict.keys():
+            source_arr[key] = self.replicator_dict[key].source
 
-			lx.eval('select.item {}'.format(originalName))
-			lx.eval('replicator.freeze')
-			lx.eval('select.item {}'.format(originalName))
-			lx.eval('select.itemHierarchy')
-			lx.eval('item.setType.mesh')
-			lx.eval('layer.mergeMeshes true')
-			self.scn.selected[0].name = originalName
+        for o in selection:
+            originalName = o.name
+            self.scn.deselect()
 
-			self.replicator_dict.pop(originalName, None)
+            lx.eval('select.item {}'.format(originalName))
+            lx.eval('replicator.freeze')
+            lx.eval('select.item {}'.format(originalName))
+            lx.eval('select.itemHierarchy')
+            lx.eval('item.setType.mesh')
+            lx.eval('layer.mergeMeshes true')
+            self.scn.selected[0].name = originalName
 
-			frozenItem = modo.Item(originalName)
+            self.replicator_dict.pop(originalName, None)
 
-			for g in group_source:  # Clean frozenItems in source_group
-				g.removeItems(frozenItem)
+            frozenItem = modo.Item(originalName)
 
-			for key, rep in self.replicator_dict.iteritems():  # reassign source for all other replicator items in the scene
-				rep.set_source(source_arr[key])
+            for g in group_source:  # Clean frozenItems in source_group
+                g.removeItems(frozenItem)
 
-	def cmd_Query(self, index, vaQuery):
-		lx.notimpl()
+            for key, rep in self.replicator_dict.iteritems():  # reassign source for all other replicator items in the scene
+                rep.set_source(source_arr[key])
+
+    def cmd_Query(self, index, vaQuery):
+        lx.notimpl()
 
 
 lx.bless(CmdTilaFreezeReplicator, t.TILA_FREEZE_REPLICATOR)
-

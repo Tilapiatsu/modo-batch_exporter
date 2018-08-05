@@ -3,7 +3,6 @@
 import lx
 import modo
 import os
-from Tila_BatchExportModule import dialog
 
 
 def enum(*args):
@@ -28,6 +27,10 @@ TILA_BACKUP_SUFFIX = '_tila_backup'
 TILA_MESSAGEPREFIX = 'TILA_BATCHEXPORT'
 
 REFRESH_ASTERISK_NOTIFIER = "tila.export.refreshAsteriskNotifier"
+
+from Tila_BatchExportModule import dialog
+
+mm = dialog.MessageManagement('Init')
 
 
 def set_import_setting():
@@ -927,7 +930,7 @@ kit_prefix = 'tilaBExp.'
 preset_hash = '70945661220'
 
 curr_path = os.path.dirname(os.path.realpath(__file__))
-root_path = dialog.parentPath(curr_path)
+root_path = mm.parentPath(curr_path)
 config_path = os.path.join(root_path, "Tila_Config")
 preset_path = os.path.join(root_path, "Tila_Preset")
 

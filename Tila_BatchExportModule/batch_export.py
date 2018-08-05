@@ -2,6 +2,8 @@ import lx
 import os
 import sys
 import Tila_BatchExportModule as t
+from Tila_BatchExportModule import helper
+from Tila_BatchExportModule import item_processing
 
 ############## TODO ###################
 '''
@@ -23,17 +25,19 @@ Help doc:
 - Remote Debugging : http://sdk.luxology.com/wiki/Remote_Debugging
 	https://www.jetbrains.com/help/pycharm/remote-debugging-with-product.html#remote-interpreter
 
-	https://code.visualstudio.com/docs/python/debugging#_remote-debugging 
+	https://code.visualstudio.com/docs/python/debugging#_remote-debugging
 faut voir si tu peux installer pip install ptvsd==3.0.0 dans le python de MODO
-	
+
 '''
 
 
-class TilaBacthExport(t.helper.ModoHelper):
+class TilaBacthExport(helper.ModoHelper):
 
     def __init__(self, userValues):
-        t.helper.ModoHelper.__init__(self, userValues)
-        self.itemProcessing = t.item_processing.ItemProcessing()
+        reload(helper)
+        reload(item_processing)
+        super(TilaBacthExport, self).__init__(userValues)
+        self.itemProcessing = item_processing.ItemProcessing(userValues)
 
     def export_at_least_one_format(self):
         if not (self.exportFormatFbx_sw
@@ -281,7 +285,7 @@ class TilaBacthExport(t.helper.ModoHelper):
     def batch_process(self, output_dir, filename):
         # helper.select_hierarchy(self)
 
-        self.construct_replicator_dict(self)
+        self.construct_replicator_dict()
 
         item_count = len(self.sortedItemToProceed)
 
@@ -303,7 +307,7 @@ class TilaBacthExport(t.helper.ModoHelper):
                         break
 
                 self.proceededMeshIndex = tcount
-                self.mm.increment_progress_bar(self.progress[0], self.progression)
+                self.mm.increment_progress_bar(self.proceededMesh, self.progress[0], self.progression)
 
                 layername = currItem[0].name
 
@@ -338,7 +342,7 @@ class TilaBacthExport(t.helper.ModoHelper):
 
         # helper.set_name(self.sortedOriginalItems, shrink=len(t.TILA_BACKUP_SUFFIX))
 
-        self.revert_scene_preferences(self)
+        self.revert_scene_preferences()
 
     def transform_loop(self):
 

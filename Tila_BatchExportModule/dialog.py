@@ -202,7 +202,6 @@ class MessageManagement():
         for o in arr:
             self.info(o.name)
 
-    @staticmethod
     def debug(func):
         def func_wrapper(self, message, dialog=False):
             if self.debugMode and not dialog:

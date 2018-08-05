@@ -13,8 +13,11 @@ class Renamer():
                 '#'
                 ]
 
-    def __init__(self):
-        self.scnName = modo.scene.current().name
+    def __init__(self, scnName=None):
+        try:
+            self.scnName = modo.scene.current().name
+        except:
+            self.scnName = 'Untitled'
 
     @staticmethod
     def generate_increment(increment, padding):

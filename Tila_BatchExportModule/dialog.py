@@ -25,7 +25,7 @@ class MessageManagement():
                         'SVG': [('SVG',), 'Scalable Vector Graphics file', ('*.SVG',), 'svg'],
                         'PLT': [('PTL',), 'HPGL Plotter file', ('*.PTL',), 'ptl']}
 
-    def __init__(self, context):
+    def __init__(self, context=''):
         self.prefix += ' : {} : '.format(str(context))
 
     if sys.platform == 'darwin':

@@ -7,11 +7,10 @@ import math
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import renamer
 from Tila_BatchExportModule import configFile
+from Tila_BatchExportModule import modoItem
 
 
 class ModoHelper(object):
-    reload(renamer)
-    reload(configFile)
     mm = t.dialog.MessageManagement('ModoHelper')
     renamer = renamer.Renamer()
     file = configFile.ConfigFile()
@@ -24,6 +23,7 @@ class ModoHelper(object):
     def __init__(self, userValues=None):
         reload(renamer)
         reload(configFile)
+        reload(modoItem)
         self.scn = modo.Scene()
 
         self.cmd_svc = lx.service.Command()
@@ -251,9 +251,12 @@ class ModoHelper(object):
 
     def items_to_proceed_constructor(self):
         for item in self.userSelection:
-            for type in t.compatibleItemType.keys():
-                if item.type == t.compatibleItemType[type]:
-                    self.itemToProceed[type].append(item)
+            if item.type in t.compatibleItemType.values():
+                key = self.get_key_from_value(t.compatibleItemType, item.type)
+                mItem = modoItem.modoItemTypes[key](item)
+                if mItem.have_deformers():
+                    mItem = modoItem.modoItemTypes['DEFORMER'](item)
+                self.itemToProceed[key].append(mItem)
 
         self.sortedItemToProceed = self.sort_items_dict_arr(self.itemToProceed)
 
@@ -336,10 +339,9 @@ class ModoHelper(object):
                 original_selection_name_arr.append(item.name)
 
                 # construct deformer_item_dict
-                if self.item_have_deformers(item):
+                if item.type == 'MOP':
                     self.mm.info('item "{}" have deformers'.format(item.name))
-
-                    self.deformer_item_dict[item.name] = [t.item_processing.ModoDeformerItem(item)]
+                    self.deformer_item_dict[item.name] = [modoItem.ModoDeformerItem(item)]
                     self.deformer_item_dict[item.name].append(
                         self.deformer_item_dict[item.name][0].deformer_names)
 
@@ -385,7 +387,7 @@ class ModoHelper(object):
 
                             self.replicator_dict.pop(original_name, None)
                             self.replicator_dict[item.name] = replicator
-                        elif self.item_have_deformers(modo.Item(item.name)):
+                        elif item.type == 'MOP':
                             deformer = self.deformer_item_dict[original_name][0]
 
                             replace_generic_name_dict(item, genericName_arr, gen)
@@ -399,7 +401,7 @@ class ModoHelper(object):
                             replace_generic_name_dict(item, genericName_arr, gen)
 
                 # Rename Deformers Generic Name
-                if self.item_have_deformers(item):
+                if item.type == 'MOP':
                     genericDeformerName = []
                     for gen in t.genericName:
                         for d in self.deformer_item_dict[item.name][0].deformers:
@@ -421,7 +423,7 @@ class ModoHelper(object):
                 curr_item = modified_selection_name_arr[i]
                 # Investigate Why the name modo.Item(curr_item) is sometime not found on the new scene ?
                 # revert Generic Deformer Name
-                if self.item_have_deformers(modo.Item(curr_item)):
+                if item.type == 'MOP':
                     generic_deformer_name_arr = genericDeformerName_dict[curr_item]
                     for deformer_name in generic_deformer_name_arr[1]:
                         for val in t.genericNameDict.values():
@@ -469,7 +471,7 @@ class ModoHelper(object):
                             replicator.replicator_item.name = modified_selection_name_arr[i]
                             self.replicator_dict.pop(old_name, None)
                             self.replicator_dict[item.name] = replicator
-                        elif self.item_have_deformers(modo.Item(old_name)):
+                        elif item.type == 'MOP':
                             deformer_obj = self.deformer_item_dict[old_name]
                             deformer_obj[0].item_name = modified_selection_name_arr[i]
                             deformer_obj[0]._item.name = modified_selection_name_arr[i]
@@ -687,7 +689,7 @@ class ModoHelper(object):
         selection = self.scn.selected
 
         for i in replicator_arr:
-            replicator = t.item_processing.ModoReplicatorItem(i)
+            replicator = modoItem.ModoReplicatorItem(i)
             result_dict[i.name] = replicator
 
         self.scn.select(selection)
@@ -753,19 +755,11 @@ class ModoHelper(object):
         for type in list(t.compatibleItemType.viewvalues()):
             lx.eval('select.itemType %s mode:add' % type)
 
-    @staticmethod
-    def get_compatible_item_type():
+    def get_compatible_item_type(self):
         compatible = []
         for type in list(t.compatibleItemType.viewvalues()):
             compatible += self.scn.items(type)
         return compatible
-
-    @staticmethod
-    def item_have_deformers(item):
-        if len(item.deformers):
-            return True
-        else:
-            return False
 
     def get_first_export_type(self):
         if self.exportFormatLxo_sw:
@@ -898,7 +892,7 @@ class ModoHelper(object):
 
     def construct_replicator_dict(self):
         if len(self.itemToProceed['REPLICATOR']) > 0:
-            self.replicator_dict = self.get_replicator_source(self, self.itemToProceed['REPLICATOR'])
+            self.replicator_dict = self.get_replicator_source(self.itemToProceed['REPLICATOR'])
             for o in self.replicator_dict.keys():  # Generate self.replicator_group_source
                 if self.replicator_dict[o].source_is_group:
                     self.replicator_group_source[o] = [
@@ -965,8 +959,7 @@ class ModoHelper(object):
         lx.eval('user.value sceneio.obj.import.suppress.dialog %{s}'.format(self.defaultImportSettings['OBJ_SUPRESS_DIALOG']))
         lx.eval('user.value sceneio.obj.import.units %{s}'.format(self.defaultImportSettings['OBJ_UNIT']))
 
-    @staticmethod
-    def clearitems():
+    def clearitems(self):
         try:
             lx.eval('select.itemType mesh')
             lx.eval('select.itemType camera mode:add')

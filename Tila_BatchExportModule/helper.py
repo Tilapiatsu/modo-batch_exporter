@@ -251,12 +251,8 @@ class ModoHelper(object):
 
     def items_to_proceed_constructor(self):
         for item in self.userSelection:
-            if item.type in t.compatibleItemType.values():
-                key = self.get_key_from_value(t.compatibleItemType, item.type)
-                mItem = modoItem.modoItemTypes[key](item)
-                if mItem.have_deformers():
-                    mItem = modoItem.modoItemTypes['DEFORMER'](item)
-                self.itemToProceed[key].append(mItem)
+            mItem = modoItem.convert_to_modoItem(item)
+            self.itemToProceed[mItem.typeKey].append(mItem)
 
         self.sortedItemToProceed = self.sort_items_dict_arr(self.itemToProceed)
 
@@ -293,14 +289,6 @@ class ModoHelper(object):
                     dict[o.name] = [k, t.genericNameDict[k], o.name.lower()]
 
         return dict
-
-    @staticmethod
-    def get_key_from_value(dict, value):
-        for key in dict.keys():
-            if dict[key] == value:
-                return key
-        else:
-            return None
 
     def copy_arr_to_temporary_scene(self, arr, ctype=None):
         def replace_generic_name_dict(item, genericName_arr, gen):
@@ -454,7 +442,7 @@ class ModoHelper(object):
                         old_name = modified_selection_name_arr[i]
                         item = modo.Item(old_name)
                         itemType = item.type
-                        initial_name = self.get_key_from_value(t.genericNameDict, val)
+                        initial_name = get_key_from_value(t.genericNameDict, val)
                         if initial_name is None:
                             continue
                         modified_selection_name_arr[i] = old_name.replace(
@@ -479,7 +467,7 @@ class ModoHelper(object):
                             self.deformer_item_dict[item.name] = deformer_obj
                         else:
                             self.scn.select(item.name.replace(
-                                self.get_key_from_value(t.genericNameDict, val), val))
+                                get_key_from_value(t.genericNameDict, val), val))
                             lx.eval('!item.name "{}" "{}"'.format(
                                     item.name, itemType))
 
@@ -969,3 +957,11 @@ class ModoHelper(object):
             lx.eval('!!item.delete')
         except:
             self.return_exception()
+
+
+def get_key_from_value(dict, value):
+    for key in dict.keys():
+        if dict[key] == value:
+            return key
+    else:
+        return None

@@ -2,14 +2,15 @@ import lx
 import modo
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import dialog
+from Tila_BatchExportModule import helper
 
 
-class ModoItem(object):
+class ModoItem(modo.item.Item):
     mm = dialog.MessageManagement('ModoItem')
 
     def __init__(self, item):
+        modo.item.Item.__init__(self, item)
         self.scn = modo.Scene()
-        self._item = item
         self.name = item.name
 
     @staticmethod
@@ -23,6 +24,10 @@ class ModoItem(object):
     @property
     def type(self):
         return self._item.type
+
+    @property
+    def typeKey(self):
+        return helper.get_key_from_value(t.compatibleItemType, self.type)
 
     def have_deformers(self):
         if len(self._item.deformers):
@@ -293,3 +298,17 @@ modoItemTypes = {'MESH': ModoMeshItem,
                  'GROUP_LOCATOR': ModoGroupLocatorItem,
                  'LOCATOR': ModoLocatorItem,
                  'DEFORMER': ModoDeformerItem}
+
+
+def convert_to_modoItem(item):
+    if item.type in t.compatibleItemType.values():
+        key = helper.get_key_from_value(t.compatibleItemType, item.type)
+        mItem = modoItemTypes[key](item)
+        if mItem.have_deformers():
+            mItem = modoItemTypes['DEFORMER'](item)
+
+        return mItem
+    else:
+        mm = dialog.MessageManagement('ModoItem')
+        mm.info('The item {} can\'t be converted to modo Item'.format(item.name))
+        return item

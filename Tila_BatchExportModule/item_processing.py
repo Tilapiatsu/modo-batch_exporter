@@ -5,6 +5,7 @@ import random
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import helper
 from Tila_BatchExportModule import dialog
+from Tila_BatchExportModule import modoItem
 # Item Processing
 
 
@@ -70,7 +71,8 @@ class ItemProcessing(helper.ModoHelper):
                 self.mm.processing_log(message)
 
             for o in self.scn.selected:
-                if o.type == t.compatibleItemType['MESH'] and not self.item_have_deformers(o):
+                o = modoItem.convert_to_modoItem(o)
+                if o.type == t.compatibleItemType['MESH'] and not o.have_deformers():
                     morph_maps = o.geometry.vmaps.morphMaps
                     for m in morph_maps:
                         self.mm.info('Delete {} morph map'.format(m.name))
@@ -281,8 +283,8 @@ class ItemProcessing(helper.ModoHelper):
 
             selection = self.scn.selected
             for i in xrange(0, len(selection)):
-                curr_item = selection[i]
-                if self.item_have_deformers(curr_item):
+                curr_item = modoItem.convert_to_modoItem(selection[i])
+                if curr_item.have_deformers():
                     self.scn.select(curr_item)
                     lx.eval('deformer.freeze false')
                     self.scn.select(selection)
@@ -355,7 +357,7 @@ class ItemProcessing(helper.ModoHelper):
                                         if self.exportEach_sw:
                                             item_in_user_selection = item_name in self.get_name_arr(self.proceededMesh)
                                         else:
-                                            item_in_user_selection = item_name in self.get_name_arr(self.proceededMesh[self.get_key_from_value(t.compatibleItemType, ctype)])
+                                            item_in_user_selection = item_name in self.get_name_arr(self.proceededMesh[helper.get_key_from_value(t.compatibleItemType, ctype)])
 
                                         if item_name not in self.replicatorSrcIgnoreList and not item_in_user_selection:
                                             self.scn.select(item)

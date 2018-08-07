@@ -903,7 +903,8 @@ itemType = {'MESH': 'mesh',
 			'MESH_OPERATION': 'meshoperation',
 			'CHANNEL_EFFECT': 'chanEffect',
 			'DEFAULT_SHADER': 'defaultShader',
-			'ADVANCED_MATERIAL': 'advancedMaterial'}
+			'ADVANCED_MATERIAL': 'advancedMaterial',
+			'MESH_OPERATOR' : 'MOP'}
 
 compatibleItemType = {'MESH': 'mesh',
 					  'MESH_INSTANCE': 'meshInst',

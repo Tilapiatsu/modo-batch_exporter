@@ -4,6 +4,7 @@ import sys
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import helper
 from Tila_BatchExportModule import item_processing
+from Tila_BatchExportModule import modoItem
 
 ############## TODO ###################
 '''
@@ -281,7 +282,7 @@ class TilaBacthExport(helper.ModoHelper):
 
         self.mm.ending_log(self.exportFile_sw)
 
-        # Loop Processes
+    # Loop Processes
     def batch_process(self, output_dir, filename):
         # helper.select_hierarchy(self)
 
@@ -295,21 +296,18 @@ class TilaBacthExport(helper.ModoHelper):
 
         if self.exportEach_sw:
             for tcount in xrange(item_count):
-                currItem = [self.sortedItemToProceed[tcount]]
+                self.currentlyProcessing = [self.sortedItemToProceed[tcount]]
 
-                self.copy_arr_to_temporary_scene(currItem)
+                self.copy_arr_to_temporary_scene(self.currentlyProcessing)
 
-                currItem = [self.proceededMesh[tcount]]
+                self.currentlyProcessing = [self.proceededMesh[tcount]]
 
-                for ctype, type in t.compatibleItemType.iteritems():
-                    if type == currItem[0].type:
-                        self.transform_arr(currItem, ctype)
-                        break
+                self.transform_arr(self.currentlyProcessing)
 
                 self.proceededMeshIndex = tcount
                 self.mm.increment_progress_bar(self.proceededMesh, self.progress[0], self.progression)
 
-                layername = currItem[0].name
+                layername = self.currentlyProcessing[0].name
 
                 self.export_all_format(output_dir, layername, tcount)
 
@@ -322,9 +320,9 @@ class TilaBacthExport(helper.ModoHelper):
         else:  # export all in one file
             tcount = len(t.compatibleItemType)
             for ctype, type in t.compatibleItemType.iteritems():
-                items = self.itemToProceed[ctype]
-                if len(items) > 0:
-                    self.firstIndex[ctype] = self.copy_arr_to_temporary_scene(items, ctype)
+                self.currentlyProcessing = self.itemToProceed[ctype]
+                if len(self.currentlyProcessing) > 0:
+                    self.firstIndex[ctype] = self.copy_arr_to_temporary_scene(self.currentlyProcessing, ctype)
                 if tcount > 1:  # for the last type, we don't want to go back to the original scene
                     lx.eval('scene.set {}'.format(self.scnIndex))
                 else:
@@ -351,37 +349,41 @@ class TilaBacthExport(helper.ModoHelper):
         for ctype in t.compatibleItemType.keys():
             if len(self.proceededMesh[ctype]) > 0:
                 self.mm.info('Processing item of type : ' + ctype)
-                # dialog.print_list_item_name(self.proceededMesh[ctype])
-                transformed += self.transform_arr(self.proceededMesh[ctype], ctype)
+
+                self.currentlyProcessing = self.proceededMesh[ctype]
+
+                transformed += self.transform_arr(self.currentlyProcessing, ctype)
 
         if self.mergeMesh_sw:
             self.item_processing.merge_meshes(transformed)
             self.proceededMesh = [self.scn.selected[0]]
-
-            print self.filename
-            print self.filenamePattern
 
             layer_name = self.renamer.construct_filename('', self.filenamePattern, self.filename, '', 0)
             layer_name = os.path.splitext(layer_name)[0]
             self.proceededMesh[0].name = layer_name
 
         # Transform Processes
-    def transform_arr(self, item_arr, ctype):
+    def transform_arr(self, item_arr):
         if len(item_arr) > 0:
             self.scn.select(item_arr)
-            self.transform_selected(ctype=ctype)
+            self.transform_selected()
 
-        return self.scn.selected
+        result = []
 
-    def transform_selected(self, ctype):
+        for o in self.scn.selected:
+            result.append(modoItem.convert_to_modoItem(o))
+
+        return result
+
+    def transform_selected(self):
         self.progression = [1, self.get_transformation_count()]
         self.progress = self.mm.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
         self.select_hierarchy()
 
-        self.itemProcessing.freeze_instance(ctype=t.compatibleItemType[ctype], first_index=self.firstIndex[ctype])
-        self.itemProcessing.freeze_replicator(ctype=t.compatibleItemType[ctype])
-        self.itemProcessing.freeze_deformers(ctype=t.compatibleItemType[ctype])
+        self.itemProcessing.freeze_instance()
+        self.itemProcessing.freeze_replicator()
+        self.itemProcessing.freeze_deformers()
 
         self.itemProcessing.smooth_angle()
         self.itemProcessing.harden_uv_border()

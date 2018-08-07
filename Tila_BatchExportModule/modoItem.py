@@ -7,6 +7,7 @@ from Tila_BatchExportModule import helper
 
 class ModoItem(modo.item.Item):
     mm = dialog.MessageManagement('ModoItem')
+    _key = None
 
     def __init__(self, item):
         modo.item.Item.__init__(self, item)
@@ -23,7 +24,10 @@ class ModoItem(modo.item.Item):
 
     @property
     def type(self):
-        return self._item.type
+        if self._key is None:
+            return self._item.type
+        else:
+            return t.itemType[self._key]
 
     @property
     def typeKey(self):
@@ -34,6 +38,11 @@ class ModoItem(modo.item.Item):
             return True
         else:
             return False
+
+    def apply_morph(self, morph_map_name):
+        morph_maps = morph_map_name.split(',')
+        for maps in morph_maps:
+            lx.eval('vertMap.applyMorph %s 1.0' % maps)
 
 
 class ModoMeshItem(ModoItem):
@@ -60,7 +69,16 @@ class ModoLocatorItem(ModoItem):
         ModoItem.__init__(self, item)
 
 
+class ModoMeshFusionItem(ModoItem):
+    _key = 'MESH_FUSION'
+
+    def __init__(self, item):
+        ModoItem.__init__(self, item)
+
+
 class ModoReplicatorItem(ModoItem):
+    _key = 'REPLICATOR'
+
     def __init__(self, item):
         ModoItem.__init__(self, item)
         self._replicator = None
@@ -194,6 +212,8 @@ class ModoReplicatorItem(ModoItem):
 
 
 class ModoDeformerItem(ModoItem):
+    _key = 'MESH_OPERATOR'
+
     # is Used by MOP Item
     def __init__(self, item):
         ModoItem.__init__(self, item)
@@ -202,10 +222,6 @@ class ModoDeformerItem(ModoItem):
         self._deformers = None
         if not self.is_deformer_item:
             self.mm.warning('The item {} has no deformer'.format(self.name))
-
-    @property
-    def type(self):
-        return 'MOP'
 
     @property
     def deformer_item(self):
@@ -297,6 +313,7 @@ modoItemTypes = {'MESH': ModoMeshItem,
                  'REPLICATOR': ModoReplicatorItem,
                  'GROUP_LOCATOR': ModoGroupLocatorItem,
                  'LOCATOR': ModoLocatorItem,
+                 'MESH_FUSION': ModoMeshFusionItem,
                  'DEFORMER': ModoDeformerItem}
 
 

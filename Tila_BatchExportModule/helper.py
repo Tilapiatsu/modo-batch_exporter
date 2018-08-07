@@ -50,6 +50,8 @@ class ModoHelper(object):
 
             self.itemToProceed = self.init_ctype_dict_arr()
 
+            self.currentlyProcessing = []
+
             self.replicatorSrcIgnoreList = ()
             self.replicator_dict = {}
             self.replicator_group_source = {}

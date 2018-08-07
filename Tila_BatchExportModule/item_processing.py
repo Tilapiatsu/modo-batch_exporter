@@ -224,25 +224,20 @@ class ItemProcessing(helper.ModoHelper):
 
             lx.eval('poly.freeze polyline true 2 true true true false 4.0 true Morph')
 
-    def freeze_instance(self, ctype=t.itemType['MESH_INSTANCE'], update_arr=True, first_index=0):
-        compatibleType = [t.itemType['MESH_INSTANCE']]
-        if ctype in compatibleType and self.scn.selected[0].type in compatibleType:
-            if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
-                #
-                # message = "Freeze Instance"
-                # message = get_progression_message(self, message)
-                # increment_progress_bar(self, self.progress)
-                # dialog.transform_log(message)
+    def freeze_instance(self, update_arr=True, first_index=0):
+        i = 0
+        for o in self.currentlyProcessing:
+            if o.type == t.itemType['MESH_INSTANCE']:
+                if self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)):
+                    #
+                    # message = "Freeze Instance"
+                    # message = get_progression_message(self, message)
+                    # increment_progress_bar(self, self.progress)
+                    # dialog.transform_log(message)
+                    o.select(replace=True)
+                    lx.eval('item.setType.mesh')
 
-                lx.eval('item.setType.mesh')
-
-                selection = self.scn.selected
-                for i in xrange(0, len(selection)):
-
-                    item = selection[i]
-                    item.select(replace=True)
-
-                    currScale = item.Item.scale
+                    currScale = o.Item.scale
 
                     if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
                         # dialog.transform_log('Freeze Scaling after Instance Freeze')
@@ -250,44 +245,44 @@ class ItemProcessing(helper.ModoHelper):
                         lx.eval('vertMap.updateNormals')
 
                     if not self.exportFile_sw:
-                        self.userSelection[first_index + i] = item
+                        self.userSelection[first_index + i] = o
                     elif update_arr:
-                        self.proceededMesh[first_index + i] = item
+                        self.proceededMesh[first_index + i] = o
 
-    def freeze_meshfusion(self, ctype):
-        if ctype == t.itemType['MESH_FUSION']:
+                    i += 1
 
-            message = "Freeze MeshFusion"
-            message = self.get_progression_message(message)
-            self.increment_progress_bar(self.progress)
-            self.mm.processing_log(message)
-
-            selection = self.scn.selected
-            for i in xrange(0, len(selection)):
-                self.scn.select(selection[i])
-                name = self.scn.selected[0].name
-                lx.eval('item.channel OutputMeshMode outModeFinalParts')
-                lx.eval('user.value sdf.outDup false')
-                lx.eval('user.value sdf.meshOutName "%s"' % name)
-                lx.eval('!!@tila.meshout')
-                selection[i] = self.scn.item(name)
-                self.scn.select(selection)
-
-    def freeze_deformers(self, ctype, force=False):
-        if (self.freezeMeshOp_sw or force) and ctype == t.itemType['MESH']:
-            if not force:
-                message = "Freeze Deformers"
+    def freeze_meshfusion(self):
+        selection = self.scn.selected
+        for o in self.currentlyProcessing:
+            if o.type == t.itemType['MESH_FUSION']:
+                message = "Freeze MeshFusion"
                 message = self.get_progression_message(message)
                 self.increment_progress_bar(self.progress)
                 self.mm.processing_log(message)
 
-            selection = self.scn.selected
-            for i in xrange(0, len(selection)):
-                curr_item = modoItem.convert_to_modoItem(selection[i])
-                if curr_item.have_deformers():
-                    self.scn.select(curr_item)
-                    lx.eval('deformer.freeze false')
-                    self.scn.select(selection)
+                self.scn.select(o)
+                name = o.name
+                lx.eval('item.channel OutputMeshMode outModeFinalParts')
+                lx.eval('user.value sdf.outDup false')
+                lx.eval('user.value sdf.meshOutName "%s"' % name)
+                lx.eval('!!@tila.meshout')
+                o = self.scn.item(name)
+
+        self.scn.select(selection)
+
+    def freeze_deformers(self, force=False):
+        selection = self.scn.selected
+        for o in self.currentlyProcessing:
+            if (self.freezeMeshOp_sw or force) and o.type == t.itemType['MESH_OPERATOR']:
+                if not force:
+                    message = "Freeze Deformers"
+                    message = self.get_progression_message(message)
+                    self.increment_progress_bar(self.progress)
+                    self.mm.processing_log(message)
+
+                self.scn.select(o)
+                lx.eval('deformer.freeze false')
+        self.scn.select(selection)
 
     def force_freeze_deformers(self):
         selection = self.scn.selected
@@ -300,9 +295,9 @@ class ItemProcessing(helper.ModoHelper):
         if len(self.scn.selected):
             self.freeze_deformers(t.itemType['MESH'], force=True)
 
-    def freeze_replicator(self, ctype, update_arr=True, force=False):
+    def freeze_replicator(self, update_arr=True, force=False):  # Need to be reworked
         if self.freezeReplicator_sw or force:
-            if ctype == t.itemType['REPLICATOR']:
+            if self.currentlyProcessing[0].type == t.itemType['REPLICATOR']:
                 first_index = 0
 
                 message = "Freeze Replicator"
@@ -313,10 +308,8 @@ class ItemProcessing(helper.ModoHelper):
                 frozenItem_arr = []
                 source_dict = {}
 
-                selection = self.scn.selected
-
                 i = 0
-                for o in selection:
+                for o in self.currentlyProcessing:
                     originalName = o.name
                     self.scn.deselect()
                     self.scn.select(originalName)
@@ -325,9 +318,9 @@ class ItemProcessing(helper.ModoHelper):
 
                     lx.eval(t.TILA_FREEZE_REPLICATOR)
 
-                    frozenItem = modo.Item(originalName)
+                    frozenItem = modoItem.convert_to_modoItem(modo.Item(originalName))
 
-                    selection[i] = frozenItem
+                    self.currentlyProcessing[i] = frozenItem
 
                     frozenItem_arr.append(frozenItem)
 
@@ -341,7 +334,7 @@ class ItemProcessing(helper.ModoHelper):
 
                     i += 1
 
-                for o in selection:  # remove replicator source and particle
+                for o in self.currentlyProcessing:  # remove replicator source and particle
                     if self.exportFile_sw:
                         for k, source in source_dict.iteritems():
                             if o.name == k:

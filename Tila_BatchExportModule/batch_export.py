@@ -33,12 +33,36 @@ faut voir si tu peux installer pip install ptvsd==3.0.0 dans le python de MODO
 
 
 class TilaBacthExport(helper.ModoHelper):
+    exportedFileCount = 0
 
     def __init__(self, userValues):
         reload(helper)
         reload(item_processing)
         super(TilaBacthExport, self).__init__(userValues)
         self.itemProcessing = item_processing.ItemProcessing(userValues)
+
+    @property
+    def transform_condition(self):
+        return {"freeze_instance": self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw)),
+                "freeze_deformers": self.freezeMeshOp_sw,
+                "freeze_replicator": self.freezeReplicator_sw,
+                "position_offset": (self.posX != 0.0 or self.posY != 0.0 or self.posZ != 0.0) and self.pos_sw,
+                "scale_amount": (self.scaX != 1.0 or self.scaY != 1.0 or self.scaZ != 1.0) and self.sca_sw,
+                "rot_angle": (self.rotX != 0.0 or self.rotY != 0.0 or self.rotZ != 0.0) and self.rot_sw,
+                "export_morph": not self.exportMorphMap_sw,
+                "smooth_angle": self.smoothAngle_sw,
+                "harden_uv_border": self.hardenUvBorder_sw,
+                "assign_material_per_udim": self.assignMaterialPerUDIMTile_sw,
+                "triple": self.triple_sw,
+                "reset_pos": self.resetPos_sw,
+                "reset_rot": self.resetRot_sw,
+                "reset_sca": self.resetSca_sw,
+                "reset_she": self.resetShe_sw,
+                "freeze_pos": self.freezePos_sw,
+                "freeze_rot": self.freezePos_sw,
+                "freeze_sca": self.freezeRot_sw,
+                "freeze_she": self.freezeSca_sw,
+                "freeze_geo": self.freezeGeo_sw}
 
     def export_at_least_one_format(self):
         if not (self.exportFormatFbx_sw
@@ -190,7 +214,7 @@ class TilaBacthExport(helper.ModoHelper):
         else:
             input_dir = lx.eval1('dialog.result ?')
             self.file.updateExportPath('', input_dir, '')
-            self.currPath = file.getLatestPath(t.config_browse_dest_path)
+            self.currPath = self.file.getLatestPath(t.config_browse_dest_path)
             self.mm.init_dialog("output", self.currPath)
             try:  # output folder dialog
                 lx.eval('dialog.open')
@@ -296,13 +320,14 @@ class TilaBacthExport(helper.ModoHelper):
 
         if self.exportEach_sw:
             for tcount in xrange(item_count):
-                self.currentlyProcessing = [self.sortedItemToProceed[tcount]]
+                self.currentlyProcessing = self.sortedItemToProceed[tcount]
 
-                self.copy_arr_to_temporary_scene(self.currentlyProcessing)
+                dstScn = self.currentlyProcessing.dstScnID
+                self.currentlyProcessing.copy_to_scene(dstScn)
 
-                self.currentlyProcessing = [self.proceededMesh[tcount]]
+                self.currentlyProcessing = self.currentlyProcessing.dstItem
 
-                self.transform_arr(self.currentlyProcessing)
+                self.transform_items()
 
                 self.proceededMeshIndex = tcount
                 self.mm.increment_progress_bar(self.proceededMesh, self.progress[0], self.progression)
@@ -352,66 +377,58 @@ class TilaBacthExport(helper.ModoHelper):
 
                 self.currentlyProcessing = self.proceededMesh[ctype]
 
-                transformed += self.transform_arr(self.currentlyProcessing, ctype)
+                transformed += self.transform_arr(self.currentlyProcessing)
 
         if self.mergeMesh_sw:
-            self.item_processing.merge_meshes(transformed)
+            self.itemProcessing.merge_meshes(transformed)
             self.proceededMesh = [self.scn.selected[0]]
 
             layer_name = self.renamer.construct_filename('', self.filenamePattern, self.filename, '', 0)
             layer_name = os.path.splitext(layer_name)[0]
             self.proceededMesh[0].name = layer_name
 
-        # Transform Processes
+    # Transform Processes
     def transform_arr(self, item_arr):
         if len(item_arr) > 0:
-            self.scn.select(item_arr)
-            self.transform_selected()
+            self.transform_items()
 
-        result = []
-
-        for o in self.scn.selected:
-            result.append(modoItem.convert_to_modoItem(o))
-
-        return result
-
-    def transform_selected(self):
+    def transform_items(self):
         self.progression = [1, self.get_transformation_count()]
         self.progress = self.mm.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
         self.select_hierarchy()
 
-        self.itemProcessing.freeze_instance()
-        self.itemProcessing.freeze_replicator()
-        self.itemProcessing.freeze_deformers()
+        self.itemProcessing.freeze_instance(self.transform_condition['freeze_instance'], self.currentlyProcessing)
+        self.itemProcessing.freeze_replicator(self.transform_condition['freeze_replicator'], self.currentlyProcessing)
+        self.itemProcessing.freeze_deformers(self.transform_condition['freeze_deformers'], self.currentlyProcessing)
 
-        self.itemProcessing.smooth_angle()
-        self.itemProcessing.harden_uv_border()
+        self.itemProcessing.smooth_angle(self.transform_condition['smooth_angle'], self.currentlyProcessing)
+        self.itemProcessing.harden_uv_border(self.transform_condition['harden_uv_border'], self.currentlyProcessing)
 
-        self.itemProcessing.freeze_geo()
-        self.itemProcessing.triple()
+        self.itemProcessing.freeze_geo(self.transform_condition['freeze_geo'], self.currentlyProcessing)
+        self.itemProcessing.triple(self.transform_condition['triple'], self.currentlyProcessing)
 
-        self.itemProcessing.assign_material_per_udim(True)
-        self.itemProcessing.apply_morph(self.applyMorphMap_sw, self.morphMapName)
-        self.itemProcessing.export_morph()
+        self.itemProcessing.assign_material_per_udim(self.transform_condition['assign_material_per_udim'], self.currentlyProcessing)
+        self.itemProcessing.apply_morph(self.applyMorphMap_sw, self.currentlyProcessing, name=self.morphMapName)
+        self.itemProcessing.export_morph(self.transform_condition['export_morph'], self.currentlyProcessing)
 
-        self.itemProcessing.reset_pos()
-        self.itemProcessing.reset_rot()
-        self.itemProcessing.reset_sca()
-        self.itemProcessing.reset_she()
+        self.itemProcessing.reset_pos(self.transform_condition['reset_pos'], self.currentlyProcessing)
+        self.itemProcessing.reset_rot(self.transform_condition['reset_rot'], self.currentlyProcessing)
+        self.itemProcessing.reset_sca(self.transform_condition['reset_sca'], self.currentlyProcessing)
+        self.itemProcessing.reset_she(self.transform_condition['reset_she'], self.currentlyProcessing)
 
-        self.itemProcessing.position_offset()
-        self.itemProcessing.scale_amount()
-        self.itemProcessing.rot_angle()
+        self.itemProcessing.position_offset(self.transform_condition['position_offset'], self.currentlyProcessing)
+        self.itemProcessing.scale_amount(self.transform_condition['scale_amount'], self.currentlyProcessing)
+        self.itemProcessing.rot_angle(self.transform_condition['rot_angle'], self.currentlyProcessing)
 
-        self.itemProcessing.freeze_rot()
-        self.itemProcessing.freeze_sca()
-        self.itemProcessing.freeze_pos()
-        self.itemProcessing.freeze_she()
+        self.itemProcessing.freeze_rot(self.transform_condition['freeze_rot'], self.currentlyProcessing)
+        self.itemProcessing.freeze_sca(self.transform_condition['freeze_sca'], self.currentlyProcessing)
+        self.itemProcessing.freeze_pos(self.transform_condition['freeze_pos'], self.currentlyProcessing)
+        self.itemProcessing.freeze_she(self.transform_condition['freeze_she'], self.currentlyProcessing)
 
         self.mm.deallocate_dialog_svc(self.progress[1])
 
-        # Export Processes
+    # Export Processes
     def export_all_format(self, output_dir, layer_name, increment=0):
 
         if self.exportFormatLxo_sw:
@@ -423,8 +440,8 @@ class TilaBacthExport(helper.ModoHelper):
             self.export_selection(output_path, t.exportTypes[1][1])
 
         if self.exportFormatFbx_sw:
-            self.itemProcessing.force_freeze_deformers()
-            self.itemProcessing.force_freeze_replicator()
+            self.itemProcessing.force_freeze_deformers(True, self.currentlyProcessing)
+            self.itemProcessing.force_freeze_replicator(True, self.currentlyProcessing)
             output_path = self.construct_file_path(output_dir, layer_name, t.exportTypes[2][0], increment)
             lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')
             lx.eval('user.value sceneio.fbx.save.surfaceRefining subDivs')
@@ -432,7 +449,7 @@ class TilaBacthExport(helper.ModoHelper):
             self.export_selection(output_path, t.exportTypes[2][1])
 
         if self.exportFormatObj_sw:
-            self.itemProcessing.force_freeze_replicator()
+            self.itemProcessing.force_freeze_replicator(True, self.currentlyProcessing)
             output_path = self.construct_file_path(output_dir, layer_name, t.exportTypes[3][0], increment)
             self.export_selection(output_path, t.exportTypes[3][1])
 
@@ -497,6 +514,7 @@ class TilaBacthExport(helper.ModoHelper):
         self.save_file(output_path, export_format)
 
     # Saving Methods
+
     def save_file(self, output_path, export_format):
         if self.file_conflict(output_path) and self.askBeforeOverride_sw:
             if self.overrideFiles != 'yesToAll' and self.overrideFiles != 'noToAll':

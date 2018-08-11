@@ -2,7 +2,6 @@ import lx
 import modo
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import dialog
-from Tila_BatchExportModule import helper
 
 
 class ModoItem(modo.item.Item):
@@ -13,6 +12,12 @@ class ModoItem(modo.item.Item):
         modo.item.Item.__init__(self, item)
         self.scn = modo.Scene()
         self.name = item.name
+        self.cmd_svc = lx.service.Command()
+
+        # store scene source scene ID
+        self.srcScnID = lx.eval('query sceneservice scene.index ? current')
+        self.dstScnID = None
+        self.dstItem = None
 
     @staticmethod
     def get_name_arr(arr):
@@ -31,7 +36,19 @@ class ModoItem(modo.item.Item):
 
     @property
     def typeKey(self):
-        return helper.get_key_from_value(t.compatibleItemType, self.type)
+        return t.get_key_from_value(t.compatibleItemType, self.type)
+
+    @property
+    def position(self):
+        return modo.item.LocatorSuperType(self._item).position
+
+    @property
+    def rotation(self):
+        return modo.item.LocatorSuperType(self._item).rotation
+
+    @property
+    def scale(self):
+        return modo.item.LocatorSuperType(self._item).scale
 
     def have_deformers(self):
         if len(self._item.deformers):
@@ -43,6 +60,92 @@ class ModoItem(modo.item.Item):
         morph_maps = morph_map_name.split(',')
         for maps in morph_maps:
             lx.eval('vertMap.applyMorph %s 1.0' % maps)
+
+    def clearitems(self):
+        try:
+            lx.eval('select.itemType mesh')
+            lx.eval('select.itemType camera mode:add')
+            lx.eval('select.itemType light super:true mode:add')
+            lx.eval('select.itemType renderOutput mode:add')
+            lx.eval('select.itemType defaultShader mode:add')
+            lx.eval('!!item.delete')
+        except:
+            t.return_exception()
+
+    def copy_to_scene(self, dstScnID=None):
+        # store the original name of the item
+        originalName = self._item.name
+
+        # create a new temporary scene if no one scene is specified
+        if dstScnID is None:
+            self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.new')
+            self.dstScnID = lx.eval('query sceneservice scene.index ? current')
+
+            self.clearitems()
+
+            self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % self.srcScnID)
+        else:
+            self.dstScnID = dstScnID
+
+        # rename item if it is contains a generic name
+        modifiedName = self.rename_generic_name()
+
+        self.scn.select(modifiedName)
+
+        # Move all selected items to temporary scene
+        self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, '!layer.import {}'.format(self.dstScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(False))
+
+        self.scn = modo.Scene()
+
+        if modifiedName is not None:
+            self.revert_generic_name(originalName, modifiedName)
+
+        self.store_dstItem(originalName)
+
+    def rename_generic_name(self):
+        for gen in t.genericName:
+            if gen in self._item.name:
+                self._item.name = self._item.name.replace(gen, t.genericNameDict[gen])
+                return self._item.name
+        else:
+            return None
+
+    def revert_generic_name(self, originalName, modifiedName):
+        if self.srcScnID is None or self.dstScnID is None:
+            self.mm.error('Temporary scene not found. \n can\'t revert name', dialog=True)
+            return False
+
+        # rename item in destination scene
+        lx.eval('scene.set {}'.format(self.dstScnID))
+        self.scn = modo.Scene()
+
+        item = modo.Item(modifiedName)
+
+        item.name = originalName
+
+        # switch to source Scene to revert name
+        lx.eval('scene.set {}'.format(self.srcScnID))
+        self.scn = modo.Scene()
+
+        item = modo.Item(modifiedName)
+
+        item.name = originalName
+
+        lx.eval('scene.set {}'.format(self.dstScnID))
+        self.scn = modo.Scene()
+
+        return True
+
+    def store_dstItem(self, name):
+        curr_scnID = lx.eval('query sceneservice scene.index ? current')
+
+        lx.eval('scene.set {}'.format(self.dstScnID))
+        self.scn = modo.Scene()
+
+        self.dstItem = convert_to_modoItem(modo.Item(name))
+
+        lx.eval('scene.set {}'.format(curr_scnID))
+        self.scn = modo.Scene()
 
 
 class ModoMeshItem(ModoItem):
@@ -195,7 +298,7 @@ class ModoReplicatorItem(ModoItem):
 
             if self.source_is_group:
                 lx.eval('replicator.source "{}"'.format(
-                    self._source_group_name))
+                        self._source_group_name))
                 group = modo.item.Group(self._source_group_name)
                 for o in source_arr:
                     if not group.hasItem(o):
@@ -319,7 +422,7 @@ modoItemTypes = {'MESH': ModoMeshItem,
 
 def convert_to_modoItem(item):
     if item.type in t.compatibleItemType.values():
-        key = helper.get_key_from_value(t.compatibleItemType, item.type)
+        key = t.get_key_from_value(t.compatibleItemType, item.type)
         mItem = modoItemTypes[key](item)
         if mItem.have_deformers():
             mItem = modoItemTypes['DEFORMER'](item)

@@ -18,6 +18,11 @@ class ModoItem(modo.item.Item):
         self.srcScnID = lx.eval('query sceneservice scene.index ? current')
         self.dstScnID = None
         self.dstItem = None
+        self.extraItems = []
+        self.previouslySelected = None
+
+        self.originalName = []
+        self.modifiedName = []
 
     @staticmethod
     def get_name_arr(arr):
@@ -56,11 +61,6 @@ class ModoItem(modo.item.Item):
         else:
             return False
 
-    def apply_morph(self, morph_map_name):
-        morph_maps = morph_map_name.split(',')
-        for maps in morph_maps:
-            lx.eval('vertMap.applyMorph %s 1.0' % maps)
-
     def clearitems(self):
         try:
             lx.eval('select.itemType mesh')
@@ -72,9 +72,12 @@ class ModoItem(modo.item.Item):
         except:
             t.return_exception()
 
-    def copy_to_scene(self, dstScnID=None):
+    def copy_to_scene(self, dstScnID=None, getExtraItems_func=None):
         # store the original name of the item
-        originalName = self._item.name
+        self.originalName.append(self._item.name)
+
+        if getExtraItems_func is not None:
+            self.originalName = getExtraItems_func(self.originalName)
 
         # create a new temporary scene if no one scene is specified
         if dstScnID is None:
@@ -88,29 +91,37 @@ class ModoItem(modo.item.Item):
             self.dstScnID = dstScnID
 
         # rename item if it is contains a generic name
-        modifiedName = self.rename_generic_name()
+        self.rename_generic_name()
 
-        self.scn.select(modifiedName)
+        self.scn.deselect()
+        for name in self.modifiedName:
+            self.scn.select(name, add=True)
 
         # Move all selected items to temporary scene
         self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, '!layer.import {}'.format(self.dstScnID) + ' {} ' + 'childs:{} shaders:true move:false position:0'.format(False))
 
         self.scn = modo.Scene()
 
-        if modifiedName is not None:
-            self.revert_generic_name(originalName, modifiedName)
+        self.revert_generic_name()
 
-        self.store_dstItem(originalName)
+        self.store_dstItem(self.originalName[0])
+        if len(self.originalName) > 1:
+            self.store_extraItems(self.originalName[1:])
 
     def rename_generic_name(self):
-        for gen in t.genericName:
-            if gen in self._item.name:
-                self._item.name = self._item.name.replace(gen, t.genericNameDict[gen])
-                return self._item.name
-        else:
-            return None
+        for name in self.originalName:
+            isGenericName = False
+            for gen in t.genericName:
+                if gen in name:
+                    item = modo.Item(name)
+                    item.name = name.replace(gen, t.genericNameDict[gen])
+                    self.modifiedName.append(item.name)
+                    isGenericName = True
+            else:
+                if not isGenericName:
+                    self.modifiedName.append(name)
 
-    def revert_generic_name(self, originalName, modifiedName):
+    def revert_generic_name(self):
         if self.srcScnID is None or self.dstScnID is None:
             self.mm.error('Temporary scene not found. \n can\'t revert name', dialog=True)
             return False
@@ -119,17 +130,23 @@ class ModoItem(modo.item.Item):
         lx.eval('scene.set {}'.format(self.dstScnID))
         self.scn = modo.Scene()
 
-        item = modo.Item(modifiedName)
+        i = 0
+        for modifiedName in self.modifiedName:
+            item = modo.Item(modifiedName)
 
-        item.name = originalName
+            item.name = self.originalName[i]
+            i += 1
 
         # switch to source Scene to revert name
         lx.eval('scene.set {}'.format(self.srcScnID))
         self.scn = modo.Scene()
 
-        item = modo.Item(modifiedName)
+        i = 0
+        for modifiedName in self.modifiedName:
+            item = modo.Item(modifiedName)
 
-        item.name = originalName
+            item.name = self.originalName[i]
+            i += 1
 
         lx.eval('scene.set {}'.format(self.dstScnID))
         self.scn = modo.Scene()
@@ -147,6 +164,104 @@ class ModoItem(modo.item.Item):
         lx.eval('scene.set {}'.format(curr_scnID))
         self.scn = modo.Scene()
 
+    def store_extraItems(self, names):
+        curr_scnID = lx.eval('query sceneservice scene.index ? current')
+
+        lx.eval('scene.set {}'.format(self.dstScnID))
+        self.scn = modo.Scene()
+
+        for name in names:
+            self.extraItems.append(convert_to_modoItem(modo.Item(name)))
+
+        lx.eval('scene.set {}'.format(curr_scnID))
+        self.scn = modo.Scene()
+
+    def remove_extraItems(self):
+        if len(self.extraItems):
+            curr_scnID = lx.eval('query sceneservice scene.index ? current')
+
+            lx.eval('scene.set {}'.format(self.dstScnID))
+            self.scn = modo.Scene()
+
+            self.scn.removeItems(self.extraItems)
+
+            lx.eval('scene.set {}'.format(curr_scnID))
+            self.scn = modo.Scene()
+
+            self.extraItems = []
+
+    def store_previouslySelected(self):
+        self.previouslySelected = self.scn.selected
+
+    def select_previouslySeleced(self):
+        self.scn.select(self.previouslySelected)
+        self.previouslySelected = None
+
+    # item transform
+
+    def apply_morph(self, morph_map_name):
+        morph_maps = morph_map_name.split(',')
+        for maps in morph_maps:
+            lx.eval('vertMap.applyMorph %s 1.0' % maps)
+
+    def reset_pos(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.reset translation')
+        self.select_previouslySeleced()
+
+    def reset_rot(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.reset rotation')
+        self.select_previouslySeleced()
+
+    def reset_sca(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.reset scale')
+        self.select_previouslySeleced()
+
+    def reset_she(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.reset shear')
+        self.select_previouslySeleced()
+
+    def freeze_pos(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.freeze translation')
+        # lx.eval('vertMap.updateNormals')
+        self.select_previouslySeleced()
+
+    def freeze_rot(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.freeze rotation')
+        # lx.eval('vertMap.updateNormals')
+        self.select_previouslySeleced()
+
+    def freeze_sca(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.freeze scale')
+        # lx.eval('vertMap.updateNormals')
+        self.select_previouslySeleced()
+
+    def freeze_she(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('!!transform.freeze shear')
+        # lx.eval('vertMap.updateNormals')
+        self.select_previouslySeleced()
+
+    def freeze_geo(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('poly.freeze polyline true 2 true true true false 4.0 true Morph')
+        self.select_previouslySeleced()
+
 
 class ModoMeshItem(ModoItem):
 
@@ -158,6 +273,43 @@ class ModoMeshInstance(ModoItem):
 
     def __init__(self, item):
         ModoItem.__init__(self, item)
+
+    @property
+    def source(self):
+        self.store_previouslySelected()
+        self._item.select()
+        lx.eval('select.itemSourceSelected')
+        source = convert_to_modoItem(self.scn.selected[0])
+        self.select_previouslySeleced()
+        return source
+
+    def copy_to_scene(self, dstScnID=None):
+        ModoItem.copy_to_scene(self, dstScnID, getExtraItems_func=self.getExtraItems)
+
+    def getExtraItems(self, originalName):
+        originalName.append(self.source.name)
+        return originalName
+
+    # Item Processing
+
+    def freeze_instance(self):
+        itemName = self._item.name
+        self.mm.breakPoint()
+        self._item.select(replace=True)
+        lx.eval('item.setType.mesh')
+        self.mm.breakPoint()
+
+        currScale = self.scale
+
+        if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
+            # dialog.transform_log('Freeze Scaling after Instance Freeze')
+            self.freeze_sca()
+            lx.eval('vertMap.updateNormals')
+
+        self.remove_extraItems()
+
+        print itemName
+        self.mm.breakPoint()
 
 
 class ModoGroupLocatorItem(ModoItem):

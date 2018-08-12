@@ -28,18 +28,18 @@ class ItemProcessing(helper.ModoHelper):
                 sys.exit()
 
     def conditionTesting(func):
-        def func_wrapper(self, condition, items, **kwargs):
+        def func_wrapper(self, condition, item, **kwargs):
             force = False
             for key, value in kwargs.items():
                 if key == 'force':
                     force = value
             if condition or force:
-                return func(self, condition, items, **kwargs)
+                return func(self, condition, item, **kwargs)
         return func_wrapper
     # Item Processing
 
     @conditionTesting
-    def apply_morph(self, condition, items, name=""):
+    def apply_morph(self, condition, item, name=""):
         message = 'Applying Morph Map : ' + name
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -73,7 +73,7 @@ class ItemProcessing(helper.ModoHelper):
         self.scn.select(selection)
 
     @conditionTesting
-    def export_morph(self, condition, items, force=False):
+    def export_morph(self, condition, item, force=False):
         if not force:
             message = 'Cleaning Morph Map'
             message = self.get_progression_message(message)
@@ -90,7 +90,7 @@ class ItemProcessing(helper.ModoHelper):
                     lx.eval('!!vertMap.delete morf')
 
     @conditionTesting
-    def smooth_angle(self, condition, items):
+    def smooth_angle(self, condition, item):
         message = "Harden edges witch are sharper than %s degrees" % self.smoothAngle
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -103,7 +103,7 @@ class ItemProcessing(helper.ModoHelper):
         lx.eval('vertMap.updateNormals')
 
     @conditionTesting
-    def harden_uv_border(self, condition, items):
+    def harden_uv_border(self, condition, item):
         message = "HardenUvBorder = " + self.uvMapName
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -116,7 +116,7 @@ class ItemProcessing(helper.ModoHelper):
         lx.eval('select.type item')
 
     @conditionTesting
-    def assign_material_per_udim(self, condition, items, random_color=True):
+    def assign_material_per_udim(self, condition, item, random_color=True):
         message = "Assign Material per UDIM Tile = " + self.UDIMTextureName
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -137,7 +137,7 @@ class ItemProcessing(helper.ModoHelper):
         self.scn.select(selection)
 
     @conditionTesting
-    def triple(self, condition, items):
+    def triple(self, condition, item):
         message = "Triangulate"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -149,112 +149,99 @@ class ItemProcessing(helper.ModoHelper):
             pass
 
     @conditionTesting
-    def reset_pos(self, condition, items):
+    def reset_pos(self, condition, item):
         message = "Reset Position"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('!!transform.reset translation')
+        item.reset_pos()
 
     @conditionTesting
-    def reset_rot(self, condition, items):
+    def reset_rot(self, condition, item):
         message = "Reset Rotation"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('!!transform.reset rotation')
+        item.reset_rot()
 
     @conditionTesting
-    def reset_sca(self, condition, items):
+    def reset_sca(self, condition, item):
         message = "Reset Scale"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('!!transform.reset scale')
+        item.reset_sca()
 
     @conditionTesting
-    def reset_she(self, condition, items):
+    def reset_she(self, condition, item):
         message = "Reset Shear"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('!!transform.reset shear')
+        item.reset_she()
 
     @conditionTesting
-    def freeze_pos(self, condition, items):
+    def freeze_pos(self, condition, item):
         message = "Freeze Position"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('!!transform.freeze translation')
-        # lx.eval('vertMap.updateNormals')
+        item.freeze_pos()
 
     @conditionTesting
-    def freeze_rot(self, condition, items):
+    def freeze_rot(self, condition, item):
         message = "Freeze Rotation"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('!!transform.freeze rotation')
-        # lx.eval('vertMap.updateNormals')
+        item.freeze_rot()
 
     @conditionTesting
-    def freeze_sca(self, condition, items, force=False):
+    def freeze_sca(self, condition, item, force=False):
         if not force:
             message = "Freeze Scale"
             message = self.get_progression_message(message)
             self.increment_progress_bar(self.progress)
             self.mm.processing_log(message)
 
-        lx.eval('!!transform.freeze scale')
-        # lx.eval('vertMap.updateNormals')
+        item.freeze_sca()
 
     @conditionTesting
-    def freeze_she(self, condition, items):
+    def freeze_she(self, condition, item):
         message = "Freeze Shear"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('!!transform.freeze shear')
-        # lx.eval('vertMap.updateNormals')
+        item.freeze_she()
 
     @conditionTesting
-    def freeze_geo(self, condition, items):
+    def freeze_geo(self, condition, item):
         message = "Freeze Geometry"
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        lx.eval('poly.freeze polyline true 2 true true true false 4.0 true Morph')
+        item.freeze_geo()
 
     @conditionTesting
-    def freeze_instance(self, condition, items):
-        for o in items:
-            if o.type == t.itemType['MESH_INSTANCE']:
-                #
-                # message = "Freeze Instance"
-                # message = get_progression_message(self, message)
-                # increment_progress_bar(self, self.progress)
-                # dialog.transform_log(message)
-                o.select(replace=True)
-                lx.eval('item.setType.mesh')
-
-                currScale = o.scale
-
-                if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
-                    # dialog.transform_log('Freeze Scaling after Instance Freeze')
-                    self.freeze_sca(True)
-                    lx.eval('vertMap.updateNormals')
+    def freeze_instance(self, condition, item):
+        if item.type == t.itemType['MESH_INSTANCE']:
+            #
+            # message = "Freeze Instance"
+            # message = get_progression_message(self, message)
+            # increment_progress_bar(self, self.progress)
+            # dialog.transform_log(message)
+            item.freeze_instance()
 
     @conditionTesting
-    def freeze_meshfusion(self, condition, items):
+    def freeze_meshfusion(self, condition, item):
         selection = self.scn.selected
         for o in self.currentlyProcessing:
             if o.type == t.itemType['MESH_FUSION']:
@@ -274,7 +261,7 @@ class ItemProcessing(helper.ModoHelper):
         self.scn.select(selection)
 
     @conditionTesting
-    def freeze_deformers(self, condition, items, force=False):
+    def freeze_deformers(self, condition, item, force=False):
         selection = self.scn.selected
         for o in self.currentlyProcessing:
             if not force:
@@ -288,7 +275,7 @@ class ItemProcessing(helper.ModoHelper):
         self.scn.select(selection)
 
     @conditionTesting
-    def force_freeze_deformers(self, condition, items):
+    def force_freeze_deformers(self, condition, item):
         selection = self.scn.selected
         self.scn.deselect()
 
@@ -297,10 +284,10 @@ class ItemProcessing(helper.ModoHelper):
                 self.scn.select(o.name, add=True)
 
         if len(self.scn.selected):
-            self.freeze_deformers(condition, items, force=True)
+            self.freeze_deformers(condition, item, force=True)
 
     @conditionTesting
-    def freeze_replicator(self, condition, items, update_arr=True, force=False):  # Need to be reworked
+    def freeze_replicator(self, condition, item, update_arr=True, force=False):  # Need to be reworked
         if self.currentlyProcessing[0].type == t.itemType['REPLICATOR']:
             first_index = 0
 
@@ -370,7 +357,7 @@ class ItemProcessing(helper.ModoHelper):
             self.scn.select(frozenItem_arr)
 
     @conditionTesting
-    def force_freeze_replicator(self, condition, items):
+    def force_freeze_replicator(self, condition, item):
         # Force Freeze replicator if the item use a group source replicator
         self.scn.deselect()
         self.select_compatible_item_type()
@@ -388,12 +375,12 @@ class ItemProcessing(helper.ModoHelper):
                     self.scn.select(o.name, add=True)
 
         if len(self.scn.selected):
-            self.freeze_replicator(condition, items, force=True)
+            self.freeze_replicator(condition, item, force=True)
 
         self.replicatorSrcIgnoreList = ()
 
     @conditionTesting
-    def position_offset(self, condition, items):
+    def position_offset(self, condition, item):
         message = "Position offset = (%s, %s, %s)" % (self.posX, self.posY, self.posZ)
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -412,7 +399,7 @@ class ItemProcessing(helper.ModoHelper):
         self.scn.select(selection)
 
     @conditionTesting
-    def scale_amount(self, condition, items):
+    def scale_amount(self, condition, item):
         message = "Scale amount = (%s, %s, %s)" % (self.scaX, self.scaY, self.scaZ)
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -432,7 +419,7 @@ class ItemProcessing(helper.ModoHelper):
         self.scn.select(selection)
 
     @conditionTesting
-    def rot_angle(self, condition, items):
+    def rot_angle(self, condition, item):
         message = "Rotation Angle = (%s, %s, %s)" % (self.rotX, self.rotY, self.rotZ)
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
@@ -453,15 +440,15 @@ class ItemProcessing(helper.ModoHelper):
         # freeze_rot(self)
 
     @conditionTesting
-    def merge_meshes(self, condition, items):
+    def merge_meshes(self, condition, item):
         message = 'Merging Meshes'
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        self.scn.select(items)
+        self.scn.select(item)
 
-        name_arr = self.get_name_arr(items)
+        name_arr = self.get_name_arr(item)
 
         for o in self.scn.selected:
             if o.type in [t.compatibleItemType['GROUP_LOCATOR'], t.compatibleItemType['LOCATOR']]:

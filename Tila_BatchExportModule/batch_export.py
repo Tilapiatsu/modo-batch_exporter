@@ -323,16 +323,16 @@ class TilaBacthExport(helper.ModoHelper):
                 self.currentlyProcessing = self.sortedItemToProceed[tcount]
 
                 dstScn = self.currentlyProcessing.dstScnID
-                self.currentlyProcessing.copy_to_scene(dstScn)
+                self.currentlyProcessing.copy_to_scene(dstScnID=dstScn)
 
                 self.currentlyProcessing = self.currentlyProcessing.dstItem
 
-                self.transform_items()
+                self.transform_item()
 
                 self.proceededMeshIndex = tcount
                 self.mm.increment_progress_bar(self.proceededMesh, self.progress[0], self.progression)
 
-                layername = self.currentlyProcessing[0].name
+                layername = self.currentlyProcessing.name
 
                 self.export_all_format(output_dir, layername, tcount)
 
@@ -377,7 +377,7 @@ class TilaBacthExport(helper.ModoHelper):
 
                 self.currentlyProcessing = self.proceededMesh[ctype]
 
-                transformed += self.transform_arr(self.currentlyProcessing)
+                transformed += self.transform_items(self.currentlyProcessing)
 
         if self.mergeMesh_sw:
             self.itemProcessing.merge_meshes(transformed)
@@ -388,11 +388,12 @@ class TilaBacthExport(helper.ModoHelper):
             self.proceededMesh[0].name = layer_name
 
     # Transform Processes
-    def transform_arr(self, item_arr):
-        if len(item_arr) > 0:
-            self.transform_items()
+    def transform_items(self, item_arr):
+        for o in item_arr:
+            self.currentlyProcessing = o
+            self.transform_item()
 
-    def transform_items(self):
+    def transform_item(self):
         self.progression = [1, self.get_transformation_count()]
         self.progress = self.mm.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 

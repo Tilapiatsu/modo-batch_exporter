@@ -172,6 +172,7 @@ class ModoItem(modo.item.Item):
 
         for name in names:
             self.extraItems.append(convert_to_modoItem(modo.Item(name)))
+            print name
 
         lx.eval('scene.set {}'.format(curr_scnID))
         self.scn = modo.Scene()
@@ -294,10 +295,9 @@ class ModoMeshInstance(ModoItem):
 
     def freeze_instance(self):
         itemName = self._item.name
-        self.mm.breakPoint()
+
         self._item.select(replace=True)
         lx.eval('item.setType.mesh')
-        self.mm.breakPoint()
 
         currScale = self.scale
 
@@ -307,9 +307,6 @@ class ModoMeshInstance(ModoItem):
             lx.eval('vertMap.updateNormals')
 
         self.remove_extraItems()
-
-        print itemName
-        self.mm.breakPoint()
 
 
 class ModoGroupLocatorItem(ModoItem):

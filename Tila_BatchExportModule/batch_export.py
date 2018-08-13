@@ -322,9 +322,10 @@ class TilaBacthExport(helper.ModoHelper):
             for tcount in xrange(item_count):
                 self.currentlyProcessing = self.sortedItemToProceed[tcount]
 
-                dstScn = self.currentlyProcessing.dstScnID
-                self.currentlyProcessing.copy_to_scene(dstScnID=dstScn)
+                self.tempScnID = self.currentlyProcessing.dstScnID
+                self.currentlyProcessing.copy_to_scene(dstScnID=self.tempScnID)
 
+                print 'extra', self.currentlyProcessing.extraItems[0].name
                 self.currentlyProcessing = self.currentlyProcessing.dstItem
 
                 self.transform_item()
@@ -340,7 +341,7 @@ class TilaBacthExport(helper.ModoHelper):
                 lx.eval('!!scene.close')
 
                 self.tempScnID = None
-                self.deformer_item_dict = {}
+                self.currentlyProcessing = None
 
         else:  # export all in one file
             tcount = len(t.compatibleItemType)

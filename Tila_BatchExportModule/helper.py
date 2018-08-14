@@ -620,9 +620,9 @@ class ModoHelper(object):
             count += 1
         if self.freezeGeo_sw:
             count += 1
-        if self.scn.selected[0].type == t.itemType['MESH_INSTANCE'] and (self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw))):
+        if (self.exportFile_sw or ((not self.exportFile_sw) and (self.freezeInstance_sw or self.freezePos_sw or self.freezeRot_sw or self.freezeSca_sw or self.freezeShe_sw))):
             count += 1
-        if self.scn.selected[0].type == t.itemType['REPLICATOR']:
+        if self.freezeReplicator_sw:
             count += 1
         if (self.posX != 0 or self.posY != 0 or self.posZ != 0) and self.pos_sw:
             count += 1

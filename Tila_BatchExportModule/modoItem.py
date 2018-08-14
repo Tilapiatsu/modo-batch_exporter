@@ -8,7 +8,7 @@ class ModoItem(modo.item.Item):
     mm = dialog.MessageManagement('ModoItem')
     _key = None
 
-    def __init__(self, item):
+    def __init__(self, item, **kwargs):
         modo.item.Item.__init__(self, item)
         self.scn = modo.Scene()
         self.name = item.name
@@ -19,10 +19,13 @@ class ModoItem(modo.item.Item):
         self.dstScnID = None
         self.dstItem = None
         self.extraItems = []
+
         self.previouslySelected = None
 
         self.originalName = []
         self.modifiedName = []
+
+        self.set_kwargs(kwargs)
 
     @staticmethod
     def get_name_arr(arr):
@@ -54,6 +57,43 @@ class ModoItem(modo.item.Item):
     @property
     def scale(self):
         return modo.item.LocatorSuperType(self._item).scale
+
+    def set_kwargs(self, kwargs):
+        for key, value in kwargs.items():
+            if key == 'scn':
+                self.scn = value
+            if key == 'name':
+                self.name = value
+            if key == 'srcScnID':
+                self.srcScnID = value
+            if key == 'dstScnID':
+                self.dstScnID = value
+            if key == 'dstItem':
+                self.dstItem = value
+            if key == 'extraItems':
+                self.extraItems = value
+
+    def get_src_parameters_dict(self):
+        return {'scn': self.scn,
+                'name': self.name,
+                'srcScnID': self.srcScnID,
+                'dstScnID': self.dstScnID,
+                'dstItem': self.dstItem,
+                'extraItems': self.extraItems}
+
+    def get_dst_parameters_dict(self):
+        return {'scn': self.scn,
+                'name': self.dstItem.name,
+                'srcScnID': self.dstScnID,
+                'extraItems': self.extraItems}
+
+    def create_dstItem(self):
+        kwargs = self.get_dst_parameters_dict()
+        return convert_to_modoItem(self.dstItem,
+                                   scn=kwargs.get('scn'),
+                                   name=kwargs.get('name'),
+                                   srcScnID=kwargs.get('srcScnID'),
+                                   extraItems=kwargs.get('extraItems'))
 
     def have_deformers(self):
         if len(self._item.deformers):
@@ -159,7 +199,7 @@ class ModoItem(modo.item.Item):
         lx.eval('scene.set {}'.format(self.dstScnID))
         self.scn = modo.Scene()
 
-        self.dstItem = convert_to_modoItem(modo.Item(name))
+        self.dstItem = modo.Item(name)
 
         lx.eval('scene.set {}'.format(curr_scnID))
         self.scn = modo.Scene()
@@ -172,7 +212,6 @@ class ModoItem(modo.item.Item):
 
         for name in names:
             self.extraItems.append(convert_to_modoItem(modo.Item(name)))
-            print name
 
         lx.eval('scene.set {}'.format(curr_scnID))
         self.scn = modo.Scene()
@@ -266,22 +305,26 @@ class ModoItem(modo.item.Item):
 
 class ModoMeshItem(ModoItem):
 
-    def __init__(self, item):
-        ModoItem.__init__(self, item)
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
 
 
 class ModoMeshInstance(ModoItem):
 
-    def __init__(self, item):
-        ModoItem.__init__(self, item)
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
 
     @property
     def source(self):
         self.store_previouslySelected()
+
         self._item.select()
+
         lx.eval('select.itemSourceSelected')
+
         source = convert_to_modoItem(self.scn.selected[0])
         self.select_previouslySeleced()
+
         return source
 
     def copy_to_scene(self, dstScnID=None):
@@ -294,7 +337,6 @@ class ModoMeshInstance(ModoItem):
     # Item Processing
 
     def freeze_instance(self):
-        itemName = self._item.name
 
         self._item.select(replace=True)
         lx.eval('item.setType.mesh')
@@ -311,28 +353,28 @@ class ModoMeshInstance(ModoItem):
 
 class ModoGroupLocatorItem(ModoItem):
 
-    def __init__(self, item):
-        ModoItem.__init__(self, item)
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
 
 
 class ModoLocatorItem(ModoItem):
 
-    def __init__(self, item):
-        ModoItem.__init__(self, item)
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
 
 
 class ModoMeshFusionItem(ModoItem):
     _key = 'MESH_FUSION'
 
-    def __init__(self, item):
-        ModoItem.__init__(self, item)
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
 
 
 class ModoReplicatorItem(ModoItem):
     _key = 'REPLICATOR'
 
-    def __init__(self, item):
-        ModoItem.__init__(self, item)
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
         self._replicator = None
         self._source_group_name = self.source_group_name
 
@@ -447,7 +489,7 @@ class ModoReplicatorItem(ModoItem):
 
             if self.source_is_group:
                 lx.eval('replicator.source "{}"'.format(
-                        self._source_group_name))
+                    self._source_group_name))
                 group = modo.item.Group(self._source_group_name)
                 for o in source_arr:
                     if not group.hasItem(o):
@@ -467,8 +509,8 @@ class ModoDeformerItem(ModoItem):
     _key = 'MESH_OPERATOR'
 
     # is Used by MOP Item
-    def __init__(self, item):
-        ModoItem.__init__(self, item)
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
         self.deformer_group = None
         self._deformer_item = None
         self._deformers = None
@@ -569,12 +611,12 @@ modoItemTypes = {'MESH': ModoMeshItem,
                  'DEFORMER': ModoDeformerItem}
 
 
-def convert_to_modoItem(item):
+def convert_to_modoItem(item, **kwargs):
     if item.type in t.compatibleItemType.values():
         key = t.get_key_from_value(t.compatibleItemType, item.type)
-        mItem = modoItemTypes[key](item)
+        mItem = modoItemTypes[key](item, **kwargs)
         if mItem.have_deformers():
-            mItem = modoItemTypes['DEFORMER'](item)
+            mItem = modoItemTypes['DEFORMER'](item, **kwargs)
 
         return mItem
     else:

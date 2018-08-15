@@ -29,12 +29,12 @@ class ItemProcessing(helper.ModoHelper):
 
     def conditionTesting(func):
         def func_wrapper(self, condition, item, **kwargs):
-            force = False
-            for key, value in kwargs.items():
-                if key == 'force':
-                    force = value
+            force = kwargs.get('force')
             if condition or force:
+                print 'yes', force, condition
                 return func(self, condition, item, **kwargs)
+            else:
+                return None
         return func_wrapper
     # Item Processing
 
@@ -239,14 +239,12 @@ class ItemProcessing(helper.ModoHelper):
             # increment_progress_bar(self, self.progress)
             # dialog.transform_log(message)
             item.freeze_instance()
-            self.mm.breakPoint()
+
             item = item.updated_item()
-            self.mm.breakPoint()
+
             item.freeze_sca(test=True)
-            self.mm.breakPoint()
 
             item.remove_extraItems()
-            self.mm.breakPoint()
 
             return item
 

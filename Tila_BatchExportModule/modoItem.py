@@ -11,7 +11,7 @@ class ModoItem(modo.item.Item):
     def __init__(self, item, **kwargs):
         modo.item.Item.__init__(self, item)
         self.scn = modo.Scene()
-        self.name = item.name
+        self._name = item.name
         self.cmd_svc = lx.service.Command()
 
         # store scene source scene ID
@@ -58,6 +58,14 @@ class ModoItem(modo.item.Item):
     def scale(self):
         return modo.item.LocatorSuperType(self._item).scale
 
+    @property
+    def name(self):
+        return self._item.name
+
+    @name.setter
+    def name(self, name):
+        self._item.name = name
+
     def set_kwargs(self, kwargs):
         for key, value in kwargs.items():
             if key == 'scn':
@@ -75,7 +83,7 @@ class ModoItem(modo.item.Item):
 
     def get_src_parameters_dict(self):
         return {'scn': self.scn,
-                'name': self.name,
+                'name': self._name,
                 'srcScnID': self.srcScnID,
                 'dstScnID': self.dstScnID,
                 'dstItem': self.dstItem,
@@ -91,16 +99,13 @@ class ModoItem(modo.item.Item):
         kwargs = self.get_dst_parameters_dict()
         return convert_to_modoItem(self.dstItem,
                                    scn=kwargs.get('scn'),
-                                   name=kwargs.get('name'),
                                    srcScnID=kwargs.get('srcScnID'),
                                    extraItems=kwargs.get('extraItems'))
 
     def updated_item(self):
         kwargs = self.get_src_parameters_dict()
-        self.mm.breakPoint('before update')
-        return convert_to_modoItem(modo.Item(self.name),
+        return convert_to_modoItem(self.scn.item(self._name),
                                    scn=kwargs.get('scn'),
-                                   name=kwargs.get('name'),
                                    srcScnID=kwargs.get('srcScnID'),
                                    dstScnID=kwargs.get('dstScnID'),
                                    dstItem=kwargs.get('dstItem'),

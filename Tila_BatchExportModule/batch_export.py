@@ -323,10 +323,9 @@ class TilaBacthExport(helper.ModoHelper):
                 self.currentlyProcessing = self.sortedItemToProceed[tcount]
 
                 self.tempScnID = self.currentlyProcessing.dstScnID
+
                 self.currentlyProcessing.copy_to_scene(dstScnID=self.tempScnID)
 
-                print 'extra', self.currentlyProcessing.extraItems[0].name
-                print self.currentlyProcessing.dstItem
                 self.currentlyProcessing = self.currentlyProcessing.create_dstItem()
 
                 self.transform_item()

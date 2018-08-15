@@ -239,6 +239,16 @@ class ItemProcessing(helper.ModoHelper):
             # increment_progress_bar(self, self.progress)
             # dialog.transform_log(message)
             item.freeze_instance()
+            self.mm.breakPoint()
+            item = item.updated_item()
+            self.mm.breakPoint()
+            item.freeze_sca(test=True)
+            self.mm.breakPoint()
+
+            item.remove_extraItems()
+            self.mm.breakPoint()
+
+            return item
 
     @conditionTesting
     def freeze_meshfusion(self, condition, item):

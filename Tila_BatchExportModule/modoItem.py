@@ -95,6 +95,17 @@ class ModoItem(modo.item.Item):
                                    srcScnID=kwargs.get('srcScnID'),
                                    extraItems=kwargs.get('extraItems'))
 
+    def updated_item(self):
+        kwargs = self.get_src_parameters_dict()
+        self.mm.breakPoint('before update')
+        return convert_to_modoItem(modo.Item(self.name),
+                                   scn=kwargs.get('scn'),
+                                   name=kwargs.get('name'),
+                                   srcScnID=kwargs.get('srcScnID'),
+                                   dstScnID=kwargs.get('dstScnID'),
+                                   dstItem=kwargs.get('dstItem'),
+                                   extraItems=kwargs.get('extraItems'))
+
     def have_deformers(self):
         if len(self._item.deformers):
             return True
@@ -282,11 +293,21 @@ class ModoItem(modo.item.Item):
         # lx.eval('vertMap.updateNormals')
         self.select_previouslySeleced()
 
-    def freeze_sca(self):
+    def freeze_sca(self, test=False):
         self.store_previouslySelected()
         self._item.select()
+
+        if test:
+            currScale = self.scale
+            if currScale.x.get() > 0 or currScale.y.get() > 0 or currScale.z.get() > 0:
+                self.select_previouslySeleced()
+                return
+
         lx.eval('!!transform.freeze scale')
-        # lx.eval('vertMap.updateNormals')
+
+        if test:
+            lx.eval('vertMap.updateNormals')
+
         self.select_previouslySeleced()
 
     def freeze_she(self):
@@ -340,15 +361,6 @@ class ModoMeshInstance(ModoItem):
 
         self._item.select(replace=True)
         lx.eval('item.setType.mesh')
-
-        currScale = self.scale
-
-        if currScale.x.get() < 0 or currScale.y.get() < 0 or currScale.z.get() < 0:
-            # dialog.transform_log('Freeze Scaling after Instance Freeze')
-            self.freeze_sca()
-            lx.eval('vertMap.updateNormals')
-
-        self.remove_extraItems()
 
 
 class ModoGroupLocatorItem(ModoItem):

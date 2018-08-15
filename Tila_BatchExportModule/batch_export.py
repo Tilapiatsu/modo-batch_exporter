@@ -326,6 +326,7 @@ class TilaBacthExport(helper.ModoHelper):
                 self.currentlyProcessing.copy_to_scene(dstScnID=self.tempScnID)
 
                 print 'extra', self.currentlyProcessing.extraItems[0].name
+                print self.currentlyProcessing.dstItem
                 self.currentlyProcessing = self.currentlyProcessing.create_dstItem()
 
                 self.transform_item()
@@ -333,12 +334,12 @@ class TilaBacthExport(helper.ModoHelper):
                 self.proceededMeshIndex = tcount
                 self.mm.increment_progress_bar(self.proceededMesh, self.progress[0], self.progression)
 
-                layername = self.currentlyProcessing.name
-
-                self.export_all_format(output_dir, layername, tcount)
+                self.export_all_format(output_dir, self.currentlyProcessing.name, tcount)
 
                 lx.eval('scene.set {}'.format(self.tempScnID))
                 lx.eval('!!scene.close')
+
+                self.scn.deselect()
 
                 self.tempScnID = None
                 self.currentlyProcessing = None
@@ -400,7 +401,7 @@ class TilaBacthExport(helper.ModoHelper):
 
         self.select_hierarchy()
 
-        self.itemProcessing.freeze_instance(self.transform_condition['freeze_instance'], self.currentlyProcessing)
+        self.currentlyProcessing = self.itemProcessing.freeze_instance(self.transform_condition['freeze_instance'], self.currentlyProcessing)
         self.itemProcessing.freeze_replicator(self.transform_condition['freeze_replicator'], self.currentlyProcessing)
         self.itemProcessing.freeze_deformers(self.transform_condition['freeze_deformers'], self.currentlyProcessing)
 

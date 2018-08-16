@@ -404,7 +404,7 @@ class TilaBacthExport(helper.ModoHelper):
         self.itemProcessing.freeze_replicator(self.transform_condition['freeze_replicator'], self.currentlyProcessing)
         self.itemProcessing.freeze_deformers(self.transform_condition['freeze_deformers'], self.currentlyProcessing)
 
-        self.itemProcessing.smooth_angle(self.transform_condition['smooth_angle'], self.currentlyProcessing)
+        self.itemProcessing.smooth_angle(self.transform_condition['smooth_angle'], self.currentlyProcessing, angle=self.smoothAngle)
         self.itemProcessing.harden_uv_border(self.transform_condition['harden_uv_border'], self.currentlyProcessing)
 
         self.itemProcessing.freeze_geo(self.transform_condition['freeze_geo'], self.currentlyProcessing)

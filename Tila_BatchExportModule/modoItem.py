@@ -104,7 +104,7 @@ class ModoItem(modo.item.Item):
 
     def updated_item(self):
         kwargs = self.get_src_parameters_dict()
-        return convert_to_modoItem(self.scn.item(self._name),
+        return convert_to_modoItem(modo.Item(self._name),
                                    scn=kwargs.get('scn'),
                                    srcScnID=kwargs.get('srcScnID'),
                                    dstScnID=kwargs.get('dstScnID'),
@@ -327,6 +327,24 @@ class ModoItem(modo.item.Item):
         self._item.select()
         lx.eval('poly.freeze polyline true 2 true true true false 4.0 true Morph')
         self.select_previouslySeleced()
+
+    def smooth_angle(self, angle):
+        self.store_previouslySelected()
+        self._item.select()
+        currAngle = lx.eval('user.value vnormkit.angle ?')
+        lx.eval('user.value vnormkit.angle %s' % angle)
+        lx.eval('vertMap.hardenNormals angle soften:true')
+        lx.eval('user.value vnormkit.angle %s' % currAngle)
+        lx.eval('vertMap.updateNormals')
+        self.select_previouslySeleced()
+
+    def export_morph(self):
+        if self.type == t.compatibleItemType['MESH']:
+            morph_maps = self.geometry.vmaps.morphMaps
+            for m in morph_maps:
+                self.mm.info('Deleting {} morph map ...'.format(m.name))
+                lx.eval('!select.vertexMap {} morf replace'.format(m.name))
+                lx.eval('!!vertMap.delete morf')
 
 
 class ModoMeshItem(ModoItem):

@@ -31,7 +31,6 @@ class ItemProcessing(helper.ModoHelper):
         def func_wrapper(self, condition, item, **kwargs):
             force = kwargs.get('force')
             if condition or force:
-                print 'yes', force, condition
                 return func(self, condition, item, **kwargs)
             else:
                 return None
@@ -80,27 +79,17 @@ class ItemProcessing(helper.ModoHelper):
             self.increment_progress_bar(self.progress)
             self.mm.processing_log(message)
 
-        for o in self.scn.selected:
-            o = modoItem.convert_to_modoItem(o)
-            if o.type == t.compatibleItemType['MESH'] and not o.have_deformers():
-                morph_maps = o.geometry.vmaps.morphMaps
-                for m in morph_maps:
-                    self.mm.info('Delete {} morph map'.format(m.name))
-                    lx.eval('!select.vertexMap {} morf replace'.format(m.name))
-                    lx.eval('!!vertMap.delete morf')
+        print item.have_deformer()
+        item.export_morph()
 
     @conditionTesting
-    def smooth_angle(self, condition, item):
+    def smooth_angle(self, condition, item, angle=40):
         message = "Harden edges witch are sharper than %s degrees" % self.smoothAngle
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        currAngle = lx.eval('user.value vnormkit.angle ?')
-        lx.eval('user.value vnormkit.angle %s' % self.smoothAngle)
-        lx.eval('vertMap.hardenNormals angle soften:true')
-        lx.eval('user.value vnormkit.angle %s' % currAngle)
-        lx.eval('vertMap.updateNormals')
+        item.smooth_angle(angle)
 
     @conditionTesting
     def harden_uv_border(self, condition, item):
@@ -246,7 +235,7 @@ class ItemProcessing(helper.ModoHelper):
 
             item.remove_extraItems()
 
-            return item
+        return item
 
     @conditionTesting
     def freeze_meshfusion(self, condition, item):

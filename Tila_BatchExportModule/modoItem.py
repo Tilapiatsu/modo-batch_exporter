@@ -11,6 +11,7 @@ class ModoItem(modo.item.Item):
     def __init__(self, item, **kwargs):
         modo.item.Item.__init__(self, item)
         self.scn = modo.Scene()
+        self.item = item
         self._name = item.name
         self.cmd_svc = lx.service.Command()
 
@@ -80,10 +81,13 @@ class ModoItem(modo.item.Item):
                 self.dstItem = value
             if key == 'extraItems':
                 self.extraItems = value
+            if key == 'item':
+                self.item = value
 
     def get_src_parameters_dict(self):
         return {'scn': self.scn,
                 'name': self._name,
+                'item': self.item,
                 'srcScnID': self.srcScnID,
                 'dstScnID': self.dstScnID,
                 'dstItem': self.dstItem,
@@ -103,7 +107,7 @@ class ModoItem(modo.item.Item):
                                    extraItems=kwargs.get('extraItems'))
 
     def updated_item(self):
-        kwargs = self.get_src_parameters_dict()
+        kwargs = self.get_src_parameters_dict( )
         return convert_to_modoItem(modo.Item(self._name),
                                    scn=kwargs.get('scn'),
                                    srcScnID=kwargs.get('srcScnID'),
@@ -112,7 +116,7 @@ class ModoItem(modo.item.Item):
                                    extraItems=kwargs.get('extraItems'))
 
     def have_deformers(self):
-        if len(self._item.deformers):
+        if len(self.item.deformers):
             return True
         else:
             return False
@@ -340,7 +344,7 @@ class ModoItem(modo.item.Item):
 
     def export_morph(self):
         if self.type == t.compatibleItemType['MESH']:
-            morph_maps = self.geometry.vmaps.morphMaps
+            morph_maps = self.item.geometry.vmaps.morphMaps
             for m in morph_maps:
                 self.mm.info('Deleting {} morph map ...'.format(m.name))
                 lx.eval('!select.vertexMap {} morf replace'.format(m.name))

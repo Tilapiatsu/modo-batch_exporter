@@ -436,15 +436,15 @@ class ItemProcessing(helper.ModoHelper):
         # freeze_rot(self)
 
     @conditionTesting
-    def merge_meshes(self, condition, item):
+    def merge_meshes(self, condition, items):
         message = 'Merging Meshes'
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
 
-        self.scn.select(item)
+        self.scn.select(items)
 
-        name_arr = self.get_name_arr(item)
+        name_arr = self.get_name_arr(items)
 
         for o in self.scn.selected:
             if o.type in [t.compatibleItemType['GROUP_LOCATOR'], t.compatibleItemType['LOCATOR']]:
@@ -454,5 +454,7 @@ class ItemProcessing(helper.ModoHelper):
         for o in name_arr:
             self.scn.select(o, add=True)
 
-        self.select_hierarchy(self, force=True)
+        self.select_hierarchy(self, True)
         lx.eval('layer.mergeMeshes true')
+
+        return modoItem.convert_to_modoItem(self.scn.selected[0])

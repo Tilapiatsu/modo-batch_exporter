@@ -16,6 +16,7 @@ class ModoItem(modo.item.Item):
         self.cmd_svc = lx.service.Command()
 
         # store scene source scene ID
+        self.currScn = self.get_current_scene()
         self.srcScnID = lx.eval('query sceneservice scene.index ? current')
         self.dstScnID = None
         self.dstItem = None
@@ -30,6 +31,9 @@ class ModoItem(modo.item.Item):
 
     def __repr__(self):
         return "ModoItem(name='{}', type='{}', dstItem='{}', extraItems='{}')".format(self.name, self.type, self.dstItem, self.extraItems)
+
+    def __len__(self):
+        return len(self.extraItems) + 1
 
     @staticmethod
     def get_name_arr(arr):
@@ -137,7 +141,7 @@ class ModoItem(modo.item.Item):
 
     def copy_to_scene(self, dstScnID=None, getExtraItems_func=None):
         # store the original name of the item
-        self.originalName.append(self._item.name)
+        self.originalName.append(self.item.name)
 
         if getExtraItems_func is not None:
             self.originalName = getExtraItems_func(self.originalName)
@@ -149,9 +153,10 @@ class ModoItem(modo.item.Item):
 
             self.clearitems()
 
-            self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % self.srcScnID)
         else:
             self.dstScnID = dstScnID
+
+        self.set_current_scene(self.srcScnID)
 
         # rename item if it is contains a generic name
         self.rename_generic_name()
@@ -259,6 +264,15 @@ class ModoItem(modo.item.Item):
     def select_previouslySeleced(self):
         self.scn.select(self.previouslySelected)
         self.previouslySelected = None
+
+    def store_current_scene(self):
+        self.currScn = self.get_current_scene()
+
+    def get_current_scene(self):
+        return lx.eval('query sceneservice scene.index ? current')
+
+    def set_current_scene(self, scnID):
+        self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % scnID)
 
     # item transform
 
@@ -368,6 +382,9 @@ class ModoMeshInstance(ModoItem):
 
     @property
     def source(self):
+        self.store_current_scene()
+        self.set_current_scene(self.srcScnID)
+
         self.store_previouslySelected()
 
         self._item.select()
@@ -376,6 +393,7 @@ class ModoMeshInstance(ModoItem):
 
         source = convert_to_modoItem(self.scn.selected[0])
         self.select_previouslySeleced()
+        self.set_current_scene(self.curr_scnID)
 
         return source
 
@@ -383,14 +401,17 @@ class ModoMeshInstance(ModoItem):
         ModoItem.copy_to_scene(self, dstScnID, getExtraItems_func=self.getExtraItems)
 
     def getExtraItems(self, originalName):
+        print originalName
+        print self
+        print dir(self)
+        print self.item
         originalName.append(self.source.name)
         return originalName
 
     # Item Processing
 
     def freeze_instance(self):
-
-        self._item.select(replace=True)
+        self.item.select(replace=True)
         lx.eval('item.setType.mesh')
 
 

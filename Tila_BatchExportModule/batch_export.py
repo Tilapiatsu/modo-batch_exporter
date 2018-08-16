@@ -344,16 +344,14 @@ class TilaBacthExport(helper.ModoHelper):
                 self.currentlyProcessing = None
 
         else:  # export all in one file
-            tcount = len(t.compatibleItemType)
-            for ctype, type in t.compatibleItemType.iteritems():
-                self.currentlyProcessing = self.itemToProceed[ctype]
-                if len(self.currentlyProcessing) > 0:
-                    self.firstIndex[ctype] = self.copy_arr_to_temporary_scene(self.currentlyProcessing, ctype)
-                if tcount > 1:  # for the last type, we don't want to go back to the original scene
-                    lx.eval('scene.set {}'.format(self.scnIndex))
-                else:
-                    lx.eval('scene.set {}'.format(self.tempScnID))
-                tcount -= 1
+            self.currentlyProcessing = []
+            for item in self.sortedItemToProceed:
+                item.copy_to_scene(dstScnID=self.tempScnID)
+
+                if self.tempScnID is None:
+                    self.tempScnID = item.dstScnID
+
+                self.currentlyProcessing.append(item.create_dstItem())
 
             self.transform_loop()
 
@@ -363,6 +361,7 @@ class TilaBacthExport(helper.ModoHelper):
             lx.eval('scene.set {}'.format(self.tempScnID))
             lx.eval('!!scene.close')
             self.tempScnID = None
+            self.currentlyProcessing = None
 
         # helper.set_name(self.sortedOriginalItems, shrink=len(t.TILA_BACKUP_SUFFIX))
 
@@ -372,35 +371,23 @@ class TilaBacthExport(helper.ModoHelper):
 
         transformed = []
 
-        for ctype in t.compatibleItemType.keys():
-            if len(self.proceededMesh[ctype]) > 0:
-                self.mm.info('Processing item of type : ' + ctype)
-
-                self.currentlyProcessing = self.proceededMesh[ctype]
-
-                transformed += self.transform_items(self.currentlyProcessing)
+        for item in self.currentlyProcessing:
+            transformed += self.transform_item(item)
 
         if self.mergeMesh_sw:
-            self.itemProcessing.merge_meshes(transformed)
-            self.proceededMesh = [self.scn.selected[0]]
+            self.proceededMesh = [self.itemProcessing.merge_meshes(transformed)]
 
             layer_name = self.renamer.construct_filename('', self.filenamePattern, self.filename, '', 0)
             layer_name = os.path.splitext(layer_name)[0]
             self.proceededMesh[0].name = layer_name
 
     # Transform Processes
-    def transform_items(self, item_arr):
-        for o in item_arr:
-            self.currentlyProcessing = o
-            self.transform_item()
 
     def transform_item(self):
         self.progression = [1, self.get_transformation_count()]
         self.progress = self.mm.init_progress_bar(self.progression[1], 'Processing item(s) ...')
 
         self.select_hierarchy()
-
-        print self.currentlyProcessing
 
         self.currentlyProcessing = self.itemProcessing.freeze_instance(self.transform_condition['freeze_instance'], self.currentlyProcessing)
         self.itemProcessing.freeze_replicator(self.transform_condition['freeze_replicator'], self.currentlyProcessing)

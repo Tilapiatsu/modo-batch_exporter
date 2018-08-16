@@ -28,6 +28,9 @@ class ModoItem(modo.item.Item):
 
         self.set_kwargs(kwargs)
 
+    def __repr__(self):
+        return "ModoItem(name='{}', type='{}', dstItem='{}', extraItems='{}')".format(self.name, self.type, self.dstItem, self.extraItems)
+
     @staticmethod
     def get_name_arr(arr):
         name_arr = []
@@ -39,7 +42,7 @@ class ModoItem(modo.item.Item):
     @property
     def type(self):
         if self._key is None:
-            return self._item.type
+            return self.item.type
         else:
             return t.itemType[self._key]
 
@@ -65,7 +68,7 @@ class ModoItem(modo.item.Item):
 
     @name.setter
     def name(self, name):
-        self._item.name = name
+        self.item.name = name
 
     def set_kwargs(self, kwargs):
         for key, value in kwargs.items():
@@ -107,7 +110,7 @@ class ModoItem(modo.item.Item):
                                    extraItems=kwargs.get('extraItems'))
 
     def updated_item(self):
-        kwargs = self.get_src_parameters_dict( )
+        kwargs = self.get_src_parameters_dict()
         return convert_to_modoItem(modo.Item(self._name),
                                    scn=kwargs.get('scn'),
                                    srcScnID=kwargs.get('srcScnID'),
@@ -355,6 +358,7 @@ class ModoMeshItem(ModoItem):
 
     def __init__(self, item, **kwargs):
         ModoItem.__init__(self, item, **kwargs)
+        self.item = modo.Mesh(item)
 
 
 class ModoMeshInstance(ModoItem):

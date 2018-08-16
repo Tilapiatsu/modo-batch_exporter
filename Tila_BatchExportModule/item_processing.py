@@ -79,7 +79,6 @@ class ItemProcessing(helper.ModoHelper):
             self.increment_progress_bar(self.progress)
             self.mm.processing_log(message)
 
-        print item.item
         item.export_morph()
 
     @conditionTesting

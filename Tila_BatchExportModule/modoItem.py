@@ -382,18 +382,14 @@ class ModoMeshInstance(ModoItem):
 
     @property
     def source(self):
-        self.store_current_scene()
-        self.set_current_scene(self.srcScnID)
-
         self.store_previouslySelected()
 
-        self._item.select()
+        self.item.select()
 
         lx.eval('select.itemSourceSelected')
 
         source = convert_to_modoItem(self.scn.selected[0])
         self.select_previouslySeleced()
-        self.set_current_scene(self.curr_scnID)
 
         return source
 

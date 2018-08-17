@@ -371,8 +371,12 @@ class TilaBacthExport(helper.ModoHelper):
 
         transformed = []
 
+        currentlyProcessing_bak = self.currentlyProcessing
+
         for item in self.currentlyProcessing:
-            transformed += self.transform_item(item)
+            self.currentlyProcessing = item
+            transformed += [self.transform_item()]
+            self.currentlyProcessing = currentlyProcessing_bak
 
         if self.mergeMesh_sw:
             self.proceededMesh = [self.itemProcessing.merge_meshes(transformed)]
@@ -418,6 +422,8 @@ class TilaBacthExport(helper.ModoHelper):
         self.itemProcessing.freeze_she(self.transform_condition['freeze_she'], self.currentlyProcessing)
 
         self.mm.deallocate_dialog_svc(self.progress[1])
+
+        return self.currentlyProcessing
 
     # Export Processes
     def export_all_format(self, output_dir, layer_name, increment=0):

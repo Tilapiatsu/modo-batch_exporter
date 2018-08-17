@@ -384,6 +384,8 @@ class ModoMeshInstance(ModoItem):
     def source(self):
         self.store_previouslySelected()
 
+        self.scn.deselect()
+
         self.item.select()
 
         lx.eval('select.itemSourceSelected')
@@ -397,10 +399,6 @@ class ModoMeshInstance(ModoItem):
         ModoItem.copy_to_scene(self, dstScnID, getExtraItems_func=self.getExtraItems)
 
     def getExtraItems(self, originalName):
-        print originalName
-        print self
-        print dir(self)
-        print self.item
         originalName.append(self.source.name)
         return originalName
 
@@ -672,14 +670,18 @@ modoItemTypes = {'MESH': ModoMeshItem,
 
 
 def convert_to_modoItem(item, **kwargs):
+    mm = dialog.MessageManagement('ModoItem')
+
     if item.type in t.compatibleItemType.values():
         key = t.get_key_from_value(t.compatibleItemType, item.type)
         mItem = modoItemTypes[key](item, **kwargs)
         if mItem.have_deformers():
             mItem = modoItemTypes['DEFORMER'](item, **kwargs)
+            mm.debug('Converting item "{}" to type {}'.format(item.name, modoItemTypes['DEFORMER']))
+        else:
+            mm.debug('Converting item "{}" to type {}'.format(item.name, modoItemTypes[key]))
 
         return mItem
     else:
-        mm = dialog.MessageManagement('ModoItem')
-        mm.info('The item {} can\'t be converted to modo Item'.format(item.name))
+        mm.info('The item "{}" can\'t be converted to modo Item'.format(item.name))
         return item

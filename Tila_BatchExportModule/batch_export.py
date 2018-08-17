@@ -346,6 +346,8 @@ class TilaBacthExport(helper.ModoHelper):
         else:  # export all in one file
             self.currentlyProcessing = []
             for item in self.sortedItemToProceed:
+                self.set_current_scene(self.scnIndex)
+
                 item.copy_to_scene(dstScnID=self.tempScnID)
 
                 if self.tempScnID is None:

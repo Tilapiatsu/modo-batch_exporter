@@ -899,6 +899,10 @@ class ModoHelper(object):
 
         self.scn.select(visible)
         return visible
+
+    def set_current_scene(self, scnID):
+        self.cmd_svc.ExecuteArgString(-1, lx.symbol.iCTAG_NULL, 'scene.set %s' % scnID)
+
     # Cleaning
 
     def revert_scene_preferences(self):

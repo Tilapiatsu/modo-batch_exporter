@@ -202,7 +202,7 @@ class MessageManagement():
         for o in arr:
             self.info(o.name)
 
-    def debug(func):
+    def debug_dec(func):
         def func_wrapper(self, message, dialog=False):
             if self.debugMode and not dialog:
                 message = '{} : {} '.format('DEBUG_MODE', message)
@@ -213,14 +213,14 @@ class MessageManagement():
         message = '{} : {} '.format(self.prefix, message)
         lx.out(message)
 
-    @debug
+    @debug_dec
     def info(self, message, dialog=False):
         if dialog:
             self.init_message('info', 'info', message)
         else:
             self.print_log(message)
 
-    @debug
+    @debug_dec
     def warning(self, message, dialog=False):
         if dialog:
             self.init_message('warning', 'warning', message)
@@ -228,13 +228,22 @@ class MessageManagement():
             message = '{} : {} '.format(self.prefix, message)
             self.print_log(message)
 
-    @debug
+    @debug_dec
     def error(self, message, dialog=False):
         if dialog:
             self.init_message('error', 'error', message)
         else:
             message = '{} : {} '.format(self.prefix, message)
             self.print_log(message)
+
+    @debug_dec
+    def debug(self, message, dialog=False):
+        if self.debugMode:
+            if dialog:
+                self.init_message('info', 'info', message)
+            else:
+                message = '{} : {} '.format(self.prefix, message)
+                self.print_log(message)
 
     def transform_log(self, message):
         self.info("Transform_Item : " + message)

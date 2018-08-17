@@ -50,6 +50,7 @@ class TilaBacthExport(helper.ModoHelper):
                 "scale_amount": (self.scaX != 1.0 or self.scaY != 1.0 or self.scaZ != 1.0) and self.sca_sw,
                 "rot_angle": (self.rotX != 0.0 or self.rotY != 0.0 or self.rotZ != 0.0) and self.rot_sw,
                 "export_morph": not self.exportMorphMap_sw,
+                "apply_morph": self.applyMorphMap_sw,
                 "smooth_angle": self.smoothAngle_sw,
                 "harden_uv_border": self.hardenUvBorder_sw,
                 "assign_material_per_udim": self.assignMaterialPerUDIMTile_sw,
@@ -406,7 +407,7 @@ class TilaBacthExport(helper.ModoHelper):
         self.itemProcessing.triple(self.transform_condition['triple'], self.currentlyProcessing)
 
         self.itemProcessing.assign_material_per_udim(self.transform_condition['assign_material_per_udim'], self.currentlyProcessing)
-        self.itemProcessing.apply_morph(self.applyMorphMap_sw, self.currentlyProcessing, name=self.morphMapName)
+        self.itemProcessing.apply_morph(self.transform_condition['apply_morph'], self.currentlyProcessing, name=self.morphMapName)
         self.itemProcessing.export_morph(self.transform_condition['export_morph'], self.currentlyProcessing)
 
         self.itemProcessing.reset_pos(self.transform_condition['reset_pos'], self.currentlyProcessing)
@@ -414,9 +415,9 @@ class TilaBacthExport(helper.ModoHelper):
         self.itemProcessing.reset_sca(self.transform_condition['reset_sca'], self.currentlyProcessing)
         self.itemProcessing.reset_she(self.transform_condition['reset_she'], self.currentlyProcessing)
 
-        self.itemProcessing.position_offset(self.transform_condition['position_offset'], self.currentlyProcessing)
-        self.itemProcessing.scale_amount(self.transform_condition['scale_amount'], self.currentlyProcessing)
-        self.itemProcessing.rot_angle(self.transform_condition['rot_angle'], self.currentlyProcessing)
+        self.itemProcessing.position_offset(self.transform_condition['position_offset'], self.currentlyProcessing, offset=(self.posX, self.posY, self.posY))
+        self.itemProcessing.scale_amount(self.transform_condition['scale_amount'], self.currentlyProcessing, amount=(self.scaX, self.scaY, self.scaY))
+        self.itemProcessing.rot_angle(self.transform_condition['rot_angle'], self.currentlyProcessing, angle=(self.rotX, self.rotY, self.rotY))
 
         self.itemProcessing.freeze_rot(self.transform_condition['freeze_rot'], self.currentlyProcessing)
         self.itemProcessing.freeze_sca(self.transform_condition['freeze_sca'], self.currentlyProcessing)
@@ -439,8 +440,8 @@ class TilaBacthExport(helper.ModoHelper):
             self.export_selection(output_path, t.exportTypes[1][1])
 
         if self.exportFormatFbx_sw:
-            self.itemProcessing.force_freeze_deformers(True, self.currentlyProcessing)
-            self.itemProcessing.force_freeze_replicator(True, self.currentlyProcessing)
+            # self.itemProcessing.force_freeze_deformers(self.currentlyProcessing)
+            # self.itemProcessing.force_freeze_replicator(self.currentlyProcessing)
             output_path = self.construct_file_path(output_dir, layer_name, t.exportTypes[2][0], increment)
             lx.eval('user.value sceneio.fbx.save.exportType FBXExportAll')
             lx.eval('user.value sceneio.fbx.save.surfaceRefining subDivs')
@@ -448,7 +449,7 @@ class TilaBacthExport(helper.ModoHelper):
             self.export_selection(output_path, t.exportTypes[2][1])
 
         if self.exportFormatObj_sw:
-            self.itemProcessing.force_freeze_replicator(True, self.currentlyProcessing)
+            # self.itemProcessing.force_freeze_replicator(self.currentlyProcessing)
             output_path = self.construct_file_path(output_dir, layer_name, t.exportTypes[3][0], increment)
             self.export_selection(output_path, t.exportTypes[3][1])
 

@@ -64,7 +64,7 @@ class ModoItem(modo.item.Item):
 
     @property
     def scale(self):
-        return modo.item.LocatorSuperType(self._item).scale
+        return modo.item.LocatorSuperType(self.item).scale
 
     @property
     def name(self):
@@ -307,21 +307,21 @@ class ModoItem(modo.item.Item):
 
     def freeze_pos(self):
         self.store_previouslySelected()
-        self._item.select()
+        self.item.select()
         lx.eval('!!transform.freeze translation')
         # lx.eval('vertMap.updateNormals')
         self.select_previouslySeleced()
 
     def freeze_rot(self):
         self.store_previouslySelected()
-        self._item.select()
+        self.item.select()
         lx.eval('!!transform.freeze rotation')
         # lx.eval('vertMap.updateNormals')
         self.select_previouslySeleced()
 
     def freeze_sca(self, test=False):
         self.store_previouslySelected()
-        self._item.select()
+        self.item.select()
 
         if test:
             currScale = self.scale
@@ -360,12 +360,57 @@ class ModoItem(modo.item.Item):
         self.select_previouslySeleced()
 
     def export_morph(self):
+        self.store_previouslySelected()
+        self.item.select()
         if self.type == t.compatibleItemType['MESH']:
             morph_maps = self.item.geometry.vmaps.morphMaps
             for m in morph_maps:
                 self.mm.info('Deleting {} morph map ...'.format(m.name))
                 lx.eval('!select.vertexMap {} morf replace'.format(m.name))
                 lx.eval('!!vertMap.delete morf')
+
+        self.select_previouslySeleced()
+
+    def position_offset(self, offset):
+        self.store_previouslySelected()
+
+        self.item.select()
+
+        currPos = self.position
+
+        lx.eval('transform.channel pos.X %s' % str(float(offset[0]) * currPos.x.get()))
+        lx.eval('transform.channel pos.Y %s' % str(float(offset[1]) * currPos.y.get()))
+        lx.eval('transform.channel pos.Z %s' % str(float(offset[2]) * currPos.z.get()))
+
+        self.select_previouslySeleced()
+
+    def rotation_angle(self, angle):
+        self.store_previouslySelected()
+
+        self.item.select()
+
+        currRot = self.rotation
+
+        self.freeze_rot()
+        lx.eval('transform.channel rot.X %s' % str(float(angle[0]) * currRot.x.get()))
+        lx.eval('transform.channel rot.Y %s' % str(float(angle[1]) * currRot.y.get()))
+        lx.eval('transform.channel rot.Z %s' % str(float(angle[2]) * currRot.z.get()))
+
+        self.select_previouslySeleced()
+
+    def scale_amount(self, amount):
+        self.store_previouslySelected()
+
+        self.item.select()
+
+        currSca = self.scale
+
+        self.freeze_sca()
+        lx.eval('transform.channel scl.X %s' % str(float(amount[0]) * currSca.x.get()))
+        lx.eval('transform.channel scl.Y %s' % str(float(amount[1]) * currSca.y.get()))
+        lx.eval('transform.channel scl.Z %s' % str(float(amount[2]) * currSca.z.get()))
+
+        self.select_previouslySeleced()
 
 
 class ModoMeshItem(ModoItem):
@@ -563,7 +608,7 @@ class ModoReplicatorItem(ModoItem):
             self.scn.select(selection)
 
 
-class ModoDeformerItem(ModoItem):
+class ModoMeshOperatorItem(ModoItem):
     _key = 'MESH_OPERATOR'
 
     # is Used by MOP Item
@@ -666,12 +711,11 @@ modoItemTypes = {'MESH': ModoMeshItem,
                  'GROUP_LOCATOR': ModoGroupLocatorItem,
                  'LOCATOR': ModoLocatorItem,
                  'MESH_FUSION': ModoMeshFusionItem,
-                 'DEFORMER': ModoDeformerItem}
+                 'MESH_OPERATOR': ModoMeshOperatorItem}
 
 
 def convert_to_modoItem(item, **kwargs):
     mm = dialog.MessageManagement('ModoItem')
-
     if item.type in t.compatibleItemType.values():
         key = t.get_key_from_value(t.compatibleItemType, item.type)
         mItem = modoItemTypes[key](item, **kwargs)
@@ -685,3 +729,12 @@ def convert_to_modoItem(item, **kwargs):
     else:
         mm.info('The item "{}" can\'t be converted to modo Item'.format(item.name))
         return item
+
+
+def get_item_of_type(items, type):
+    type_arr = []
+    for o in items:
+        if o.type == type:
+            type_arr.append(o)
+
+    return type_arr

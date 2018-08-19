@@ -378,9 +378,13 @@ class ModoItem(modo.item.Item):
 
         currPos = self.position
 
-        lx.eval('transform.channel pos.X %s' % str(float(offset[0]) * currPos.x.get()))
-        lx.eval('transform.channel pos.Y %s' % str(float(offset[1]) * currPos.y.get()))
-        lx.eval('transform.channel pos.Z %s' % str(float(offset[2]) * currPos.z.get()))
+        x = offset[0] + currPos.x.get()
+        y = offset[1] + currPos.y.get()
+        z = offset[2] + currPos.z.get()
+
+        lx.eval('transform.channel pos.X {}'.format(x))
+        lx.eval('transform.channel pos.Y {}'.format(y))
+        lx.eval('transform.channel pos.Z {}'.format(z))
 
         self.select_previouslySeleced()
 
@@ -391,10 +395,13 @@ class ModoItem(modo.item.Item):
 
         currRot = self.rotation
 
-        self.freeze_rot()
-        lx.eval('transform.channel rot.X %s' % str(float(angle[0]) * currRot.x.get()))
-        lx.eval('transform.channel rot.Y %s' % str(float(angle[1]) * currRot.y.get()))
-        lx.eval('transform.channel rot.Z %s' % str(float(angle[2]) * currRot.z.get()))
+        x = angle[0] + currRot.x.get()
+        y = angle[1] + currRot.y.get()
+        z = angle[2] + currRot.z.get()
+
+        lx.eval('transform.channel rot.X {}'.format(x))
+        lx.eval('transform.channel rot.Y {}'.format(y))
+        lx.eval('transform.channel rot.Z {}'.format(z))
 
         self.select_previouslySeleced()
 
@@ -405,10 +412,13 @@ class ModoItem(modo.item.Item):
 
         currSca = self.scale
 
-        self.freeze_sca()
-        lx.eval('transform.channel scl.X %s' % str(float(amount[0]) * currSca.x.get()))
-        lx.eval('transform.channel scl.Y %s' % str(float(amount[1]) * currSca.y.get()))
-        lx.eval('transform.channel scl.Z %s' % str(float(amount[2]) * currSca.z.get()))
+        x = amount[0] + currSca.x.get()
+        y = amount[1] + currSca.y.get()
+        z = amount[2] + currSca.z.get()
+
+        lx.eval('transform.channel scl.X {}'.format(x))
+        lx.eval('transform.channel scl.Y {}'.format(y))
+        lx.eval('transform.channel scl.Z {}'.format(z))
 
         self.select_previouslySeleced()
 

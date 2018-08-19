@@ -370,7 +370,7 @@ class ItemProcessing(helper.ModoHelper):
 
     @conditionTesting
     def position_offset(self, condition, item, offset=(0, 0, 0)):
-        message = "Position offset = (%s, %s, %s)" % (offset[0], offset[1], offset[2])
+        message = "Position offset = ({}, {}, {})".format(offset[0], offset[1], offset[2])
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
@@ -379,7 +379,7 @@ class ItemProcessing(helper.ModoHelper):
 
     @conditionTesting
     def scale_amount(self, condition, item, amount=(1, 1, 1)):
-        message = "Scale amount = (%s, %s, %s)" % (amount[0], amount[1], amount[2])
+        message = "Scale amount = ({}, {}, {})".format(amount[0], amount[1], amount[2])
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)
@@ -388,7 +388,7 @@ class ItemProcessing(helper.ModoHelper):
 
     @conditionTesting
     def rot_angle(self, condition, item, angle=(0, 0, 0)):
-        message = "Rotation Angle = (%s, %s, %s)" % (angle[0], angle[1], angle[2])
+        message = "Rotation Angle = ({}, {}, {})".format(angle[0], angle[1], angle[2])
         message = self.get_progression_message(message)
         self.increment_progress_bar(self.progress)
         self.mm.processing_log(message)

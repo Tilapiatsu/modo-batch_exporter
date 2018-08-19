@@ -278,8 +278,10 @@ class MessageManagement():
         self.info('----------------------------------------------------------------------------------------------------')
         self.info('')
 
-    def breakPoint(self, message='break'):
+    def breakPoint(self, message='break', exit=False):
         self.init_message('info', message, message)
+        if exit:
+            sys.exit()
 
     def safe_select(self, tuple):
         first = False

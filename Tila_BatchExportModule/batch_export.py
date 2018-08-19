@@ -63,7 +63,11 @@ class TilaBacthExport(helper.ModoHelper):
                 "freeze_rot": self.freezePos_sw,
                 "freeze_sca": self.freezeRot_sw,
                 "freeze_she": self.freezeSca_sw,
-                "freeze_geo": self.freezeGeo_sw}
+                "freeze_geo": self.freezeGeo_sw,
+                "preFreeze_pos": self.preFreezePos_sw,
+                "preFreeze_rot": self.preFreezeRot_sw,
+                "preFreeze_sca": self.preFreezeSca_sw,
+                "preFreeze_she": self.preFreezeShe_sw}
 
     def export_at_least_one_format(self):
         if not (self.exportFormatFbx_sw
@@ -415,9 +419,14 @@ class TilaBacthExport(helper.ModoHelper):
         self.itemProcessing.reset_sca(self.transform_condition['reset_sca'], self.currentlyProcessing)
         self.itemProcessing.reset_she(self.transform_condition['reset_she'], self.currentlyProcessing)
 
-        self.itemProcessing.position_offset(self.transform_condition['position_offset'], self.currentlyProcessing, offset=(self.posX, self.posY, self.posY))
-        self.itemProcessing.scale_amount(self.transform_condition['scale_amount'], self.currentlyProcessing, amount=(self.scaX, self.scaY, self.scaY))
-        self.itemProcessing.rot_angle(self.transform_condition['rot_angle'], self.currentlyProcessing, angle=(self.rotX, self.rotY, self.rotY))
+        self.itemProcessing.freeze_rot(self.transform_condition['preFreeze_rot'], self.currentlyProcessing)
+        self.itemProcessing.freeze_sca(self.transform_condition['preFreeze_sca'], self.currentlyProcessing)
+        self.itemProcessing.freeze_pos(self.transform_condition['preFreeze_pos'], self.currentlyProcessing)
+        self.itemProcessing.freeze_she(self.transform_condition['preFreeze_she'], self.currentlyProcessing)
+
+        self.itemProcessing.position_offset(self.transform_condition['position_offset'], self.currentlyProcessing, offset=(self.posX, self.posY, self.posZ))
+        self.itemProcessing.scale_amount(self.transform_condition['scale_amount'], self.currentlyProcessing, amount=(self.scaX, self.scaY, self.scaZ))
+        self.itemProcessing.rot_angle(self.transform_condition['rot_angle'], self.currentlyProcessing, angle=(self.rotX, self.rotY, self.rotZ))
 
         self.itemProcessing.freeze_rot(self.transform_condition['freeze_rot'], self.currentlyProcessing)
         self.itemProcessing.freeze_sca(self.transform_condition['freeze_sca'], self.currentlyProcessing)

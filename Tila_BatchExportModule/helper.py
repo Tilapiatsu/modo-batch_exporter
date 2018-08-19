@@ -24,6 +24,8 @@ class ModoHelper(object):
         reload(renamer)
         reload(configFile)
         reload(modoItem)
+        reload(t.dialog)
+        reload(t)
         self.scn = modo.Scene()
 
         self.cmd_svc = lx.service.Command()
@@ -107,6 +109,15 @@ class ModoHelper(object):
             self.resetSca_sw = bool(userValues[index])
             index += 1
             self.resetShe_sw = bool(userValues[index])
+            index += 1
+
+            self.preFreezePos_sw = bool(userValues[index])
+            index += 1
+            self.preFreezeRot_sw = bool(userValues[index])
+            index += 1
+            self.preFreezeSca_sw = bool(userValues[index])
+            index += 1
+            self.preFreezeShe_sw = bool(userValues[index])
             index += 1
 
             self.freezePos_sw = bool(userValues[index])

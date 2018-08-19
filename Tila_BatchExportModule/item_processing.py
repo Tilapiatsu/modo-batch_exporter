@@ -31,7 +31,8 @@ class ItemProcessing(helper.ModoHelper):
         def func_wrapper(self, condition, item, **kwargs):
             force = kwargs.get('force')
             if condition or force:
-                self.mm.prefix = "ItemProcessing : {}".format(item.name)
+                if not isinstance(item, list):
+                    self.mm.prefix = "ItemProcessing : {}".format(item.name)
                 return func(self, condition, item, **kwargs)
             else:
                 return None

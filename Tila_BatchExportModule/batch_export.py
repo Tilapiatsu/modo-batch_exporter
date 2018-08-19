@@ -386,10 +386,13 @@ class TilaBacthExport(helper.ModoHelper):
             self.currentlyProcessing = currentlyProcessing_bak
 
         if self.mergeMesh_sw:
-            self.proceededMesh = [self.itemProcessing.merge_meshes(transformed)]
+            self.mm.breakPoint('Before Merging')
+            self.proceededMesh = [self.itemProcessing.merge_meshes(True, transformed)]
+            self.currentlyProcessing = self.proceededMesh[0]
 
             layer_name = self.renamer.construct_filename('', self.filenamePattern, self.filename, '', 0)
             layer_name = os.path.splitext(layer_name)[0]
+            self.mm.breakPoint()
             self.proceededMesh[0].name = layer_name
 
     # Transform Processes

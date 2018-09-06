@@ -42,6 +42,15 @@ class ModoItem(modo.item.Item):
             name_arr.append(o.name)
 
         return name_arr
+    
+    def select_dec(func):
+        def func_wrapper(self, **kwargs):
+            self.store_previouslySelected()
+            self._item.select()
+            result = func(self, **kwargs)
+            self.select_previouslySeleced()
+            return result
+        return func_wrapper
 
     @property
     def type(self):
@@ -73,6 +82,27 @@ class ModoItem(modo.item.Item):
     @name.setter
     def name(self, name):
         self.item.name = name
+
+    @property
+    @select_dec
+    def lock(self):
+        lock = lx.eval('item.channel locator$lock ?')
+        if lock == 'on':
+            return True
+        else:
+            return False
+    
+    @lock.setter
+    @select_dec
+    def lock(self, value):
+        if not isinstance(value, bool):
+            raise ValueError
+        else:
+            values = {'on': True, 'off':False}
+            if value not in values.values():
+                raise ValueError
+            else:
+                lx.eval('item.channel locator$lock {}'.format(t.get_key_from_value(values, value)))
 
     def set_kwargs(self, kwargs):
         for key, value in kwargs.items():

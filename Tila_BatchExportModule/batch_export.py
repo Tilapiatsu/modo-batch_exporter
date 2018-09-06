@@ -403,6 +403,8 @@ class TilaBacthExport(helper.ModoHelper):
 
         self.select_hierarchy()
 
+        self.itemProcessing.unlock_item(True, self.currentlyProcessing)
+
         self.currentlyProcessing = self.itemProcessing.freeze_instance(self.transform_condition['freeze_instance'], self.currentlyProcessing)
         self.itemProcessing.freeze_replicator(self.transform_condition['freeze_replicator'], self.currentlyProcessing)
         self.itemProcessing.freeze_deformers(self.transform_condition['freeze_deformers'], self.currentlyProcessing)

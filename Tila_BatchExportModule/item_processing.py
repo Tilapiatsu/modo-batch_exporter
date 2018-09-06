@@ -419,3 +419,11 @@ class ItemProcessing(helper.ModoHelper):
         lx.eval('layer.mergeMeshes true')
 
         return modoItem.convert_to_modoItem(self.scn.selected[0])
+
+    def unlock_item(self, condition, item):
+        if item.lock:
+            item.lock = False
+    
+    def lock_item(self, condition, item):
+        if not item.lock:
+            item.lock = True

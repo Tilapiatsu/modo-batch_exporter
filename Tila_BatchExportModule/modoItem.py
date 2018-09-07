@@ -3,6 +3,15 @@ import modo
 import Tila_BatchExportModule as t
 from Tila_BatchExportModule import dialog
 
+    
+def select_dec(func):
+    def func_wrapper(self, *args, **kwargs):
+        self.store_previouslySelected()
+        self._item.select()
+        result = func(self, *args, **kwargs)
+        self.select_previouslySeleced()
+        return result
+    return func_wrapper
 
 class ModoItem(modo.item.Item):
     mm = dialog.MessageManagement('ModoItem')
@@ -42,15 +51,6 @@ class ModoItem(modo.item.Item):
             name_arr.append(o.name)
 
         return name_arr
-    
-    def select_dec(func):
-        def func_wrapper(self, **kwargs):
-            self.store_previouslySelected()
-            self._item.select()
-            result = func(self, **kwargs)
-            self.select_previouslySeleced()
-            return result
-        return func_wrapper
 
     @property
     def type(self):
@@ -230,6 +230,7 @@ class ModoItem(modo.item.Item):
 
         i = 0
         for modifiedName in self.modifiedName:
+            self.mm.info(modifiedName)
             item = modo.Item(modifiedName)
 
             item.name = self.originalName[i]
@@ -311,52 +312,37 @@ class ModoItem(modo.item.Item):
         for maps in morph_maps:
             lx.eval('vertMap.applyMorph %s 1.0' % maps)
 
+    @select_dec
     def reset_pos(self):
-        self.store_previouslySelected()
-        self._item.select()
         lx.eval('!!transform.reset translation')
-        self.select_previouslySeleced()
 
+    @select_dec
     def reset_rot(self):
-        self.store_previouslySelected()
-        self._item.select()
         lx.eval('!!transform.reset rotation')
-        self.select_previouslySeleced()
 
+    @select_dec
     def reset_sca(self):
-        self.store_previouslySelected()
-        self._item.select()
         lx.eval('!!transform.reset scale')
-        self.select_previouslySeleced()
 
+    @select_dec
     def reset_she(self):
-        self.store_previouslySelected()
-        self._item.select()
         lx.eval('!!transform.reset shear')
-        self.select_previouslySeleced()
 
+    @select_dec
     def freeze_pos(self):
-        self.store_previouslySelected()
-        self.item.select()
         lx.eval('!!transform.freeze translation')
         # lx.eval('vertMap.updateNormals')
-        self.select_previouslySeleced()
 
+    @select_dec
     def freeze_rot(self):
-        self.store_previouslySelected()
-        self.item.select()
         lx.eval('!!transform.freeze rotation')
         # lx.eval('vertMap.updateNormals')
-        self.select_previouslySeleced()
 
+    @select_dec
     def freeze_sca(self, test=False):
-        self.store_previouslySelected()
-        self.item.select()
-
         if test:
             currScale = self.scale
             if currScale.x.get() > 0 or currScale.y.get() > 0 or currScale.z.get() > 0:
-                self.select_previouslySeleced()
                 return
 
         lx.eval('!!transform.freeze scale')
@@ -364,34 +350,25 @@ class ModoItem(modo.item.Item):
         if test:
             lx.eval('vertMap.updateNormals')
 
-        self.select_previouslySeleced()
-
+    @select_dec
     def freeze_she(self):
-        self.store_previouslySelected()
-        self._item.select()
         lx.eval('!!transform.freeze shear')
         # lx.eval('vertMap.updateNormals')
-        self.select_previouslySeleced()
 
+    @select_dec
     def freeze_geo(self):
-        self.store_previouslySelected()
-        self._item.select()
         lx.eval('poly.freeze polyline true 2 true true true false 4.0 true Morph')
-        self.select_previouslySeleced()
 
+    @select_dec
     def smooth_angle(self, angle):
-        self.store_previouslySelected()
-        self._item.select()
         currAngle = lx.eval('user.value vnormkit.angle ?')
         lx.eval('user.value vnormkit.angle %s' % angle)
         lx.eval('vertMap.hardenNormals angle soften:true')
         lx.eval('user.value vnormkit.angle %s' % currAngle)
         lx.eval('vertMap.updateNormals')
-        self.select_previouslySeleced()
 
+    @select_dec
     def export_morph(self):
-        self.store_previouslySelected()
-        self.item.select()
         if self.type == t.compatibleItemType['MESH']:
             morph_maps = self.item.geometry.vmaps.morphMaps
             for m in morph_maps:
@@ -399,13 +376,8 @@ class ModoItem(modo.item.Item):
                 lx.eval('!select.vertexMap {} morf replace'.format(m.name))
                 lx.eval('!!vertMap.delete morf')
 
-        self.select_previouslySeleced()
-
+    @select_dec
     def position_offset(self, offset):
-        self.store_previouslySelected()
-
-        self.item.select()
-
         currPos = self.position
 
         x = offset[0] + currPos.x.get()
@@ -416,13 +388,8 @@ class ModoItem(modo.item.Item):
         lx.eval('transform.channel pos.Y {}'.format(y))
         lx.eval('transform.channel pos.Z {}'.format(z))
 
-        self.select_previouslySeleced()
-
+    @select_dec
     def rotation_angle(self, angle):
-        self.store_previouslySelected()
-
-        self.item.select()
-
         currRot = self.rotation
 
         x = angle[0] + currRot.x.get()
@@ -433,13 +400,8 @@ class ModoItem(modo.item.Item):
         lx.eval('transform.channel rot.Y {}'.format(y))
         lx.eval('transform.channel rot.Z {}'.format(z))
 
-        self.select_previouslySeleced()
-
+    @select_dec
     def scale_amount(self, amount):
-        self.store_previouslySelected()
-
-        self.item.select()
-
         currSca = self.scale
 
         x = amount[0] + currSca.x.get()
@@ -449,8 +411,6 @@ class ModoItem(modo.item.Item):
         lx.eval('transform.channel scl.X {}'.format(x))
         lx.eval('transform.channel scl.Y {}'.format(y))
         lx.eval('transform.channel scl.Z {}'.format(z))
-
-        self.select_previouslySeleced()
 
 
 class ModoMeshItem(ModoItem):
@@ -464,19 +424,13 @@ class ModoMeshInstance(ModoItem):
 
     def __init__(self, item, **kwargs):
         ModoItem.__init__(self, item, **kwargs)
-
+    
     @property
+    @select_dec
     def source(self):
-        self.store_previouslySelected()
-
-        self.scn.deselect()
-
-        self.item.select()
-
         lx.eval('select.itemSourceSelected')
 
         source = convert_to_modoItem(self.scn.selected[0])
-        self.select_previouslySeleced()
 
         return source
 

@@ -413,6 +413,12 @@ class ModoItem(modo.item.Item):
         lx.eval('transform.channel scl.Z {}'.format(z))
 
 
+class ModoMaterial(ModoItem):
+
+    def __init__(self, item, **kwargs):
+        ModoItem.__init__(self, item, **kwargs)
+        self.item = modo.Mesh(item)
+
 class ModoMeshItem(ModoItem):
 
     def __init__(self, item, **kwargs):
@@ -705,7 +711,8 @@ modoItemTypes = {'MESH': ModoMeshItem,
                  'GROUP_LOCATOR': ModoGroupLocatorItem,
                  'LOCATOR': ModoLocatorItem,
                  'MESH_FUSION': ModoMeshFusionItem,
-                 'MESH_OPERATOR': ModoMeshOperatorItem}
+                 'MESH_OPERATOR': ModoMeshOperatorItem,
+                 'ADVANCED_MATERIAL': ModoMaterial}
 
 
 def convert_to_modoItem(item, **kwargs):

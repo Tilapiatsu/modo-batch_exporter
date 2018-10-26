@@ -263,7 +263,10 @@ class ModoHelper(object):
     def items_to_proceed_constructor(self):
         for item in self.userSelection:
             mItem = modoItem.convert_to_modoItem(item)
-            self.itemToProceed[mItem.typeKey].append(mItem)
+            try:
+                self.itemToProceed[mItem.typeKey].append(mItem)
+            except AttributeError:
+                continue
 
         self.sortedItemToProceed = self.sort_items_dict_arr(self.itemToProceed)
 

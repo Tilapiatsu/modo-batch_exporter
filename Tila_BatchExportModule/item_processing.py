@@ -415,7 +415,7 @@ class ItemProcessing(helper.ModoHelper):
         for o in name_arr:
             self.scn.select(o, add=True)
 
-        self.select_hierarchy(self, True)
+        self.select_hierarchy(force=True)
         lx.eval('layer.mergeMeshes true')
 
         return modoItem.convert_to_modoItem(self.scn.selected[0])
